@@ -149,7 +149,7 @@ def post_step_log(endpoint: Optional[str], payload: Dict[str, Any]) -> Dict[str,
     if not endpoint:
         return {"ok": True, "skipped": True}
     try:
-        response = requests.post(endpoint, json=payload, timeout=15)
+        response = requests.post(endpoint, json=payload, timeout=60)
         response.raise_for_status()
         return response.json()
     except requests.RequestException as exc:
@@ -730,7 +730,10 @@ with st.expander("Technician / Case Info", expanded=True):
         )
 
 # Technician visit proof (selfie)
-st.markdown("<div class='section-title'>Take your Selfie with product</div>", unsafe_allow_html=True)
+st.markdown(
+    "<div class='section-title' style='color:#ffffff;font-weight:700;'>Take your Selfie with product</div>",
+    unsafe_allow_html=True,
+)
 selfie_key = "visit_selfie_capture"
 existing_selfie = st.session_state.get("visit_selfie")
 if existing_selfie:
