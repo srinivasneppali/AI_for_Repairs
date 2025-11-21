@@ -363,21 +363,25 @@ def wants_resolution_prompt(node: Dict[str, Any]) -> bool:
 
 
 def render_token_copy(token: str) -> None:
-    safe_token = html.escape(token)
-    js_token = json.dumps(token)
+    st.markdown(
+        "<div style='font-weight:700;color:#ffffff;margin-top:0.5rem;'>Gate Token</div>",
+        unsafe_allow_html=True,
+    )
+    st.text_input(
+        "Gate Token",
+        value=token,
+        key=f"gate_token_display_{token}",
+        disabled=True,
+        label_visibility="collapsed",
+    )
     components.html(
         f"""
-        <div style="display:flex;gap:0.6rem;align-items:center;margin:0.4rem 0 0.8rem;">
-            <div style="flex:1;background:#fff3cd;border:2px solid #ffd166;border-radius:10px;padding:0.6rem 0.8rem;font-weight:700;font-size:1.2rem;color:#0a1f44;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-                {safe_token}
-            </div>
-            <button style="padding:0.55rem 1rem;border:none;border-radius:8px;background:#06d6a0;color:#ffffff;font-weight:600;cursor:pointer;"
-                onclick="navigator.clipboard.writeText({js_token}).then(() => {{ const btn = this; const prev = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = prev, 1500); }});">
-                Copy
-            </button>
-        </div>
+        <button style="padding:0.45rem 1rem;border:none;border-radius:8px;background:#06d6a0;color:#ffffff;font-weight:600;cursor:pointer;"
+            onclick="navigator.clipboard.writeText({json.dumps(token)}).then(() => {{ const btn = this; const prev = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = prev, 1500); }});">
+            Copy Token
+        </button>
         """,
-        height=80,
+        height=60,
     )
 
 
