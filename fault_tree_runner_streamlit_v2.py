@@ -432,7 +432,7 @@ def render_token_copy(token: str) -> None:
                 }} catch (err) {{
                     setCopied(false);
                 }}
-            };
+            }};
 
             btn.addEventListener('click', async () => {{
                 if (navigator.clipboard && navigator.clipboard.writeText) {{
