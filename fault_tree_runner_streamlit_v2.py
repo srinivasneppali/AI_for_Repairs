@@ -3,6 +3,7 @@ import time
 import base64
 import json
 import re
+import html
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
