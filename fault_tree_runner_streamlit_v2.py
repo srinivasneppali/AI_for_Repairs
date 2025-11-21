@@ -38,6 +38,7 @@ EVIDENCE_COLLECTION_ENABLED = (
     os.getenv("ENABLE_EVIDENCE_UPLOAD", "false").strip().lower() == "true"
 )
 RECOMMENDED_PARTS_KEY = "recommended_parts"
+ISSUE_LABEL_COLOR = os.getenv("ISSUE_LABEL_COLOR", "#ef476f")
 
 
 # -----------------------------
@@ -361,6 +362,16 @@ def key_from_part(part: str) -> str:
 
 def wants_resolution_prompt(node: Dict[str, Any]) -> bool:
     return bool(node.get("resolution_prompt", True))
+
+
+def prettify_flow_label(path: Path) -> str:
+    """Generate a reader-friendly name without prefixes like Ftree/P2O."""
+    raw = path.stem.replace("_", " ")
+    raw = re.sub(r"\b(ftree|p2o)\b", "", raw, flags=re.IGNORECASE)
+    raw = re.sub(r"\s+", " ", raw).strip()
+    if not raw:
+        raw = path.stem
+    return raw.title()
 
 
 def render_token_copy(token: str) -> None:
@@ -764,11 +775,11 @@ title_colors = {
 }
 title_color = title_colors.get(os.getenv("FLOW_SELECT_COLOR", "yellow").lower(), "#ffd166")
 st.markdown(
-    f"<div class='main-title' style='background:{title_color};padding:0.4rem 0.8rem;border-radius:8px;'>Interactive Troubleshooting - Automated Flow</div>",
+    f"<div class='main-title' style='background:{title_color};padding:0.6rem 1.2rem;border-radius:10px;text-align:center;margin:0.2rem auto 0.6rem auto;max-width:760px;font-size:1.4rem;letter-spacing:0.03em;'>Interactive Troubleshooting - Automated Flow</div>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<div class='sub-caption' style='color:#ffffff;font-weight:700;'>Train decision-making, not just steps. Logs MPD/RR risk proxies for coaching.</div>",
+    "<div class='sub-caption' style='color:#ffffff;font-weight:700;text-align:center;'>Train decision-making, not just steps. Logs MPD/RR risk proxies for coaching.</div>",
     unsafe_allow_html=True,
 )
 
@@ -785,26 +796,26 @@ available_flows = discover_flow_files()
 selected_flow_path = st.session_state.get("selected_flow_path")
 
 if available_flows:
-    labels = []
+    labels: List[str] = []
     label_to_path: Dict[str, Path] = {}
+    seen_labels: Dict[str, int] = {}
     default_index = 0
     for idx, path in enumerate(available_flows):
-        label = f"{path.stem.replace('_', ' ').title()} ({path.name})"
+        friendly = prettify_flow_label(path)
+        label = friendly
+        if label in seen_labels:
+            seen_labels[label] += 1
+            label = f"{friendly} ({seen_labels[label]})"
+        else:
+            seen_labels[label] = 1
         labels.append(label)
         label_to_path[label] = path
         if selected_flow_path and str(path) == selected_flow_path:
             default_index = idx
-    highlight_colors = {
-        "yellow": "#ffd166",
-        "green": "#06d6a0",
-        "blue": "#118ab2",
-        "red": "#ef476f",
-    }
-    highlight_color = highlight_colors.get(
-        os.getenv("FLOW_SELECT_COLOR", "blue").lower(), "#ffd166"
-    )
+    issue_label_color = ISSUE_LABEL_COLOR or "#ef476f"
+    issue_label_text_color = "#ffffff"
     st.markdown(
-        f"<div style='font-size:1.2rem;font-weight:700;color:#0a1f44;background:{highlight_color};padding:0.4rem 0.8rem;border-radius:8px;margin-top:1rem;'>Select troubleshooting issue</div>",
+        f"<div style='font-size:1.2rem;font-weight:800;color:{issue_label_text_color};background:{issue_label_color};padding:0.5rem 0.9rem;border-radius:10px;margin-top:1.2rem;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.15);'>Select troubleshooting issue</div>",
         unsafe_allow_html=True,
     )
     selected_label = st.selectbox(
