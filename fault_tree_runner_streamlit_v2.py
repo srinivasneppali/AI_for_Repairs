@@ -346,6 +346,11 @@ def ensure_widget_state(key: str, default: Any) -> Any:
     return st.session_state[key]
 
 
+def reset_full_session() -> None:
+    st.session_state.clear()
+    st.rerun()
+
+
 def key_from_part(part: str) -> str:
     slug = re.sub(r"[^0-9A-Za-z]+", "_", part).strip("_")
     return slug.lower() or "part"
@@ -353,6 +358,22 @@ def key_from_part(part: str) -> str:
 
 def wants_resolution_prompt(node: Dict[str, Any]) -> bool:
     return bool(node.get("resolution_prompt", True))
+
+
+def render_token_copy(token: str) -> None:
+    escaped = html.escape(token)
+    token_js = json.dumps(token)
+    copy_html = f"""
+    <div style='display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;'>
+        <span style='font-weight:700;color:#0f3057;'>Gate Token: {escaped}</span>
+        <button type='button'
+            style='padding:0.4rem 0.8rem;border:none;border-radius:6px;background:#06d6a0;color:#fff;font-weight:600;cursor:pointer;'
+            onclick="navigator.clipboard.writeText({token_js}).then(() => {{ const btn = this; const prev = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = prev, 1500); }});">
+            Copy
+        </button>
+    </div>
+    """
+    st.markdown(copy_html, unsafe_allow_html=True)
 
 
 def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
@@ -388,10 +409,7 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
 
     continue_col, stop_col = st.columns([3, 1])
     if stop_col.button("Stop Session"):
-        reset_tree_progress(tree)
-        st.session_state.pending_resolution = None
-        st.session_state.flow_status = None
-        st.rerun()
+        reset_full_session()
 
     if continue_col.button("Submit Resolution Decision", type="primary"):
         st.session_state.pending_resolution = None
@@ -563,7 +581,8 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     token = resp.get("token", "(no token — endpoint not set)")
                     st.session_state.final_token = token
                     st.session_state.flow_status["finalized"] = True
-                    st.success(f"Gate Token: **{token}**")
+                    st.success("Gate token generated successfully.")
+                    render_token_copy(token)
                     st.caption("Paste this token in Strider Notes until API integration.")
                 else:
                     # non-OK from endpoint
@@ -580,16 +599,16 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                 detail_msg = f"{base_err} ({detail})" if detail else base_err
                 st.error(f"Finalize failed: {detail_msg}")
     else:
-        token = token or "(no token — endpoint not set)"
-        st.success(f"Gate Token: **{token}**")
+        token = token or "(no token ? endpoint not set)"
+        st.success("Gate token generated successfully.")
+        render_token_copy(token)
         st.caption("Paste this token in Strider Notes until API integration.")
 
     # -----------------------------
     # Restart option
     # -----------------------------
     if st.button("Restart Session"):
-        reset_tree_progress(tree)
-        st.rerun()
+        reset_full_session()
 
     return True
 
@@ -1004,15 +1023,12 @@ stop_here = st.button(
 )
 
 if go_back and len(st.session_state.visited_stack) > 1:
-        st.session_state.visited_stack.pop()
-        st.session_state.node_id = st.session_state.visited_stack[-1]
-        st.rerun()
+    st.session_state.visited_stack.pop()
+    st.session_state.node_id = st.session_state.visited_stack[-1]
+    st.rerun()
 
 if stop_here:
-    reset_tree_progress(tree)
-    st.session_state.pending_resolution = None
-    st.session_state.flow_status = None
-    st.rerun()
+    reset_full_session()
 
 if go_next:
     elapsed = None
