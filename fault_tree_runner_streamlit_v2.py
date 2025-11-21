@@ -151,7 +151,15 @@ def post_step_log(endpoint: Optional[str], payload: Dict[str, Any]) -> Dict[str,
     try:
         response = requests.post(endpoint, json=payload, timeout=60)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            return {
+                "ok": False,
+                "error": "Invalid JSON response",
+                "status_code": response.status_code,
+                "text": response.text,
+            }
     except requests.RequestException as exc:
         return {"ok": False, "error": str(exc)}
     except ValueError:
