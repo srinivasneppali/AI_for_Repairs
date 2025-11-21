@@ -1,0 +1,29 @@
+How to use it
+
+Option A – With default message (auto timestamp)
+
+Open PowerShell.
+
+Run:
+
+cd "C:\Users\srini\Documents\Python Scripts\AI_for_Repairs"
+.\push_ai_for_repairs.ps1
+
+Option B – With your own message
+
+cd "C:\Users\srini\Documents\Python Scripts\AI_for_Repairs"
+.\push_ai_for_repairs.ps1 "Update runner script and add new WM YAML"
+
+
+The script will:
+
+Check if there are changes.
+
+If yes → git add ., git commit, git push origin main.
+
+
+Because you already configured:
+git config --global credential.helper manager
+
+Git should reuse your saved GitHub token, so no repeated login.
+

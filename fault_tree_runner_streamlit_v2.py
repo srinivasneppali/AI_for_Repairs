@@ -3,6 +3,7 @@ import time
 import base64
 import json
 import re
+from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -26,6 +27,7 @@ SESSION_HISTORY_KEY = "fault_history"
 SESSION_TIMER_PREFIX = "timer_start_"
 INPUT_VALUE_PREFIX = "ctrl_value_"
 INPUT_LABEL_PREFIX = "ctrl_label_"
+BASE_DIR = Path(__file__).resolve().parent
 CAMERA_CAPTURE_ENABLED = (
     os.getenv("ENABLE_CAMERA_CAPTURE", "false").strip().lower() == "true"
 )
@@ -56,6 +58,7 @@ def init_session_state() -> None:
     st.session_state.setdefault("visited_stack", [])
     st.session_state.setdefault("second_visit_mode", False)
     st.session_state.setdefault("pending_resolution", None)
+    st.session_state.setdefault("selected_flow_path", None)
 
 
 def normalize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
@@ -288,6 +291,45 @@ def log_local_step(entry: Dict[str, Any]) -> None:
     # keep the list from growing indefinitely
     if len(history) > 500:
         del history[0]
+
+
+def discover_flow_files() -> List[Path]:
+    files = []
+    seen = set()
+    for pattern in ("*.yaml", "*.yml"):
+        for path in BASE_DIR.glob(pattern):
+            resolved = path.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                files.append(resolved)
+    files.sort(key=lambda p: p.name.lower())
+    return files
+
+
+def apply_loaded_tree(tree: Dict[str, Any], source_label: Optional[str]) -> None:
+    st.session_state.tree = tree
+    st.session_state.meta = tree.get("meta") or {}
+    st.session_state.selected_flow_path = source_label
+    reset_tree_progress(tree)
+
+
+def load_flow_from_path(flow_path: Path) -> None:
+    try:
+        yaml_data = yaml.safe_load(flow_path.read_text(encoding="utf-8"))
+        tree = normalize_tree(yaml_data)
+        apply_loaded_tree(tree, str(flow_path))
+    except Exception as exc:
+        st.error(f"Failed to load flow '{flow_path.name}': {exc}")
+
+
+def load_flow_from_upload(upload) -> None:
+    try:
+        yaml_data = yaml.safe_load(upload.read().decode("utf-8"))
+        tree = normalize_tree(yaml_data)
+        apply_loaded_tree(tree, None)
+        st.success("Custom YAML loaded.")
+    except Exception as exc:
+        st.error(f"Failed to load uploaded YAML: {exc}")
 
 
 def ensure_widget_state(key: str, default: Any) -> Any:
@@ -571,12 +613,19 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+title_colors = {
+    "yellow": "#ffd166",
+    "green": "#06d6a0",
+    "blue": "#118ab2",
+    "red": "#ef476f",
+}
+title_color = title_colors.get(os.getenv("FLOW_SELECT_COLOR", "yellow").lower(), "#ffd166")
 st.markdown(
-    "<div class='main-title'>Interactive Troubleshooting Guide - Fully Automated</div>",
+    f"<div class='main-title' style='background:{title_color};padding:0.4rem 0.8rem;border-radius:8px;'>Interactive Troubleshooting - Automated Flow</div>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<div class='sub-caption'>Train decision-making, not just steps. Logs MPD/RR risk proxies for coaching.</div>",
+    "<div class='sub-caption' style='color:#ffffff;font-weight:700;'>Train decision-making, not just steps. Logs MPD/RR risk proxies for coaching.</div>",
     unsafe_allow_html=True,
 )
 
@@ -587,20 +636,45 @@ if ACCESS_PIN:
 
 
 # -----------------------------
-# Load YAML
+# Load YAML / Flow selection
 # -----------------------------
-uploaded = st.file_uploader("Upload a Fault Tree YAML", type=["yaml", "yml"])
+available_flows = discover_flow_files()
+selected_flow_path = st.session_state.get("selected_flow_path")
 
-if uploaded and st.button("Load YAML"):
-    try:
-        yaml_data = yaml.safe_load(uploaded.read().decode("utf-8"))
-        tree = normalize_tree(yaml_data)
-        st.session_state.tree = tree
-        st.session_state.meta = tree.get("meta") or {}
-        reset_tree_progress(tree)
-        st.success("YAML loaded.")
-    except Exception as exc:
-        st.error(f"Failed to load YAML: {exc}")
+if available_flows:
+    labels = []
+    label_to_path: Dict[str, Path] = {}
+    default_index = 0
+    for idx, path in enumerate(available_flows):
+        label = f"{path.stem.replace('_', ' ').title()} ({path.name})"
+        labels.append(label)
+        label_to_path[label] = path
+        if selected_flow_path and str(path) == selected_flow_path:
+            default_index = idx
+    highlight_colors = {
+        "yellow": "#ffd166",
+        "green": "#06d6a0",
+        "blue": "#118ab2",
+        "red": "#ef476f",
+    }
+    highlight_color = highlight_colors.get(
+        os.getenv("FLOW_SELECT_COLOR", "blue").lower(), "#ffd166"
+    )
+    st.markdown(
+        f"<div style='font-size:1.2rem;font-weight:700;color:#0a1f44;background:{highlight_color};padding:0.4rem 0.8rem;border-radius:8px;margin-top:1rem;'>Select troubleshooting issue</div>",
+        unsafe_allow_html=True,
+    )
+    selected_label = st.selectbox(
+        "",
+        options=labels,
+        index=default_index,
+        label_visibility="collapsed",
+    )
+    chosen_path = label_to_path[selected_label]
+    if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
+        load_flow_from_path(chosen_path)
+else:
+    st.warning("No YAML flows found in the workspace. Upload one to begin.")
 
 tree = st.session_state.tree
 if not tree:
