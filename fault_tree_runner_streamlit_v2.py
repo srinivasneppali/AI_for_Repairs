@@ -432,6 +432,14 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
 
 
 def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: str) -> bool:
+    """
+    Show the completion / finalize panel once the flow_status is set.
+    Handles:
+      - resolved / restart / completed states
+      - required part-photos before finalization
+      - calling the P2O endpoint and showing a gate token
+      - robust error handling (no UnboundLocalError on resp)
+    """
     flow_status = st.session_state.get("flow_status")
     if not flow_status:
         return False
@@ -441,9 +449,10 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
     nodes = tree.get("nodes") or {}
     node = nodes.get(node_id, {})
 
+    # High-level status messaging
     if status == "resolved":
         st.success(
-            "Great job! Issue resolved without additional part usage. Submit your final log."
+            "Great job! Issue resolved. Submit your final log to close the case."
         )
     elif status == "restart":
         st.warning(
@@ -456,6 +465,9 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
     else:
         st.info("All mandatory checks completed. Finalize to generate the gate token.")
 
+    # -----------------------------
+    # Part photos (for recommended parts)
+    # -----------------------------
     recommended_parts = meta.get(RECOMMENDED_PARTS_KEY) or []
     if "part_photos" not in st.session_state:
         st.session_state.part_photos = {}
@@ -492,26 +504,35 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     if upload:
                         encoded, mime = b64_of_uploaded(upload)
                         if encoded:
-                            part_photos[part] = {"photo_b64": encoded, "photo_mime": mime}
+                            part_photos[part] = {
+                                "photo_b64": encoded,
+                                "photo_mime": mime,
+                            }
                             st.rerun()
                     else:
                         all_photos_ready = False
+
         if photos_required:
             all_photos_ready = all(part in part_photos for part in photos_required)
 
+    # -----------------------------
+    # Finalize / Gate token
+    # -----------------------------
     finalized = flow_status.get("finalized", False)
     token = st.session_state.final_token
-
     ready_to_finalize = (not photos_required) or all_photos_ready
 
     if not finalized:
         if not ready_to_finalize:
             st.info("Upload required part photos to enable finalization.")
-        if st.button(
+
+        finalize_clicked = st.button(
             "Finalize & Generate Gate Token",
             type="primary",
             disabled=not ready_to_finalize,
-        ):
+        )
+
+        if finalize_clicked:
             sku_value = st.session_state.case.get("sku", "") or "NA"
             payload = {
                 "flow_id": meta.get("id", ""),
@@ -534,24 +555,38 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                 "resolution": status,
                 "part_photos": part_photos if photos_required else {},
             }
-            resp = post_step_log(P2O_ENDPOINT, payload)
-            if resp.get("ok", True):
-                token = resp.get("token", "(no token — endpoint not set)")
-                st.session_state.final_token = token
-                st.session_state.flow_status["finalized"] = True
-                st.success(f"Gate Token: **{token}**")
-                st.caption("Paste this token in Strider Notes until API integration.")
-        else:
-            detail = resp.get("text") or resp.get("status_code")
-            detail_msg = (
-                f"{resp.get('error')} ({detail})" if detail else resp.get("error")
-            )
-            st.error(f"Finalize failed: {detail_msg}")
+
+            resp = None
+            try:
+                resp = post_step_log(P2O_ENDPOINT, payload)
+                if resp.get("ok", True):
+                    token = resp.get("token", "(no token — endpoint not set)")
+                    st.session_state.final_token = token
+                    st.session_state.flow_status["finalized"] = True
+                    st.success(f"Gate Token: **{token}**")
+                    st.caption("Paste this token in Strider Notes until API integration.")
+                else:
+                    # non-OK from endpoint
+                    base_err = resp.get("error") or "Finalize call failed."
+                    detail = resp.get("text") or resp.get("status_code")
+                    detail_msg = f"{base_err} ({detail})" if detail else base_err
+                    st.error(f"Finalize failed: {detail_msg}")
+            except Exception as e:
+                # hard failure (network, JSON, etc.)
+                base_err = str(e)
+                detail = None
+                if isinstance(resp, dict):
+                    detail = resp.get("text") or resp.get("status_code")
+                detail_msg = f"{base_err} ({detail})" if detail else base_err
+                st.error(f"Finalize failed: {detail_msg}")
     else:
         token = token or "(no token — endpoint not set)"
         st.success(f"Gate Token: **{token}**")
         st.caption("Paste this token in Strider Notes until API integration.")
 
+    # -----------------------------
+    # Restart option
+    # -----------------------------
     if st.button("Restart Session"):
         reset_tree_progress(tree)
         st.rerun()
