@@ -4,6 +4,7 @@ import base64
 import json
 import re
 import html
+import uuid
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -363,21 +364,93 @@ def wants_resolution_prompt(node: Dict[str, Any]) -> bool:
 
 
 def render_token_copy(token: str) -> None:
-    st.markdown(
-        "<div style='font-weight:700;color:#ffffff;margin-top:0.5rem;'>Gate Token</div>",
-        unsafe_allow_html=True,
+    safe_token = html.escape(token)
+    token_js = json.dumps(token)
+    token_block_id = f"token-copy-{uuid.uuid4().hex}"
+    button_id = f"{token_block_id}-btn"
+    components.html(
+        f"""
+        <div id="{token_block_id}" style="margin:0.8rem 0 1.2rem 0;">
+            <div style="font-weight:700;color:#ffffff;margin-bottom:0.35rem;">
+                Gate Token
+            </div>
+            <div style="
+                background:#fff3cd;
+                border:2px solid #f4c430;
+                border-radius:12px;
+                padding:0.9rem 1rem;
+                font-weight:800;
+                font-size:1.2rem;
+                letter-spacing:0.05em;
+                color:#1b1b1b;
+                text-align:center;
+                box-shadow:0 4px 12px rgba(0,0,0,0.15);
+            ">
+                {safe_token}
+            </div>
+            <button id="{button_id}" style="
+                margin-top:0.55rem;
+                width:100%;
+                padding:0.55rem 1rem;
+                border:none;
+                border-radius:10px;
+                background:#118ab2;
+                color:#ffffff;
+                font-weight:700;
+                font-size:0.95rem;
+                cursor:pointer;
+                transition:background 0.2s ease, transform 0.2s ease;
+            ">
+                Copy Token Number
+            </button>
+        </div>
+        <script>
+        (function(){{
+            const btn = document.getElementById("{button_id}");
+            if(!btn) return;
+
+            const tokenValue = {token_js};
+            const setCopied = (success) => {{
+                const original = 'Copy Token Number';
+                btn.innerText = success ? 'Token Copied!' : 'Copy not available';
+                btn.style.background = success ? '#06d6a0' : '#ef476f';
+                setTimeout(() => {{
+                    btn.innerText = original;
+                    btn.style.background = '#118ab2';
+                }}, 1800);
+            }};
+
+            const copyFallback = () => {{
+                try {{
+                    const txt = document.createElement('textarea');
+                    txt.value = tokenValue;
+                    document.body.appendChild(txt);
+                    txt.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(txt);
+                    setCopied(true);
+                }} catch (err) {{
+                    setCopied(false);
+                }}
+            };
+
+            btn.addEventListener('click', async () => {{
+                if (navigator.clipboard && navigator.clipboard.writeText) {{
+                    try {{
+                        await navigator.clipboard.writeText(tokenValue);
+                        setCopied(true);
+                    }} catch (err) {{
+                        copyFallback();
+                    }}
+                }} else {{
+                    copyFallback();
+                }}
+            }});
+        }})();
+        </script>
+        """,
+        height=210,
     )
-    st.text_input(
-        "Gate Token",
-        value=token,
-        key=f"gate_token_display_{token}",
-        disabled=True,
-        label_visibility="collapsed",
-    )
-    # Use Python-based copy helper so no raw JS leaks to UI
-    if st.button("Copy Token Number", key=f"copy_token_{token}"):
-        st.session_state["copied_token"] = token
-        st.toast("Token copied!", icon="✅")
 
 
 def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
