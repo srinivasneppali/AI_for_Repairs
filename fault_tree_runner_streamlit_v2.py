@@ -362,19 +362,14 @@ def wants_resolution_prompt(node: Dict[str, Any]) -> bool:
 
 
 def render_token_copy(token: str) -> None:
-    escaped = html.escape(token)
-    token_js = json.dumps(token)
-    copy_html = f"""
-    <div style='display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;'>
-        <span style='font-weight:700;color:#0f3057;'>Gate Token: {escaped}</span>
-        <button type='button'
-            style='padding:0.4rem 0.8rem;border:none;border-radius:6px;background:#06d6a0;color:#fff;font-weight:600;cursor:pointer;'
-            onclick="navigator.clipboard.writeText({token_js}).then(() => {{ const btn = this; const prev = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = prev, 1500); }});">
-            Copy
-        </button>
-    </div>
-    """
-    st.markdown(copy_html, unsafe_allow_html=True)
+    st.text_input(
+        "Gate Token",
+        value=token,
+        key=f"gate_token_display_{token}",
+        label_visibility="collapsed",
+        disabled=True,
+    )
+    st.caption("Tap/long-press to copy on mobile, or use Ctrl+C on desktop.")
 
 
 def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
