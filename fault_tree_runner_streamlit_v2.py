@@ -541,9 +541,11 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                 st.session_state.flow_status["finalized"] = True
                 st.success(f"Gate Token: **{token}**")
                 st.caption("Paste this token in Strider Notes until API integration.")
-            else:
+        else:
             detail = resp.get("text") or resp.get("status_code")
-            detail_msg = f"{resp.get('error')} ({detail})" if detail else resp.get("error")
+            detail_msg = (
+                f"{resp.get('error')} ({detail})" if detail else resp.get("error")
+            )
             st.error(f"Finalize failed: {detail_msg}")
     else:
         token = token or "(no token — endpoint not set)"
