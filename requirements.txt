@@ -1,0 +1,7 @@
+streamlit>=1.36
+pyyaml
+requests
+# optional for continuous camera:
+streamlit-webrtc
+av
+opencv-python

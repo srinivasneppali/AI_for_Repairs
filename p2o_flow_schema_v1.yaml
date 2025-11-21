@@ -1,0 +1,139 @@
+# p2o_flow_schema_v1.yaml
+# Schema for Evidence‑Gated Part Ordering (Proof‑to‑Order) flows.
+# This YAML describes a linear/branching troubleshooting flow where
+# every step can require evidence (photo/video), measurements, and validations.
+# A front‑end runner reads this YAML, enforces steps (no skipping), and
+# POSTs each step result to your Apps Script Web App to log into Google Sheets
+# and save evidence to Google Drive.
+#
+# ------------------------------
+# Top-level keys
+# ------------------------------
+meta:
+  id: "STRING - unique flow ID, e.g., WM_TL_INLET_LEAK_V1"
+  title: "STRING - human-readable title"
+  version: "1.0"
+  language: ["en","hi"]            # Supported languages in 'prompt'
+  sku_scope: ["SKU1","SKU2"]       # Optional: restrict to specific SKUs
+  sheet:
+    spreadsheet_id: "GOOGLE_SHEET_ID"  # Where logs should go
+    sheet_name: "P2O_Responses"        # Sheet tab name
+  drive:
+    folder_id: "GOOGLE_DRIVE_FOLDER_ID_FOR_EVIDENCE"   # Images saved here
+  gating:
+    require_all_steps: true           # Enforce completion of all required steps
+    generate_token: true              # Issue Gate Token on full PASS
+    token_pattern: "{FAULT}-{SKU}-{RAND5}"  # Token format (see webapp)
+    token_field: "GateToken"          # Column name used in Sheet when finalized
+
+# Begin at 'start' node id
+start: "step_id_here"
+
+# Steps is a list. Each step has:
+# - id: stable string
+# - type: one of [precheck, measure, action, verify, photo, quiz, note]
+# - prompt: per-language copy
+# - ui: control & validation info
+# - evidence: what media to capture
+# - require_pass: if true, this step must meet validations to proceed
+# - next: id of next step (for linear) OR
+# - branches: list of {when: expression, next: step_id} (for conditional)
+# Expressions can be simple comparisons against current 'answers' (runner-defined).
+steps:
+  - id: "example_precheck"
+    type: "precheck"
+    prompt:
+      en: "Turn OFF water supply and power; relieve pressure for ≥5 seconds."
+      hi: "पानी और पावर बंद करें; 5 सेकंड तक दबाव रिलीज़ करें।"
+    ui:
+      control: "confirm"            # confirm | radio | chips | numeric | text | timer
+      options: ["Done"]
+    evidence:
+      required: true
+      capture: "photo"              # photo | video | none
+      instructions:
+        en: "Take a photo showing valve closed and plug disconnected."
+        hi: "वाल्व बंद और प्लग हटे हुए का फोटो लें।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "example_measure"
+
+  - id: "example_measure"
+    type: "measure"
+    prompt:
+      en: "Measure line voltage at the inlet (expect 210–250 V)."
+      hi: "इनलेट पर वोल्टेज मापें (210–250 V अपेक्षित)।"
+    ui:
+      control: "numeric"
+      units: "V"
+      range: [210, 250]
+      decimals: 1
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Capture the meter reading close-up (digits visible)."
+        hi: "मीटर रीडिंग का क्लोज-अप फोटो लें।"
+    require_pass: true
+    validation:
+      min: 210
+      max: 250
+    next: "example_action"
+
+  - id: "example_action"
+    type: "action"
+    prompt:
+      en: "Re-wrap male thread with 6 PTFE wraps; fit new gasket if worn."
+      hi: "पुरुष थ्रेड पर 6 PTFE रैप्स करें; गैस्केट घिसा हो तो बदलें।"
+    ui:
+      control: "radio"
+      options: ["Done as instructed"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of thread with new tape and gasket visible."
+        hi: "थ्रेड पर नया टेप और गैस्केट दिखता हुआ फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "example_verify"
+
+  - id: "example_verify"
+    type: "verify"
+    prompt:
+      en: "Open water and run a 60‑second leak observation."
+      hi: "पानी चालू कर 60 सेकंड लीक निरीक्षण करें।"
+    ui:
+      control: "timer"
+      seconds: 60
+    evidence:
+      required: true
+      capture: "video"          # If your runner only supports photos now, keep 'photo'
+      instructions:
+        en: "Capture a short clip/photo at the 60s mark."
+        hi: "60 सेकंड पर छोटा क्लिप/फोटो लें।"
+    require_pass: true
+    validation:
+      # Runner decides pass from learner's selection (No leak) or manual trainer review
+      # placeholder flag:
+      requires_selection: ["No leak observed"]
+    next: "final"
+
+  - id: "final"
+    type: "note"
+    prompt:
+      en: "All mandatory checks passed. You’ll receive a Gate Token."
+      hi: "सभी आवश्यक जाँच पास हुईं। अब Gate Token मिलेगा।"
+    ui:
+      control: "none"
+    evidence:
+      required: false
+      capture: "none"
+    require_pass: false
+    next: null
+
+# When finished, the runner POSTs a 'finalize' payload to the Web App.
+# The Web App issues the Gate Token (if require_all_steps true and every step passed)
+# and appends it to the Sheet in 'token_field' column.

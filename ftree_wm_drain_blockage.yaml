@@ -1,0 +1,164 @@
+# ftree_wm_drain_blockage.yaml
+meta:
+  id: WM_TL_DRAIN_BLOCKAGE_V1
+  title: "WM Top-Load: No-Drain / Drain Slow — Diagnose Before Replace"
+  version: "1.0"
+
+start: start
+
+nodes:
+  start:
+    type: choice
+    prompt: "Symptom: Water not draining / drains very slowly. What's first?"
+    options:
+      - key: safe_isolate
+        label: "Power off; unplug; ensure water level is safe; prepare towels"
+        next: inspect_filter
+        tags: ["correct"]
+        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: skip_safety
+        label: "Skip safety and start dismantling to save time"
+        next: inspect_filter
+        tags: ["unsafe"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.4 }
+
+  inspect_filter:
+    type: choice
+    prompt: "Check lint filter/coin-trap & inlet of drain pump. Observation?"
+    options:
+      - key: clogged
+        label: "Visible lint/coins/debris blocking the inlet"
+        next: clean_and_test
+        tags: ["correct"]
+        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: clear
+        label: "Looks clear"
+        next: hose_check
+        tags: ["correct"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  hose_check:
+    type: choice
+    prompt: "Inspect drain hose: height (≤ 96 cm), kinks, freeze, sharp bends."
+    options:
+      - key: kink_bend_height_issue
+        label: "Kink/bend or outlet height too high"
+        next: rectify_hose
+        tags: ["correct"]
+        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: hose_ok
+        label: "Hose looks OK"
+        next: pump_test
+        tags: ["correct"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  rectify_hose:
+    type: choice
+    prompt: "Rectify hose path/height. Re-test drain."
+    options:
+      - key: drains_ok_after_rectify
+        label: "Drains properly now"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: still_slow
+        label: "Still slow / no drain"
+        next: pump_test
+        tags: ["correct"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  pump_test:
+    type: choice
+    prompt: "Run drain/pump test. Sound & current draw? (use clamp-meter if available)"
+    options:
+      - key: humming_no_flow
+        label: "Pump hums but no flow (likely obstruction/impeller jam)"
+        next: open_pump
+        tags: ["correct"]
+        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: silent_no_current
+        label: "Silent & 0 A (electrical open/connector issue)"
+        next: electrical_check
+        tags: ["correct"]
+        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: runs_with_flow
+        label: "Pump runs with good flow"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  open_pump:
+    type: choice
+    prompt: "Open pump; inspect impeller & chamber. Findings?"
+    options:
+      - key: jam_found_cleared
+        label: "Foreign object jammed impeller — cleared"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 60, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: impeller_broken
+        label: "Impeller broken / shaft play excessive"
+        next: replace_pump
+        tags: ["correct"]
+        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  electrical_check:
+    type: choice
+    prompt: "Check connector continuity and coil resistance as per spec."
+    options:
+      - key: connector_loose
+        label: "Loose/oxidized connector — reseated/cleaned"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 40, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: coil_open
+        label: "Coil open/out of spec"
+        next: replace_pump
+        tags: ["correct"]
+        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  clean_and_test:
+    type: choice
+    prompt: "Cleaned debris; reassembled. Retest drain."
+    options:
+      - key: drains_now_ok
+        label: "Drains properly now"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 40, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: still_issue
+        label: "Still slow"
+        next: hose_check
+        tags: ["correct"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  replace_pump:
+    type: end
+    prompt: "Diagnosis supports pump replacement. Capture evidence (photo + resistance reading)."
+
+  end_pass:
+    type: end
+    prompt: "PASS: Root cause found and resolved without unnecessary parts."
+
+  end_order:
+    type: end
+    prompt: "Ordered a part without sufficient evidence — MPD risk increased."
+
+injectors:
+  - when_node: pump_test
+    chance: 1.0
+    add_options:
+      - key: order_pump_now
+        label: "Order pump immediately (skip checks)"
+        next: end_order
+        tags: ["unnecessary_part"]
+        penalty: { seconds: 30, mpd_risk: 0.6, rr_risk: 0.1 }
+
+  - when_node: inspect_filter
+    chance: 0.7
+    add_options:
+      - key: replace_hose_anyway
+        label: "Replace drain hose 'just in case'"
+        next: end_order
+        tags: ["unnecessary_part"]
+        penalty: { seconds: 20, mpd_risk: 0.5, rr_risk: 0.0 }

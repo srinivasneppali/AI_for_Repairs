@@ -1,0 +1,179 @@
+# ftree_wm_inlet_leak.yaml
+meta:
+  id: WM_TL_INLET_L_PIPE_LEAK_V1
+  title: "WM Top-Load: Inlet L-Pipe Leak — Diagnose Before Replace"
+  version: "1.0"
+
+start: start
+
+nodes:
+  start:
+    type: choice
+    prompt: "Symptom: Water observed near the inlet area. First safe action?"
+    options:
+      - key: do_nothing
+        label: "Proceed without shutting water/power (save time)"
+        next: precond_warn
+        tags: ["unsafe"]
+        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.6 }
+      - key: safe_isolate
+        label: "Turn OFF water & power; relieve pressure ≥5s"
+        next: inspect_leak_site
+        tags: ["correct"]
+        penalty: { seconds: 3, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  precond_warn:
+    type: choice
+    prompt: "Unsafe: Preconditions not met. What now?"
+    options:
+      - key: continue_anyway
+        label: "Continue anyway"
+        next: inspect_leak_site
+        tags: ["unsafe"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.5 }
+      - key: go_back_and_isolate
+        label: "Go back and isolate water/power; relieve pressure"
+        next: inspect_leak_site
+        tags: ["correct"]
+        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  inspect_leak_site:
+    type: choice
+    prompt: "Where exactly is the moisture just before disassembly?"
+    options:
+      - key: thread_interface
+        label: "At thread/seat interface (fitting)"
+        next: check_gasket_and_tape
+        tags: ["correct"]
+        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: hose_outer
+        label: "On hose outer surface / visible crack"
+        next: hose_path
+        tags: ["correct"]
+        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: inside_tub
+        label: "Inside tub only, no external leak"
+        next: wrong_symptom_path
+        tags: ["waste_time"]
+        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.2 }
+
+  wrong_symptom_path:
+    type: choice
+    prompt: "This symptom points elsewhere (not inlet L-pipe)."
+    options:
+      - key: redo_observation
+        label: "Re-check leak location carefully"
+        next: inspect_leak_site
+        tags: ["correct"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  check_gasket_and_tape:
+    type: choice
+    prompt: "Remove the fitting. What do you inspect/prepare?"
+    options:
+      - key: ignore_prep
+        label: "Skip gasket/tape inspection; just tighten harder later"
+        next: reinstall
+        tags: ["waste_time"]
+        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.2 }
+      - key: inspect_prep
+        label: "Inspect gasket; re-wrap male thread with 6 wraps PTFE tape"
+        next: reinstall
+        tags: ["correct"]
+        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  reinstall:
+    type: choice
+    prompt: "Reinstall the L-pipe. Torque strategy?"
+    options:
+      - key: undertorque
+        label: "Hand-tight + slight nudge (likely < 1.0 N·m)"
+        next: leak_test
+        tags: ["waste_time"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.2 }
+      - key: overtighten
+        label: "Crank it hard (> 2.5 N·m) so it never leaks again"
+        next: leak_test
+        tags: ["waste_time"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.3 }
+      - key: torque_band
+        label: "Tighten within 1.2–1.8 N·m torque window"
+        next: leak_test
+        tags: ["correct"]
+        penalty: { seconds: 8, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  leak_test:
+    type: choice
+    prompt: "Open water; run a 60-second leak observation. Result?"
+    options:
+      - key: leak_persists
+        label: "Drip persists at thread"
+        next: remediation
+        tags: ["waste_time"]
+        penalty: { seconds: 60, mpd_risk: 0.0, rr_risk: 0.2 }
+      - key: no_leak
+        label: "No leak for full 60 seconds"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 60, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  remediation:
+    type: choice
+    prompt: "Leak persists. Best next step?"
+    options:
+      - key: replace_gasket
+        label: "Replace gasket, re-wrap 6x, re-seat, re-torque to 1.2–1.8 N·m"
+        next: leak_test
+        tags: ["correct"]
+        penalty: { seconds: 90, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: order_valve_assembly
+        label: "Order new inlet valve assembly immediately"
+        next: end_order
+        tags: ["unnecessary_part"]
+        penalty: { seconds: 30, mpd_risk: 0.7, rr_risk: 0.1 }
+
+  hose_path:
+    type: choice
+    prompt: "Hose crack suspected. Best plan?"
+    options:
+      - key: replace_hose
+        label: "Replace hose; verify seating; torque band; 60-sec leak test"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 120, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: tape_the_crack
+        label: "Wrap outer crack with PTFE tape and return"
+        next: end_fail
+        tags: ["rr_risk"]
+        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.6 }
+
+  end_pass:
+    type: end
+    prompt: "PASS: No leak; job complete."
+
+  end_order:
+    type: end
+    prompt: "Ordered part: ensure evidence & approval. (MPD risk likely increased.)"
+
+  end_fail:
+    type: end
+    prompt: "FAIL: Temporary fix will likely cause repeat repair."
+
+injectors:
+  - when_node: remediation
+    chance: 1.0
+    add_options:
+      - key: order_inlet_valve_fast
+        label: "Order inlet valve (expedite) — skip further checks"
+        next: end_order
+        tags: ["unnecessary_part"]
+        penalty: { seconds: 30, mpd_risk: 0.7, rr_risk: 0.1 }
+
+  - when_node: inspect_leak_site
+    chance: 0.6
+    add_options:
+      - key: order_whole_assembly_now
+        label: "Order whole inlet assembly now (just to be safe)"
+        next: end_order
+        tags: ["unnecessary_part"]
+        penalty: { seconds: 20, mpd_risk: 0.6, rr_risk: 0.1 }

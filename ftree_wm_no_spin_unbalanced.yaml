@@ -1,0 +1,129 @@
+# ftree_wm_no_spin_unbalanced.yaml
+meta:
+  id: WM_TL_NO_SPIN_BALANCE_V1
+  title: "WM Top-Load: No-Spin / Out-of-Balance — Diagnose Before Replace"
+  version: "1.0"
+
+start: start
+
+nodes:
+  start:
+    type: choice
+    prompt: "Symptom: No spin / frequent unbalance aborts. First checks?"
+    options:
+      - key: safe_lid
+        label: "Confirm lid-closed sensor & latch engagement"
+        next: lid_check
+        tags: ["correct"]
+        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: skip_to_motor
+        label: "Skip directly to motor replacement plan"
+        next: end_order
+        tags: ["unnecessary_part"]
+        penalty: { seconds: 10, mpd_risk: 0.7, rr_risk: 0.2 }
+
+  lid_check:
+    type: choice
+    prompt: "Lid switch status & continuity?"
+    options:
+      - key: failswitch
+        label: "No continuity when closed / damaged latch"
+        next: replace_lid_switch
+        tags: ["correct"]
+        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: switch_ok
+        label: "Switch OK"
+        next: balance_check
+        tags: ["correct"]
+        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  balance_check:
+    type: choice
+    prompt: "Suspension/level & load distribution?"
+    options:
+      - key: not_level
+        label: "Machine not level / suspension worn"
+        next: rectify_level
+        tags: ["correct"]
+        penalty: { seconds: 25, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: level_ok
+        label: "Level OK, suspension OK"
+        next: belt_coupler_check
+        tags: ["correct"]
+        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  rectify_level:
+    type: choice
+    prompt: "Levelled machine & adjusted suspension. Re-test spin."
+    options:
+      - key: spin_ok
+        label: "Spin OK now"
+        next: end_pass
+        tags: ["correct"]
+        penalty: { seconds: 40, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: still_unbalance
+        label: "Still unbalance / no spin"
+        next: belt_coupler_check
+        tags: ["correct"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  belt_coupler_check:
+    type: choice
+    prompt: "Inspect belt/coupler & basket free rotation."
+    options:
+      - key: worn_coupler
+        label: "Coupler worn / belt slipping — replace"
+        next: end_repair
+        tags: ["correct"]
+        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: mechanical_bind
+        label: "Mechanical bind present — clear obstruction"
+        next: end_repair
+        tags: ["correct"]
+        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: drive_ok
+        label: "Drive OK"
+        next: motor_test
+        tags: ["correct"]
+        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  motor_test:
+    type: choice
+    prompt: "Run motor test; current draw in spec?"
+    options:
+      - key: out_of_spec
+        label: "Out of spec → replace motor with evidence"
+        next: end_repair
+        tags: ["correct"]
+        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
+      - key: in_spec
+        label: "In spec → check control signals / firmware errors"
+        next: end_diag
+        tags: ["correct"]
+        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
+
+  replace_lid_switch:
+    type: end
+    prompt: "Replace lid switch / latch — capture continuity evidence."
+
+  end_repair:
+    type: end
+    prompt: "Repair validated with evidence. Avoided unnecessary parts."
+
+  end_diag:
+    type: end
+    prompt: "Diagnosis complete; proceed with validated next-step (controls)."
+
+  end_order:
+    type: end
+    prompt: "Ordered part without full checks — MPD risk increased."
+
+injectors:
+  - when_node: balance_check
+    chance: 0.6
+    add_options:
+      - key: replace_drum_anyway
+        label: "Replace drum assembly 'to be safe'"
+        next: end_order
+        tags: ["unnecessary_part"]
+        penalty: { seconds: 30, mpd_risk: 0.7, rr_risk: 0.1 }

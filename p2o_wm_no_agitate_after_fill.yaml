@@ -1,0 +1,630 @@
+
+# p2o_wm_no_agitate_after_fill.yaml
+meta:
+  id: "WM_TL_NO_AGITATE_AFTER_FILL_V1"
+  title: "WM Top-Load: Fills but No Agitation/Tumble — Diagnose Before Replace"
+  version: "1.0"
+  language: ["en","hi"]
+  sku_scope: ["<SKU1>","<SKU2>"]
+  sheet:
+    spreadsheet_id: "<PUT_GOOGLE_SHEET_ID>"
+    sheet_name: "P2O_Responses"
+  drive:
+    folder_id: "<PUT_DRIVE_FOLDER_ID>"
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: "{FAULT}-{SKU}-{RAND5}"
+    token_field: "GateToken"
+
+start: "p1_siphon_check"
+
+steps:
+  - id: "p1_siphon_check"
+    type: "action"
+    prompt:
+      en: "Inspect drain hose for siphoning: ensure air gap at standpipe, hose depth 4–6 in, outlet above water level."
+      hi: "ड्रेन होज़ की सिफ़निंग जाँचें: स्टैंडपाइप में एयर गैप, होज़ 4–6 इंच गहराई, आउटलेट पानी के स्तर से ऊपर।"
+    ui:
+      control: "chips"
+      options:
+        - "Air gap present (not sealed)"
+        - "Depth 4–6 inches in standpipe"
+        - "Outlet above tub water level"
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of hose at standpipe showing air gap and depth."
+        hi: "एयर गैप और गहराई दिखाता हुआ स्टैंडपाइप पर होज़ का फोटो।"
+    require_pass: true
+    validation:
+      min_selected: 2
+    next: "p1_rinse_spin_verify"
+
+  - id: "p1_fix_siphon"
+    type: "action"
+    prompt:
+      en: "Correct the drain hose installation (create air gap, set depth 4–6 in, raise outlet)."
+      hi: "ड्रेन होज़ इंस्टॉलेशन सही करें (एयर गैप, 4–6 इंच गहराई, आउटलेट ऊपर)।"
+    ui:
+      control: "radio"
+      options: ["Done as instructed"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo after fix: hose depth & air gap clearly visible."
+        hi: "सुधार के बाद का फोटो: गहराई और एयर गैप स्पष्ट।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p1_rinse_spin_verify"
+
+  - id: "p1_rinse_spin_verify"
+    type: "verify"
+    prompt:
+      en: "Run a short Rinse & Spin. Verify that water holds until pump activation (no siphoning)."
+      hi: "शॉर्ट रिंस & स्पिन चलाएँ। पंप चालू होने तक पानी रुका रहे (सिफ़निंग नहीं)।"
+    ui:
+      control: "radio"
+      options:
+        - "Holds water until pump activates (PASS)"
+        - "Still siphoning (FAIL)"
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo during hold phase (no outflow) or brief clip if possible."
+        hi: "होल्ड चरण का फोटो (कोई बहाव नहीं) या छोटा क्लिप।"
+    require_pass: true
+    validation:
+      one_of: ["Holds water until pump activates (PASS)"]
+    branches:
+      - when: "selection == 'Still siphoning (FAIL)'"
+        next: "p1_fix_siphon"
+    next: "p1_master_reset_unplug"
+
+  - id: "p1_master_reset_unplug"
+    type: "precheck"
+    prompt:
+      en: "Master reset: unplug for 5 minutes. Discharge logic by holding Start/Pause for 10s while unplugged."
+      hi: "मास्टर रीसेट: 5 मिनट के लिए प्लग हटाएँ। अनप्लग रहते Start/Pause 10s दबाएँ।"
+    ui:
+      control: "timer"
+      seconds: 300
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo showing plug removed from wall outlet."
+        hi: "वॉल आउटलेट से प्लग हटे होने का फोटो।"
+    require_pass: true
+    validation:
+      min_seconds: 300
+    next: "p1_master_reset_voltage"
+
+  - id: "p1_master_reset_voltage"
+    type: "measure"
+    prompt:
+      en: "After reconnection, measure wall outlet voltage (expect 210–250 V) and verify proper grounding."
+      hi: "री-कनेक्शन के बाद वॉल आउटलेट वोल्टेज (210–250 V) और ग्राउंडिंग जाँचें।"
+    ui:
+      control: "numeric"
+      units: "V"
+      range: [210, 250]
+      decimals: 1
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Close-up photo of meter reading at outlet."
+        hi: "आउटलेट पर मीटर रीडिंग का क्लोज-अप फोटो।"
+    require_pass: true
+    validation:
+      min: 210
+      max: 250
+    next: "p1_lid_strike_alignment"
+
+  - id: "p1_lid_strike_alignment"
+    type: "action"
+    prompt:
+      en: "Inspect lid/door strike alignment. Tighten/adjust so strike fully engages lock."
+      hi: "लिड/डोर स्ट्राइक एलाइन्मेंट जाँचें। पूरी एंगेजमेंट हेतु कसें/एडजस्ट करें।"
+    ui:
+      control: "radio"
+      options: ["Adjusted & aligned"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of strike/lock area showing proper alignment."
+        hi: "सही एलाइन्मेंट दिखाता हुआ स्ट्राइक/लॉक क्षेत्र का फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p2_pressure_tube_inspect"
+
+  - id: "p2_pressure_tube_inspect"
+    type: "action"
+    prompt:
+      en: "Open panel; inspect clear pressure tube between tub air chamber and pressure switch (pop-off/kink/hole/clog)."
+      hi: "पैनल खोलें; टब एयर चैंबर से प्रेशर स्विच तक की ट्यूब (पॉप-ऑफ/किंक/होल/क्लॉग) जाँचें।"
+    ui:
+      control: "radio"
+      options:
+        - "Tube clear & connected"
+        - "Issue found (pop-off/kink/hole/clog)"
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of tube routing and connections."
+        hi: "ट्यूब राउटिंग और कनेक्शन का फोटो।"
+    require_pass: true
+    validation:
+      one_of: ["Tube clear & connected","Issue found (pop-off/kink/hole/clog)"]
+    branches:
+      - when: "selection == 'Issue found (pop-off/kink/hole/clog)'"
+        next: "p2_tube_fix"
+    next: "p2_pswitch_test_empty"
+
+  - id: "p2_tube_fix"
+    type: "action"
+    prompt:
+      en: "Fix tube: reconnect/un-kink; blow towards tub to clear sediment; replace if holed."
+      hi: "ट्यूब ठीक करें: री-कनेक्ट/किंक हटाएँ; सेडिमेंट हटाने को टब की ओर फूँकें; होल हो तो बदलें।"
+    ui:
+      control: "radio"
+      options: ["Done as instructed"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo after fix showing seated tube without kinks."
+        hi: "किंक रहित सीटेड ट्यूब का सुधार-बाद फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p2_pswitch_test_empty"
+
+  - id: "p2_pswitch_test_empty"
+    type: "photo"
+    prompt:
+      en: "Pressure switch test (EMPTY): with tub empty, verify continuity between EMPTY and COM terminals."
+      hi: "प्रेशर स्विच (EMPTY): टब खाली पर EMPTY और COM टर्मिनलों में कंटिन्युटी सत्यापित करें।"
+    ui:
+      control: "radio"
+      options: ["Continuity present (beep/0Ω)","No continuity"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of meter leads on EMPTY-COM and display (0Ω or beep)."
+        hi: "EMPTY‑COM पर मीटर लीड और 0Ω/बीप दिखाता फोटो।"
+    require_pass: true
+    validation:
+      one_of: ["Continuity present (beep/0Ω)"]
+    next: "p2_pswitch_test_full"
+
+  - id: "p2_pswitch_test_full"
+    type: "photo"
+    prompt:
+      en: "Pressure switch test (FULL): gently apply air; continuity should switch to FULL and COM."
+      hi: "प्रेशर स्विच (FULL): हल्का एयर; कंटिन्युटी FULL‑COM पर शिफ्ट होनी चाहिए।"
+    ui:
+      control: "radio"
+      options: ["Switched to FULL‑COM (PASS)","No switch (FAIL)"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of meter leads on FULL‑COM and display."
+        hi: "FULL‑COM पर मीटर और डिस्प्ले दिखाता फोटो।"
+    require_pass: true
+    validation:
+      one_of: ["Switched to FULL‑COM (PASS)"]
+    branches:
+      - when: "selection == 'No switch (FAIL)'"
+        next: "p2_replace_pswitch"
+    next: "p2_lid_lock_intro"
+
+  - id: "p2_replace_pswitch"
+    type: "action"
+    prompt:
+      en: "Replace the Pressure Switch / Water Level Sensor."
+      hi: "प्रेशर स्विच / वाटर लेवल सेंसर बदलें।"
+    ui:
+      control: "radio"
+      options: ["Replaced"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of the new part installed and connected."
+        hi: "नए पार्ट के इंस्टॉल और कनेक्ट होने का फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p2_small_load_verify"
+
+  - id: "p2_small_load_verify"
+    type: "verify"
+    prompt:
+      en: "Run a Small Load cycle. Confirm water stops at correct level (no overflow)."
+      hi: "स्मॉल लोड चलाएँ। पानी सही स्तर पर रुकता है (ओवरफ्लो नहीं)।"
+    ui:
+      control: "radio"
+      options: ["Level correct (PASS)","Not stopping / overflow (FAIL)"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo at water stop level indicator."
+        hi: "वॉटर स्टॉप स्तर का फोटो।"
+    require_pass: true
+    validation:
+      one_of: ["Level correct (PASS)"]
+    next: "p2_lid_lock_intro"
+
+  - id: "p2_lid_lock_intro"
+    type: "note"
+    prompt:
+      en: "Lid/Door Lock Assembly checks — continuity & coil resistance."
+      hi: "लिड/डोर लॉक असेंबली जाँच — कंटिन्युटी और कॉयल रेसिस्टेंस।"
+    ui:
+      control: "none"
+    evidence:
+      required: false
+      capture: "none"
+    require_pass: false
+    next: "p2_lid_continuity"
+
+  - id: "p2_lid_continuity"
+    type: "photo"
+    prompt:
+      en: "Mechanical switch: continuity when lid closed (beep)."
+      hi: "मैकेनिकल स्विच: लिड बंद पर कंटिन्युटी (बीप)।"
+    ui:
+      control: "radio"
+      options: ["Continuity present (PASS)","No continuity (FAIL)"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of probes at switch connector and meter display/beep indicator."
+        hi: "स्विच कनेक्टर पर प्रोब और मीटर बीप/डिस्प्ले का फोटो।"
+    require_pass: true
+    validation:
+      one_of: ["Continuity present (PASS)"]
+    next: "p2_lid_coil_res"
+
+  - id: "p2_lid_coil_res"
+    type: "measure"
+    prompt:
+      en: "Magnetic/electronic lock: coil resistance (expect 50–150 Ω)."
+      hi: "मैग्नेटिक/इलेक्ट्रॉनिक लॉक: कॉयल रेसिस्टेंस (50–150 Ω)।"
+    ui:
+      control: "numeric"
+      units: "Ω"
+      range: [50, 150]
+      decimals: 1
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of meter reading and probe placement on lock coil."
+        hi: "लॉक कॉयल पर प्रोब और मीटर रीडिंग का फोटो।"
+    require_pass: true
+    validation:
+      min: 50
+      max: 150
+    next: "p2_lid_evaluate"
+
+  - id: "p2_lid_evaluate"
+    type: "quiz"
+    prompt:
+      en: "Evaluate results."
+      hi: "परिणाम का मूल्यांकन करें।"
+    ui:
+      control: "radio"
+      options:
+        - "Continuity OK and coil within 50–150 Ω"
+        - "No continuity when closed"
+        - "Coil open (OL) or out of spec"
+    evidence:
+      required: false
+      capture: "none"
+    require_pass: true
+    validation:
+      one_of: ["Continuity OK and coil within 50–150 Ω","No continuity when closed","Coil open (OL) or out of spec"]
+    branches:
+      - when: "selection == 'No continuity when closed'"
+        next: "p2_replace_lid_lock"
+      - when: "selection == 'Coil open (OL) or out of spec'"
+        next: "p2_replace_lid_lock"
+    next: "p2_cap_applicability"
+
+  - id: "p2_replace_lid_lock"
+    type: "action"
+    prompt:
+      en: "Replace Lid Lock Assembly (do not bypass for safety)."
+      hi: "लिड लॉक असेंबली बदलें (सुरक्षा हेतु बायपास न करें)।"
+    ui:
+      control: "radio"
+      options: ["Replaced"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of new lock assembly installed; connector seated."
+        hi: "नई लॉक असेंबली इंस्टॉल और कनेक्टर फिट का फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p2_spin_lock_verify"
+
+  - id: "p2_spin_lock_verify"
+    type: "verify"
+    prompt:
+      en: "Start a spin test. Confirm the mechanical lock prevents lid opening."
+      hi: "स्पिन टेस्ट शुरू करें। सुनिश्चित करें लॉक लिड खोलने से रोकता है।"
+    ui:
+      control: "radio"
+      options: ["Lock prevents opening (PASS)","Opens (FAIL)"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo/video showing lock engaged during spin."
+        hi: "स्पिन के दौरान लॉक एंगेज का फोटो/वीडियो।"
+    require_pass: true
+    validation:
+      one_of: ["Lock prevents opening (PASS)"]
+    next: "p2_cap_applicability"
+
+  - id: "p2_cap_applicability"
+    type: "quiz"
+    prompt:
+      en: "Is this a non‑inverter motor model (has a start capacitor)?"
+      hi: "क्या यह नॉन‑इन्वर्टर मोटर मॉडल है (स्टार्ट कैपेसिटर है)?"
+    ui:
+      control: "radio"
+      options: ["Yes (non‑inverter with capacitor)","No (inverter motor)"]
+    evidence:
+      required: false
+      capture: "none"
+    require_pass: true
+    validation:
+      one_of: ["Yes (non‑inverter with capacitor)","No (inverter motor)"]
+    branches:
+      - when: "selection == 'Yes (non‑inverter with capacitor)'"
+        next: "p2_cap_measure"
+      - when: "selection == 'No (inverter motor)'"
+        next: "p2_drive_mechanics"
+    next: null
+
+  - id: "p2_cap_measure"
+    type: "measure"
+    prompt:
+      en: "Discharge capacitor safely. Measure capacitance and compare to label (accept ±10%)."
+      hi: "कैपेसिटर डिस्चार्ज करें। कैपेसिटेंस मापें; लेबल से ±10% स्वीकार।"
+    ui:
+      control: "numeric"
+      units: "µF"
+      decimals: 1
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of meter uF reading and the label showing rated µF."
+        hi: "मीटर uF रीडिंग और लेबल µF दिखाता फोटो।"
+    require_pass: true
+    validation:
+      within_percent_of_label: 10
+    next: "p2_drive_mechanics"
+
+  - id: "p2_replace_capacitor"
+    type: "action"
+    prompt:
+      en: "Replace Motor Start Capacitor."
+      hi: "मोटर स्टार्ट कैपेसिटर बदलें।"
+    ui:
+      control: "radio"
+      options: ["Replaced"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of new capacitor installed; wiring correct."
+        hi: "नया कैपेसिटर इंस्टॉल और सही वायरींग का फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p2_drive_mechanics"
+
+  - id: "p2_drive_mechanics"
+    type: "action"
+    prompt:
+      en: "Inspect mechanical drive: belt condition/tension or direct-drive coupler integrity."
+      hi: "मैकेनिकल ड्राइव: बेल्ट स्थिति/टेंशन या डायरेक्ट‑ड्राइव कपलर अखंडता जाँचें।"
+    ui:
+      control: "radio"
+      options:
+        - "Belt broken/shredded"
+        - "Coupler snapped"
+        - "Both OK"
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of belt/coupler and overall mechanism."
+        hi: "बेल्ट/कपलर और मैकेनिज्म का फोटो।"
+    require_pass: true
+    validation:
+      one_of: ["Belt broken/shredded","Coupler snapped","Both OK"]
+    branches:
+      - when: "selection == 'Belt broken/shredded'"
+        next: "p2_replace_belt_coupler"
+      - when: "selection == 'Coupler snapped'"
+        next: "p2_replace_belt_coupler"
+    next: "p2_pcb_input_voltage"
+
+  - id: "p2_replace_belt_coupler"
+    type: "action"
+    prompt:
+      en: "Replace the failed drive element (belt or coupler). Set belt deflection to ~1/2 inch."
+      hi: "फेल ड्राइव एलिमेंट (बेल्ट/कपलर) बदलें। बेल्ट डिफ्लेक्शन ~1/2 इंच रखें।"
+    ui:
+      control: "radio"
+      options: ["Replaced & tension set"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of new belt/coupler; show tension check."
+        hi: "नया बेल्ट/कपलर और टेंशन चेक का फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p2_pcb_input_voltage"
+
+  - id: "p2_pcb_input_voltage"
+    type: "measure"
+    prompt:
+      en: "Verify PCB input voltage (expect 210–250 V)."
+      hi: "PCB इनपुट वोल्टेज (210–250 V) सत्यापित करें।"
+    ui:
+      control: "numeric"
+      units: "V"
+      range: [210, 250]
+      decimals: 1
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of probes on PCB input and meter display."
+        hi: "PCB इनपुट पर प्रोब और मीटर डिस्प्ले का फोटो।"
+    require_pass: true
+    validation:
+      min: 210
+      max: 250
+    next: "p2_motor_output_test"
+
+  - id: "p2_motor_output_test"
+    type: "quiz"
+    prompt:
+      en: "Set machine to SPIN. Is voltage present at motor output pins? (Refer to tech sheet for model specifics.)"
+      hi: "मशीन को SPIN पर रखें। मोटर आउटपुट पिनों पर वोल्टेज है? (मॉडल स्पेसिफिक के अनुसार)"
+    ui:
+      control: "radio"
+      options: ["Yes, output present","No output (board not driving)"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of probes on motor output and meter display."
+        hi: "मोटर आउटपुट पर प्रोब और मीटर डिस्प्ले का फोटो।"
+    require_pass: true
+    validation:
+      one_of: ["Yes, output present","No output (board not driving)"]
+    branches:
+      - when: "selection == 'No output (board not driving)'"
+        next: "p2_replace_pcb"
+    next: "p3_final_replaced_parts"
+
+  - id: "p2_replace_pcb"
+    type: "action"
+    prompt:
+      en: "Replace Main Control Board (PCB). Transfer EEPROM/config as per model."
+      hi: "मुख्य कंट्रोल बोर्ड (PCB) बदलें। EEPROM/कनफ़िग ट्रांसफर करें।"
+    ui:
+      control: "radio"
+      options: ["Replaced"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of new PCB installed; connectors seated."
+        hi: "नया PCB इंस्टॉल और कनेक्टर फिट का फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p3_final_replaced_parts"
+
+  - id: "p3_final_replaced_parts"
+    type: "quiz"
+    prompt:
+      en: "Select any parts replaced in this repair."
+      hi: "इस मरम्मत में बदले गए पार्ट्स चुनें।"
+    ui:
+      control: "chips"
+      options:
+        - "Pressure Switch"
+        - "Pressure Tube"
+        - "Lid Lock Assembly"
+        - "Start Capacitor"
+        - "Belt/Coupler"
+        - "Main PCB"
+        - "None"
+    evidence:
+      required: false
+      capture: "none"
+    require_pass: true
+    validation:
+      min_selected: 1
+    branches:
+      - when: "selected_contains('Pressure Switch') or selected_contains('Pressure Tube')" 
+        next: "p3_leak_check"
+    next: "p3_calibration"
+
+  - id: "p3_leak_check"
+    type: "verify"
+    prompt:
+      en: "After pressure circuit work, run a 60‑second leak/overfill observation."
+      hi: "प्रेशर सर्किट कार्य के बाद 60 सेकंड लीक/ओवरफिल निरीक्षण करें।"
+    ui:
+      control: "timer"
+      seconds: 60
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo near 60s showing stable water level (no leak/overfill)."
+        hi: "60 सेकंड के पास स्थिर जल स्तर का फोटो (लीक/ओवरफिल नहीं)।"
+    require_pass: true
+    validation:
+      min_seconds: 60
+    next: "p3_calibration"
+
+  - id: "p3_calibration"
+    type: "action"
+    prompt:
+      en: "Enter Service Mode and run Calibration cycle (especially after motor/PCB changes)."
+      hi: "सर्विस मोड में जाकर कैलिब्रेशन चलाएँ (विशेषकर मोटर/PCB बदलने के बाद)।"
+    ui:
+      control: "radio"
+      options: ["Calibration completed"]
+    evidence:
+      required: true
+      capture: "photo"
+      instructions:
+        en: "Photo of Service Mode/Calibration screen or code."
+        hi: "सर्विस मोड/कैलिब्रेशन स्क्रीन/कोड का फोटो।"
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: "p3_final_note"
+
+  - id: "p3_final_note"
+    type: "note"
+    prompt:
+      en: "All mandatory checks completed. A Gate Token will be issued on finalization."
+      hi: "सभी अनिवार्य जाँचें पूरी। अंतिम चरण पर Gate Token जारी होगा।"
+    ui:
+      control: "none"
+    evidence:
+      required: false
+      capture: "none"
+    require_pass: false
+    next: null
