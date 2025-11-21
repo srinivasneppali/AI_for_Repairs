@@ -11,9 +11,9 @@ import requests
 import streamlit as st
 import yaml
 
-# -----------------------------
+# -------------------------------
 # Config
-# -----------------------------
+# -------------------------------
 st.set_page_config(
     page_title="Interactive Fault Tree + Proof-to-Order",
     layout="centered",
