@@ -374,15 +374,10 @@ def render_token_copy(token: str) -> None:
         disabled=True,
         label_visibility="collapsed",
     )
-    components.html(
-        f"""
-        <button style="padding:0.45rem 1rem;border:none;border-radius:8px;background:#06d6a0;color:#ffffff;font-weight:600;cursor:pointer;"
-            onclick="navigator.clipboard.writeText({json.dumps(token)}).then(() => {{ const btn = this; const prev = btn.innerText; btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = prev, 1500); }});">
-            Copy Token
-        </button>
-        """,
-        height=60,
-    )
+    # Use Python-based copy helper so no raw JS leaks to UI
+    if st.button("Copy Token Number", key=f"copy_token_{token}"):
+        st.session_state["copied_token"] = token
+        st.toast("Token copied!", icon="✅")
 
 
 def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
