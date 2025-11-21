@@ -542,7 +542,6 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                 st.success(f"Gate Token: **{token}**")
                 st.caption("Paste this token in Strider Notes until API integration.")
         else:
-            resp = resp or {}
             detail = resp.get("text") or resp.get("status_code")
             detail_msg = (
                 f"{resp.get('error')} ({detail})" if detail else resp.get("error")
