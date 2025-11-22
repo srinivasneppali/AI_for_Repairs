@@ -32,7 +32,7 @@ INPUT_VALUE_PREFIX = "ctrl_value_"
 INPUT_LABEL_PREFIX = "ctrl_label_"
 BASE_DIR = Path(__file__).resolve().parent
 CAMERA_CAPTURE_ENABLED = (
-    os.getenv("ENABLE_CAMERA_CAPTURE", "true").strip().lower() == "true"
+    os.getenv("ENABLE_CAMERA_CAPTURE", "false").strip().lower() == "true"
 )
 
 SPINNER_COLOR = os.getenv("SPINNER_COLOR", "#dc0d3a")
@@ -598,23 +598,39 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     st.success("Photo captured.")
                     if st.button(f"Retake photo - {part}", key=f"retake_{slug}"):
                         part_photos.pop(part, None)
+                        st.session_state.pop(f"cam_pref_{slug}", None)
                         st.rerun()
                 else:
-                    capture_file = None
+                    upload = None
+                    cam = None
+                    cam_pref_key = f"cam_pref_{slug}"
+                    use_camera = st.session_state.get(cam_pref_key, False)
                     if CAMERA_CAPTURE_ENABLED:
-                        capture_file = st.camera_input(
-                            f"Capture {part} (camera)", key=f"cam_{slug}"
+                        if use_camera:
+                            cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
+                            if st.button(
+                                f"Use gallery/upload for {part}", key=f"closecam_{slug}"
+                            ):
+                                st.session_state[cam_pref_key] = False
+                                st.rerun()
+                        else:
+                            st.caption(
+                                "Need a live photo? Tap below to open your device camera."
+                            )
+                            if st.button(
+                                f"Use camera for {part}", key=f"opencam_{slug}"
+                            ):
+                                st.session_state[cam_pref_key] = True
+                                st.rerun()
+                    upload = cam
+                    if upload is None:
+                        upload = st.file_uploader(
+                            f"Upload photo for {part}",
+                            type=["jpg", "jpeg", "png"],
+                            key=f"upload_{slug}",
                         )
-                    else:
-                        st.caption("Camera disabled for this session; upload a photo instead.")
-                    upload_file = st.file_uploader(
-                        f"Or upload photo for {part}",
-                        type=["jpg", "jpeg", "png"],
-                        key=f"upload_{slug}",
-                    )
-                    capture = capture_file or upload_file
-                    if capture:
-                        encoded, mime = b64_of_uploaded(capture)
+                    if upload:
+                        encoded, mime = b64_of_uploaded(upload)
                         if encoded:
                             part_photos[part] = {
                                 "photo_b64": encoded,
@@ -669,16 +685,10 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
             }
 
             resp = None
-            tip_placeholder = st.empty()
             try:
-                with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
-                    tip_placeholder.markdown(
-                        "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
-                        unsafe_allow_html=True,
-                    )
-                    resp = post_step_log(P2O_ENDPOINT, payload)
+                resp = post_step_log(P2O_ENDPOINT, payload)
                 if resp.get("ok", True):
-                    token = resp.get("token", "(no token – endpoint not set)")
+                    token = resp.get("token", "(no token — endpoint not set)")
                     st.session_state.final_token = token
                     st.session_state.flow_status["finalized"] = True
                     st.success("Gate token generated successfully.")
@@ -698,8 +708,6 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     detail = resp.get("text") or resp.get("status_code")
                 detail_msg = f"{base_err} ({detail})" if detail else base_err
                 st.error(f"Finalize failed: {detail_msg}")
-            finally:
-                tip_placeholder.empty()
     else:
         token = token or "(no token ? endpoint not set)"
         st.success("Gate token generated successfully.")
@@ -1280,10 +1288,14 @@ def jeeves_spinner(
         ph.empty()
 
 if go_next:
-    tip_placeholder = st.empty()
+    
+    # SPINNER_COLOR should be defined earlier, e.g. SPINNER_COLOR = "#d2e40b"
     with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", SPINNER_COLOR):
-        tip_placeholder.markdown(
-            "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
+        # This renders *under* the spinner line
+        st.markdown(
+            "<div class='spinner-tip' style='margin-top:10px; font-size:0.95rem;'>"
+            "✨ Uploading evidence, updating logs, and loading the next action..."
+            "</div>",
             unsafe_allow_html=True,
         )
         elapsed = None
@@ -1396,4 +1408,3 @@ if go_next:
                     }
                     st.session_state["_scroll_target"] = "top"
                     st.rerun()
-    tip_placeholder.empty()
