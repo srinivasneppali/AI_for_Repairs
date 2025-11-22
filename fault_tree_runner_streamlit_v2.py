@@ -1239,26 +1239,50 @@ if go_back and len(st.session_state.visited_stack) > 1:
 
 from contextlib import contextmanager
 
+from contextlib import contextmanager
+import streamlit as st
+
 @contextmanager
-def jeeves_spinner(text="Syncing...", color="#d2e40b"):
+def jeeves_spinner(
+    text: str = "🚀 Syncing your step with Jeeves Cloud...",
+    color: str = "#e6d81e",      # <-- set any color here or per-call
+    size_px: int = 22,           # ring diameter
+    thickness_px: int = 3,       # ring border thickness
+    speed_sec: float = 0.75      # rotation speed
+):
+    """
+    A reliable, brandable spinner that doesn't rely on Streamlit's built-in spinner.
+    Color/size are controlled via CSS variables on the wrapper, so each instance can differ.
+    """
     html = f"""
+    <div class="jeeves-spinner-wrap"
+         style="--spin-color:{color};
+                --spin-size:{size_px}px;
+                --spin-thickness:{thickness_px}px;
+                --spin-speed:{speed_sec}s;
+                display:flex;align-items:center;gap:.5rem;">
+
+      <span class="jeeves-spinner"
+            style="width:var(--spin-size);height:var(--spin-size);
+                   border:var(--spin-thickness) solid rgba(255,255,255,.25);
+                   border-top-color:var(--spin-color);
+                   border-radius:50%;
+                   display:inline-block;vertical-align:middle;
+                   animation:jeeves-spin var(--spin-speed) linear infinite;"></span>
+
+      <span>{text}</span>
+    </div>
+
     <style>
-    .jeeves-spin::before {{
-      content: "";
-      width: 22px; height: 22px; margin-right: .5rem;
-      border: 3px solid rgba(255,255,255,0.25);
-      border-top-color: {color};
-      border-radius: 50%; display: inline-block; vertical-align: middle;
-      animation: jeeves-spin 0.75s linear infinite;
-    }}
-    @keyframes jeeves-spin {{ to {{ transform: rotate(360deg); }} }}
+      @keyframes jeeves-spin {{ to {{ transform: rotate(360deg); }} }}
     </style>
-    <div class="jeeves-spin"></div><span>{text}</span>
     """
     ph = st.empty()
     ph.markdown(html, unsafe_allow_html=True)
-    try: yield
-    finally: ph.empty()
+    try:
+        yield
+    finally:
+        ph.empty()
 
 if go_next:
     
