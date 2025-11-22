@@ -86,19 +86,13 @@ def normalize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
 def count_progress_steps(nodes: Dict[str, Any], second_visit: bool = False) -> int:
     if not nodes:
         return 1
-    required = [nid for nid, node in nodes.items() if node.get("require_pass")]
-    if required:
-        if second_visit:
-            filtered = [nid for nid in required if nid.startswith("p0_second")]
-            if filtered:
-                return len(filtered)
-        else:
-            filtered = [nid for nid in required if not nid.startswith("p0_second")]
-            if filtered:
-                return len(filtered)
-    if required:
-        return len(required)
-    return len(nodes)
+    # Count all actionable nodes (anything that isn't a terminal end state)
+    actionable = [
+        nid
+        for nid, node in nodes.items()
+        if node.get("type") not in {"end"}
+    ]
+    return max(len(actionable), 1)
 
 
 def reset_tree_progress(tree: Dict[str, Any]) -> None:
@@ -760,6 +754,22 @@ st.markdown(
         background: #d63031;
         border-color: #d63031;
     }
+    .spinner-tip {
+        margin-top: 0.6rem;
+        padding: 0.55rem 0.9rem;
+        border-radius: 10px;
+        background: linear-gradient(120deg, #ff9a3c, #ff3864);
+        color: #ffffff;
+        font-weight: 700;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        animation: pulseGlow 1.8s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 0 6px rgba(255, 152, 60, 0.6); }
+        50% { box-shadow: 0 0 16px rgba(255, 56, 100, 0.9); }
+        100% { box-shadow: 0 0 6px rgba(255, 152, 60, 0.6); }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -1111,7 +1121,11 @@ if go_back and len(st.session_state.visited_stack) > 1:
     st.rerun()
 
 if go_next:
-    with st.spinner("Submitting step..."):
+    with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
+        st.markdown(
+            "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
+            unsafe_allow_html=True,
+        )
         elapsed = None
         if ctrl == "timer":
             elapsed = timer_elapsed_for(node_id)
