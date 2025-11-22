@@ -32,7 +32,7 @@ INPUT_VALUE_PREFIX = "ctrl_value_"
 INPUT_LABEL_PREFIX = "ctrl_label_"
 BASE_DIR = Path(__file__).resolve().parent
 CAMERA_CAPTURE_ENABLED = (
-    os.getenv("ENABLE_CAMERA_CAPTURE", "false").strip().lower() == "true"
+    os.getenv("ENABLE_CAMERA_CAPTURE", "true").strip().lower() == "true"
 )
 
 SPINNER_COLOR = os.getenv("SPINNER_COLOR", "#dc0d3a")
@@ -604,12 +604,14 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     upload = None
                     cam = None
                     cam_pref_key = f"cam_pref_{slug}"
-                    use_camera = st.session_state.get(cam_pref_key, False)
+                    if cam_pref_key not in st.session_state:
+                        st.session_state[cam_pref_key] = bool(CAMERA_CAPTURE_ENABLED)
+                    use_camera = st.session_state[cam_pref_key]
                     if CAMERA_CAPTURE_ENABLED:
                         if use_camera:
                             cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
                             if st.button(
-                                f"Use gallery/upload for {part}", key=f"closecam_{slug}"
+                                f"Prefer gallery/upload for {part}", key=f"closecam_{slug}"
                             ):
                                 st.session_state[cam_pref_key] = False
                                 st.rerun()
