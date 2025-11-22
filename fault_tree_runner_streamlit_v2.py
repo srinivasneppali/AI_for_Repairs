@@ -589,13 +589,34 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     st.success("Photo captured.")
                     if st.button(f"Retake photo - {part}", key=f"retake_{slug}"):
                         part_photos.pop(part, None)
+                        st.session_state.pop(f"cam_pref_{slug}", None)
                         st.rerun()
                 else:
-                    cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
+                    upload = None
+                    cam = None
+                    cam_pref_key = f"cam_pref_{slug}"
+                    use_camera = st.session_state.get(cam_pref_key, False)
+                    if CAMERA_CAPTURE_ENABLED:
+                        if use_camera:
+                            cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
+                            if st.button(
+                                f"Use gallery/upload for {part}", key=f"closecam_{slug}"
+                            ):
+                                st.session_state[cam_pref_key] = False
+                                st.rerun()
+                        else:
+                            st.caption(
+                                "Need a live photo? Tap below to open your device camera."
+                            )
+                            if st.button(
+                                f"Use camera for {part}", key=f"opencam_{slug}"
+                            ):
+                                st.session_state[cam_pref_key] = True
+                                st.rerun()
                     upload = cam
                     if upload is None:
                         upload = st.file_uploader(
-                            f"Or upload photo for {part}",
+                            f"Upload photo for {part}",
                             type=["jpg", "jpeg", "png"],
                             key=f"upload_{slug}",
                         )
@@ -800,6 +821,18 @@ st.markdown(
 
 if ACCESS_PIN:
     pin_in = st.text_input("Access PIN", type="password")
+    if pin_in:
+        components.html(
+            """
+            <script>
+            const active = window.parent.document.activeElement;
+            if (active && active.tagName === 'INPUT') {
+                active.blur();
+            }
+            </script>
+            """,
+            height=0,
+        )
     if pin_in != ACCESS_PIN:
         st.stop()
 
