@@ -1,164 +1,367 @@
-# ftree_wm_drain_blockage.yaml
 meta:
-  id: WM_TL_DRAIN_BLOCKAGE_V1
-  title: "WM Top-Load: No-Drain / Drain Slow â€” Diagnose Before Replace"
-  version: "1.0"
-
-start: start
-
+  id: WM_TL_DRAIN_BLOCKAGE_P2O_V1
+  title: 'WM Top-Load: No-Drain / Drain Slow - Diagnose & Proof-to-Order'
+  version: '2.0'
+  language:
+  - en
+  sku_scope:
+  - WM TL Drain Pump Platform
+  sheet:
+    spreadsheet_id: <PUT_GOOGLE_SHEET_ID>
+    sheet_name: P2O_Responses
+  drive:
+    folder_id: <PUT_DRIVE_FOLDER_ID>
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+    token_field: GateToken
+  recommended_parts:
+  - Drain Pump Assembly
+  - Drain Hose Kit
+  - Tub Pressure Switch
+  - Main Control PCB
+start: p0_visit_type
 nodes:
-  start:
-    type: choice
-    prompt: "Symptom: Water not draining / drains very slowly. What's first?"
-    options:
-      - key: safe_isolate
-        label: "Power off; unplug; ensure water level is safe; prepare towels"
-        next: inspect_filter
-        tags: ["correct"]
-        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: skip_safety
-        label: "Skip safety and start dismantling to save time"
-        next: inspect_filter
-        tags: ["unsafe"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.4 }
-
-  inspect_filter:
-    type: choice
-    prompt: "Check lint filter/coin-trap & inlet of drain pump. Observation?"
-    options:
-      - key: clogged
-        label: "Visible lint/coins/debris blocking the inlet"
-        next: clean_and_test
-        tags: ["correct"]
-        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: clear
-        label: "Looks clear"
-        next: hose_check
-        tags: ["correct"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  hose_check:
-    type: choice
-    prompt: "Inspect drain hose: height (â‰¤ 96 cm), kinks, freeze, sharp bends."
-    options:
-      - key: kink_bend_height_issue
-        label: "Kink/bend or outlet height too high"
-        next: rectify_hose
-        tags: ["correct"]
-        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: hose_ok
-        label: "Hose looks OK"
-        next: pump_test
-        tags: ["correct"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  rectify_hose:
-    type: choice
-    prompt: "Rectify hose path/height. Re-test drain."
-    options:
-      - key: drains_ok_after_rectify
-        label: "Drains properly now"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: still_slow
-        label: "Still slow / no drain"
-        next: pump_test
-        tags: ["correct"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  pump_test:
-    type: choice
-    prompt: "Run drain/pump test. Sound & current draw? (use clamp-meter if available)"
-    options:
-      - key: humming_no_flow
-        label: "Pump hums but no flow (likely obstruction/impeller jam)"
-        next: open_pump
-        tags: ["correct"]
-        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: silent_no_current
-        label: "Silent & 0 A (electrical open/connector issue)"
-        next: electrical_check
-        tags: ["correct"]
-        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: runs_with_flow
-        label: "Pump runs with good flow"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  open_pump:
-    type: choice
-    prompt: "Open pump; inspect impeller & chamber. Findings?"
-    options:
-      - key: jam_found_cleared
-        label: "Foreign object jammed impeller â€” cleared"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 60, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: impeller_broken
-        label: "Impeller broken / shaft play excessive"
-        next: replace_pump
-        tags: ["correct"]
-        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  electrical_check:
-    type: choice
-    prompt: "Check connector continuity and coil resistance as per spec."
-    options:
-      - key: connector_loose
-        label: "Loose/oxidized connector â€” reseated/cleaned"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 40, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: coil_open
-        label: "Coil open/out of spec"
-        next: replace_pump
-        tags: ["correct"]
-        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  clean_and_test:
-    type: choice
-    prompt: "Cleaned debris; reassembled. Retest drain."
-    options:
-      - key: drains_now_ok
-        label: "Drains properly now"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 40, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: still_issue
-        label: "Still slow"
-        next: hose_check
-        tags: ["correct"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  replace_pump:
+  p0_visit_type:
+    id: p0_visit_type
+    type: decision
+    prompt:
+      en: Select visit type to load the appropriate troubleshooting path.
+    ui:
+      control: radio
+      options:
+      - First visit - Diagnose & troubleshoot
+      - Second visit - Replace ordered part
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - First visit - Diagnose & troubleshoot
+      - Second visit - Replace ordered part
+    resolution_prompt: false
+    branches:
+    - when: selection == 'First visit - Diagnose & troubleshoot'
+      next: p1_safety_lockout
+    - when: selection == 'Second visit - Replace ordered part'
+      next: p0_second_visit_intro
+  p0_second_visit_intro:
+    id: p0_second_visit_intro
+    type: note
+    prompt:
+      en: Second visit workflow — confirm safety, prep the area, and replace only the approved part.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    next: p0_second_visit_precheck
+  p0_second_visit_precheck:
+    id: p0_second_visit_precheck
+    type: action
+    prompt:
+      en: Power off the washer, verify lockout/tagout, drain residual water, and remove the failed part.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    resolution_prompt: false
+    validation:
+      confirm_required: true
+    next: p0_second_visit_install
+  p0_second_visit_install:
+    id: p0_second_visit_install
+    type: verify
+    prompt:
+      en: Install the ordered part, reassemble, and run rinse/spin to confirm proper drain flow and no leaks.
+    ui:
+      control: radio
+      options:
+      - Verified drain after replacement
+      - Issue persists after replacement
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    resolution_prompt: false
+    validation:
+      one_of:
+      - Verified drain after replacement
+      - Issue persists after replacement
+    branches:
+    - when: selection == 'Issue persists after replacement'
+      next: p0_restart_full_flow
+    next: p3_final_readout
+  p0_restart_full_flow:
+    id: p0_restart_full_flow
+    type: note
+    prompt:
+      en: Issue still present. Please re-run the complete troubleshooting path from step 1.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    force_restart: true
+    next: p1_safety_lockout
+  p1_safety_lockout:
+    id: p1_safety_lockout
+    type: action
+    prompt:
+      en: Disconnect power, close water supply, and ensure tub is safe to access. Lay absorbent towels before opening.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: p1_manual_drain
+  p1_manual_drain:
+    id: p1_manual_drain
+    type: action
+    prompt:
+      en: Drain standing water via service hose/bucket so components can be inspected safely.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    next: p1_filter_check
+  p1_filter_check:
+    id: p1_filter_check
+    type: decision
+    prompt:
+      en: Inspect lint filter/coin trap and pump inlet. What do you observe?
+    ui:
+      control: radio
+      options:
+      - Debris or coins obstructing inlet
+      - Chamber looks clean
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Capture the filter bowl and inlet area clearly.
+    validation:
+      one_of:
+      - Debris or coins obstructing inlet
+      - Chamber looks clean
+    branches:
+    - when: selection == 'Debris or coins obstructing inlet'
+      next: p1_clean_filter
+    next: p2_hose_siphon_check
+  p1_clean_filter:
+    id: p1_clean_filter
+    type: action
+    prompt:
+      en: Remove all debris, rinse the filter, inspect impeller cavity, and reinstall the filter assembly.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: p1_filter_retest
+  p1_filter_retest:
+    id: p1_filter_retest
+    type: verify
+    prompt:
+      en: Run a drain/rinse cycle with filter installed. Did water evacuate normally?
+    ui:
+      control: radio
+      options:
+      - Drain restored after cleaning
+      - Still draining slowly
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Drain restored after cleaning
+      - Still draining slowly
+    branches:
+    - when: selection == 'Drain restored after cleaning'
+      next: p3_final_readout
+    next: p2_hose_siphon_check
+  p2_hose_siphon_check:
+    id: p2_hose_siphon_check
+    type: action
+    prompt:
+      en: Inspect drain hose routing — confirm air gap at standpipe, depth 4–6 inches, outlet above tub water level, and no kinks/bends.
+    ui:
+      control: chips
+      options:
+      - Air gap present at standpipe
+      - Depth set between 4 and 6 inches
+      - Outlet above tub water level
+      - No kinks/bends/freezing
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Show hose entry at standpipe plus any corrections performed.
+    validation:
+      min_selected: 2
+    next: p2_hose_rectify
+  p2_hose_rectify:
+    id: p2_hose_rectify
+    type: action
+    prompt:
+      en: Rectify hose issues (trim or raise hose, add anti-siphon gap, remove kinks) and secure with clamp.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    next: p2_hose_retest
+  p2_hose_retest:
+    id: p2_hose_retest
+    type: verify
+    prompt:
+      en: After hose corrections, run a quick drain/spin. Result?
+    ui:
+      control: radio
+      options:
+      - Drain working after hose fix
+      - No improvement
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Drain working after hose fix
+      - No improvement
+    branches:
+    - when: selection == 'Drain working after hose fix'
+      next: p3_final_readout
+    next: p3_pump_test
+  p3_pump_test:
+    id: p3_pump_test
+    type: decision
+    prompt:
+      en: Run drain/pump test. Listen and measure current draw.
+    ui:
+      control: radio
+      options:
+      - Pump hums but no flow (suspect obstruction)
+      - Pump silent / 0 A (electrical fault)
+      - Pump runs with good flow
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Pump hums but no flow (suspect obstruction)
+      - Pump silent / 0 A (electrical fault)
+      - Pump runs with good flow
+    branches:
+    - when: selection == 'Pump hums but no flow (suspect obstruction)'
+      next: p3_open_pump
+    - when: selection == 'Pump silent / 0 A (electrical fault)'
+      next: p3_electrical_checks
+    next: p3_final_readout
+  p3_open_pump:
+    id: p3_open_pump
+    type: action
+    prompt:
+      en: Remove pump cover, inspect impeller, and clear obstructions. Document impeller condition.
+    ui:
+      control: confirm
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Close-up of impeller/pump chamber showing findings.
+    next: p3_impeller_outcome
+  p3_impeller_outcome:
+    id: p3_impeller_outcome
+    type: verify
+    prompt:
+      en: After clearing, what is the impeller condition?
+    ui:
+      control: radio
+      options:
+      - Jam cleared; impeller intact
+      - Impeller damaged or shaft play excessive
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Jam cleared; impeller intact
+      - Impeller damaged or shaft play excessive
+    branches:
+    - when: selection == 'Jam cleared; impeller intact'
+      next: p3_final_readout
+    next: p3_replace_pump_recommend
+  p3_electrical_checks:
+    id: p3_electrical_checks
+    type: action
+    prompt:
+      en: Check pump connector continuity, harness seating, and coil resistance (per service manual spec).
+    ui:
+      control: confirm
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Photo of meter reading or repaired connector.
+    next: p3_electrical_outcome
+  p3_electrical_outcome:
+    id: p3_electrical_outcome
+    type: verify
+    prompt:
+      en: Electrical findings?
+    ui:
+      control: radio
+      options:
+      - Connector cleaned/reseated and continuity restored
+      - Coil open/out of spec
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Connector cleaned/reseated and continuity restored
+      - Coil open/out of spec
+    branches:
+    - when: selection == 'Connector cleaned/reseated and continuity restored'
+      next: p3_final_readout
+    next: p3_replace_pump_recommend
+  p3_replace_pump_recommend:
+    id: p3_replace_pump_recommend
+    type: note
+    prompt:
+      en: Findings support pump replacement. Attach resistance/evidence photos and proceed to order if issue persists.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    next: p3_final_readout
+  p3_final_readout:
+    id: p3_final_readout
+    type: note
+    prompt:
+      en: All mandatory checks completed. Document outcome, capture part photos if ordering, then finalize to generate gate token.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    next: completion_ready
+  completion_ready:
+    id: completion_ready
     type: end
-    prompt: "Diagnosis supports pump replacement. Capture evidence (photo + resistance reading)."
-
-  end_pass:
-    type: end
-    prompt: "PASS: Root cause found and resolved without unnecessary parts."
-
-  end_order:
-    type: end
-    prompt: "Ordered a part without sufficient evidence â€” MPD risk increased."
-
-injectors:
-  - when_node: pump_test
-    chance: 1.0
-    add_options:
-      - key: order_pump_now
-        label: "Order pump immediately (skip checks)"
-        next: end_order
-        tags: ["unnecessary_part"]
-        penalty: { seconds: 30, mpd_risk: 0.6, rr_risk: 0.1 }
-
-  - when_node: inspect_filter
-    chance: 0.7
-    add_options:
-      - key: replace_hose_anyway
-        label: "Replace drain hose 'just in case'"
-        next: end_order
-        tags: ["unnecessary_part"]
-        penalty: { seconds: 20, mpd_risk: 0.5, rr_risk: 0.0 }
+    prompt:
+      en: All checks logged. Recommended parts to order if symptoms persist after actions above.
