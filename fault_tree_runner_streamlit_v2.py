@@ -497,11 +497,7 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
         st.info("This branch requires re-running the full troubleshooting flow if the issue persists.")
         st.session_state[choice_key] = "No"
 
-    continue_col, stop_col = st.columns([3, 1])
-    if stop_col.button("Stop Session"):
-        reset_full_session()
-
-    if continue_col.button("Submit Resolution Decision", type="primary"):
+    if st.button("Submit Resolution Decision", type="primary"):
         st.session_state.pending_resolution = None
         if choice == "Yes":
             st.session_state.flow_status = {
@@ -1108,123 +1104,118 @@ with action_col:
     go_next = st.button(
         "Submit Step", type="primary", use_container_width=True, key=f"submit_{node_id}"
     )
-stop_here = st.button(
-    "Stop Session", use_container_width=True, key=f"stop_{node_id}"
-)
 
 if go_back and len(st.session_state.visited_stack) > 1:
     st.session_state.visited_stack.pop()
     st.session_state.node_id = st.session_state.visited_stack[-1]
     st.rerun()
 
-if stop_here:
-    reset_full_session()
-
 if go_next:
-    elapsed = None
-    if ctrl == "timer":
-        elapsed = timer_elapsed_for(node_id)
+    with st.spinner("Submitting step..."):
+        elapsed = None
+        if ctrl == "timer":
+            elapsed = timer_elapsed_for(node_id)
 
-    ok, message = validate_node(node, val, elapsed_sec=elapsed, extra=step_extra)
-    if not ok:
-        st.error(message)
-    elif evidence_required_now and not photo_b64:
-        st.error("Evidence required — please capture or upload a photo.")
-    else:
-        st.session_state.passed[node_id] = True
-        st.session_state.answers[node_id] = {
-            "value": val,
-            "label_value": step_extra.get("label_value"),
-            "elapsed_sec": elapsed,
-        }
-        log_entry = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "step_id": node_id,
-            "step_label": step_label(node, lang),
-            "value": val,
-            "elapsed_sec": elapsed,
-            "photo_attached": bool(photo_b64),
-        }
-        log_local_step(log_entry)
-
-        sku_value = st.session_state.case.get("sku", "") or "NA"
-        payload = {
-            "flow_id": meta.get("id", ""),
-            "case_id": st.session_state.case.get("case_id", ""),
-            "sku": sku_value,
-            "st_id": st.session_state.case.get("st_id", ""),
-                "step_id": node_id,
-            "step_label": step_label(node, lang),
-            "answers": st.session_state.answers.get(node_id, {}),
-            "pass": True,
-            "photo_b64": photo_b64,
-            "photo_mime": photo_mime,
-            "finalize": False,
-            "all_steps_valid": False,
-            "token_pattern": (meta.get("gating") or {}).get(
-                "token_pattern", "{FAULT}-{SKU}-{RAND5}"
-            ),
-            "fault_code": fault_code_from_meta(meta.get("id", "")),
-        }
-        resp = post_step_log(P2O_ENDPOINT, payload)
-        if not resp.get("ok", True):
-            st.warning(f"Log post failed: {resp.get('error')}")
-
-        part_tag = node.get("part_tag")
-        if part_tag:
-            st.session_state.parts_used.add(part_tag)
-
-        prompt_allowed = wants_resolution_prompt(node)
-        if node_id == tree.get("start") and isinstance(val, str):
-            st.session_state.second_visit_mode = (
-                "Second visit - Replace ordered part" in val
-            )
-            st.session_state.path_total_steps = count_progress_steps(
-                nodes, st.session_state.second_visit_mode
-            )
-
-        selection = val if isinstance(val, str) else None
-        selected_list = val if isinstance(val, list) else []
-        next_id = eval_branches(node, selection, selected_list) or node.get("next")
-        reset_timer_for(node_id)
-        final_entry = None
-        if not next_id:
-            gating = meta.get("gating") or {}
-            require_all = bool(gating.get("require_all_steps", True))
-            all_valid = True
-            if require_all:
-                for nid, n in nodes.items():
-                    if n.get("require_pass") and not st.session_state.passed.get(nid):
-                        all_valid = False
-                        break
-            st.session_state.path_total_steps = max(
-                st.session_state.path_total_steps, current_step_number
-            )
-            final_entry = {"final_all_valid": all_valid}
-        if node.get("force_restart"):
-            st.session_state.flow_status = {
-                "type": "restart",
-                "node_id": node_id,
-            }
-            st.rerun()
-        if prompt_allowed:
-            st.session_state.pending_resolution = {
-                "prev_node": node_id,
-                "next_node": next_id,
-                "force_restart": bool(node.get("force_restart")),
-                "second_visit_mode": bool(st.session_state.second_visit_mode),
-                **(final_entry or {}),
-            }
-            st.rerun()
+        ok, message = validate_node(node, val, elapsed_sec=elapsed, extra=step_extra)
+        if not ok:
+            st.error(message)
+        elif evidence_required_now and not photo_b64:
+            st.error("Evidence required - please capture or upload a photo.")
         else:
-            if next_id:
-                st.session_state.visited_stack.append(next_id)
-                st.session_state.node_id = next_id
-                st.rerun()
-            else:
+            st.session_state.passed[node_id] = True
+            st.session_state.answers[node_id] = {
+                "value": val,
+                "label_value": step_extra.get("label_value"),
+                "elapsed_sec": elapsed,
+            }
+            log_entry = {
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "step_id": node_id,
+                "step_label": step_label(node, lang),
+                "value": val,
+                "elapsed_sec": elapsed,
+                "photo_attached": bool(photo_b64),
+            }
+            log_local_step(log_entry)
+
+            sku_value = st.session_state.case.get("sku", "") or "NA"
+            payload = {
+                "flow_id": meta.get("id", ""),
+                "case_id": st.session_state.case.get("case_id", ""),
+                "sku": sku_value,
+                "st_id": st.session_state.case.get("st_id", ""),
+                "step_id": node_id,
+                "step_label": step_label(node, lang),
+                "answers": st.session_state.answers.get(node_id, {}),
+                "pass": True,
+                "photo_b64": photo_b64,
+                "photo_mime": photo_mime,
+                "finalize": False,
+                "all_steps_valid": False,
+                "token_pattern": (meta.get("gating") or {}).get(
+                    "token_pattern", "{FAULT}-{SKU}-{RAND5}"
+                ),
+                "fault_code": fault_code_from_meta(meta.get("id", "")),
+            }
+            resp = post_step_log(P2O_ENDPOINT, payload)
+            if not resp.get("ok", True):
+                st.warning(f"Log post failed: {resp.get('error')}")
+
+            part_tag = node.get("part_tag")
+            if part_tag:
+                st.session_state.parts_used.add(part_tag)
+
+            prompt_allowed = wants_resolution_prompt(node)
+            if node_id == tree.get("start") and isinstance(val, str):
+                st.session_state.second_visit_mode = (
+                    "Second visit - Replace ordered part" in val
+                )
+                st.session_state.path_total_steps = count_progress_steps(
+                    nodes, st.session_state.second_visit_mode
+                )
+
+            selection = val if isinstance(val, str) else None
+            selected_list = val if isinstance(val, list) else []
+            next_id = eval_branches(node, selection, selected_list) or node.get("next")
+            reset_timer_for(node_id)
+            final_entry = None
+            if not next_id:
+                gating = meta.get("gating") or {}
+                require_all = bool(gating.get("require_all_steps", True))
+                all_valid = True
+                if require_all:
+                    for nid, n in nodes.items():
+                        if n.get("require_pass") and not st.session_state.passed.get(nid):
+                            all_valid = False
+                            break
+                st.session_state.path_total_steps = max(
+                    st.session_state.path_total_steps, current_step_number
+                )
+                final_entry = {"final_all_valid": all_valid}
+            if node.get("force_restart"):
                 st.session_state.flow_status = {
-                    "type": "completed",
+                    "type": "restart",
                     "node_id": node_id,
-                    "all_valid": (final_entry or {}).get("final_all_valid", True),
                 }
                 st.rerun()
+            if prompt_allowed:
+                st.session_state.pending_resolution = {
+                    "prev_node": node_id,
+                    "next_node": next_id,
+                    "force_restart": bool(node.get("force_restart")),
+                    "second_visit_mode": bool(st.session_state.second_visit_mode),
+                    **(final_entry or {}),
+                }
+                st.rerun()
+            else:
+                if next_id:
+                    st.session_state.visited_stack.append(next_id)
+                    st.session_state.node_id = next_id
+                    st.rerun()
+                else:
+                    st.session_state.flow_status = {
+                        "type": "completed",
+                        "node_id": node_id,
+                        "all_valid": (final_entry or {}).get("final_all_valid", True),
+                    }
+                    st.rerun()
