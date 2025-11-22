@@ -598,41 +598,23 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     st.success("Photo captured.")
                     if st.button(f"Retake photo - {part}", key=f"retake_{slug}"):
                         part_photos.pop(part, None)
-                        st.session_state.pop(f"cam_pref_{slug}", None)
                         st.rerun()
                 else:
-                    upload = None
-                    cam = None
-                    cam_pref_key = f"cam_pref_{slug}"
-                    if cam_pref_key not in st.session_state:
-                        st.session_state[cam_pref_key] = bool(CAMERA_CAPTURE_ENABLED)
-                    use_camera = st.session_state[cam_pref_key]
+                    capture_file = None
                     if CAMERA_CAPTURE_ENABLED:
-                        if use_camera:
-                            cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
-                            if st.button(
-                                f"Prefer gallery/upload for {part}", key=f"closecam_{slug}"
-                            ):
-                                st.session_state[cam_pref_key] = False
-                                st.rerun()
-                        else:
-                            st.caption(
-                                "Need a live photo? Tap below to open your device camera."
-                            )
-                            if st.button(
-                                f"Use camera for {part}", key=f"opencam_{slug}"
-                            ):
-                                st.session_state[cam_pref_key] = True
-                                st.rerun()
-                    upload = cam
-                    if upload is None:
-                        upload = st.file_uploader(
-                            f"Upload photo for {part}",
-                            type=["jpg", "jpeg", "png"],
-                            key=f"upload_{slug}",
+                        capture_file = st.camera_input(
+                            f"Capture {part} (camera)", key=f"cam_{slug}"
                         )
-                    if upload:
-                        encoded, mime = b64_of_uploaded(upload)
+                    else:
+                        st.caption("Camera disabled for this session; upload a photo instead.")
+                    upload_file = st.file_uploader(
+                        f"Or upload photo for {part}",
+                        type=["jpg", "jpeg", "png"],
+                        key=f"upload_{slug}",
+                    )
+                    capture = capture_file or upload_file
+                    if capture:
+                        encoded, mime = b64_of_uploaded(capture)
                         if encoded:
                             part_photos[part] = {
                                 "photo_b64": encoded,
@@ -688,9 +670,14 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 
             resp = None
             try:
-                resp = post_step_log(P2O_ENDPOINT, payload)
+                with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
+                    st.markdown(
+                        "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
+                        unsafe_allow_html=True,
+                    )
+                    resp = post_step_log(P2O_ENDPOINT, payload)
                 if resp.get("ok", True):
-                    token = resp.get("token", "(no token — endpoint not set)")
+                    token = resp.get("token", "(no token – endpoint not set)")
                     st.session_state.final_token = token
                     st.session_state.flow_status["finalized"] = True
                     st.success("Gate token generated successfully.")
