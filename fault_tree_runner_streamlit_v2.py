@@ -985,12 +985,18 @@ if not node:
 components.html(
     """
     <script>
-    const section = window.parent.document.querySelector('section.main');
-    if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-        window.parent.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    const doScroll = () => {
+        const main = window.parent.document.querySelector('section.main');
+        if (main) {
+            const rect = main.getBoundingClientRect();
+            const centerOffset = rect.top + window.parent.scrollY - (window.parent.innerHeight / 2) + (rect.height / 2);
+            window.parent.scrollTo({ top: Math.max(centerOffset, 0), behavior: 'smooth' });
+        } else {
+            window.parent.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+    window.parent.requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 200);
     </script>
     """,
     height=0,
