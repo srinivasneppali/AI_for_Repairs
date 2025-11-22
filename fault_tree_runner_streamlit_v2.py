@@ -1249,7 +1249,7 @@ div[data-testid="stSpinner"] div[role="status"]::before {
   width: 22px; height: 22px;
   margin-right: .5rem;
   border: 3px solid rgba(255,255,255,0.25);   /* background arc */
-  border-top-color: #00c8ff;                  /* <-- change color here */
+  border-top-color: #ffc915;                  /* <-- change color here */
   border-radius: 50%;
   display: inline-block;
   vertical-align: middle;
