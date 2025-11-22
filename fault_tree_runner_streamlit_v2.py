@@ -41,7 +41,7 @@ EVIDENCE_COLLECTION_ENABLED = (
     os.getenv("ENABLE_EVIDENCE_UPLOAD", "false").strip().lower() == "true"
 )
 RECOMMENDED_PARTS_KEY = "recommended_parts"
-ISSUE_LABEL_COLOR = os.getenv("ISSUE_LABEL_COLOR", "#ef476f")
+ISSUE_LABEL_COLOR = os.getenv("ISSUE_LABEL_COLOR", "#f00c0c")
 
 
 # -----------------------------
