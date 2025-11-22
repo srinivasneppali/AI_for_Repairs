@@ -756,19 +756,26 @@ st.markdown(
     }
     .spinner-tip {
         margin-top: 0.6rem;
-        padding: 0.55rem 0.9rem;
-        border-radius: 10px;
-        background: linear-gradient(120deg, #ff9a3c, #ff3864);
-        color: #ffffff;
+        padding: 0.55rem 0.95rem;
+        border-radius: 12px;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(147, 197, 253, 0.4);
+        color: #e2e8f0;
         font-weight: 700;
         text-align: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        animation: pulseGlow 1.8s ease-in-out infinite;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35);
+        animation: pulseGlow 2s ease-in-out infinite;
     }
     @keyframes pulseGlow {
-        0% { box-shadow: 0 0 6px rgba(255, 152, 60, 0.6); }
-        50% { box-shadow: 0 0 16px rgba(255, 56, 100, 0.9); }
-        100% { box-shadow: 0 0 6px rgba(255, 152, 60, 0.6); }
+        0% { box-shadow: 0 0 6px rgba(15, 23, 42, 0.5); }
+        50% { box-shadow: 0 0 18px rgba(96, 165, 250, 0.9); }
+        100% { box-shadow: 0 0 6px rgba(15, 23, 42, 0.5); }
+    }
+    .stSpinner > div > div {
+        border-top-color: #60a5fa !important;
+        border-right-color: #1d4ed8 !important;
+        border-bottom-color: #60a5fa !important;
+        border-left-color: rgba(96,165,250,0.4) !important;
     }
     </style>
     """,
@@ -783,7 +790,7 @@ title_colors = {
 }
 title_color = title_colors.get(os.getenv("FLOW_SELECT_COLOR", "yellow").lower(), "#ffd166")
 st.markdown(
-    f"<div class='main-title' style='background:{title_color};padding:0.6rem 1.2rem;border-radius:10px;text-align:center;margin:0.2rem auto 0.6rem auto;max-width:760px;font-size:1.4rem;letter-spacing:0.03em;'>Interactive Troubleshooting - Automated Flow</div>",
+    f"<div class='main-title' style='background:{title_color};padding:0.6rem 1.2rem;border-radius:10px;text-align:center;margin:0.2rem auto 0.6rem auto;max-width:760px;font-size:1.4rem;letter-spacing:0.03em;'>AI based Interactive Troubleshooting - Automated Flow</div>",
     unsafe_allow_html=True,
 )
 st.markdown(
