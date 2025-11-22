@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
+from contextlib import contextmanager
 
 import requests
 import streamlit as st
@@ -42,6 +43,45 @@ EVIDENCE_COLLECTION_ENABLED = (
 )
 RECOMMENDED_PARTS_KEY = "recommended_parts"
 ISSUE_LABEL_COLOR = os.getenv("ISSUE_LABEL_COLOR", "#f00c0c")
+
+
+@contextmanager
+def jeeves_spinner(
+    text: str = "🚀 Syncing your step with Jeeves Cloud...",
+    color: str = "#e6d81e",
+    size_px: int = 22,
+    thickness_px: int = 3,
+    speed_sec: float = 0.75,
+) -> None:
+    """
+    Render a custom spinner so the tech always sees progress feedback during long calls.
+    """
+    html = f"""
+    <div class="jeeves-spinner-wrap"
+         style="--spin-color:{color};
+                --spin-size:{size_px}px;
+                --spin-thickness:{thickness_px}px;
+                --spin-speed:{speed_sec}s;
+                display:flex;align-items:center;gap:.5rem;margin-bottom:0.4rem;">
+      <span class="jeeves-spinner"
+            style="width:var(--spin-size);height:var(--spin-size);
+                   border:var(--spin-thickness) solid rgba(255,255,255,.25);
+                   border-top-color:var(--spin-color);
+                   border-radius:50%;
+                   display:inline-block;
+                   animation:jeeves-spin var(--spin-speed) linear infinite;"></span>
+      <span>{text}</span>
+    </div>
+    <style>
+      @keyframes jeeves-spin {{ to {{ transform: rotate(360deg); }} }}
+    </style>
+    """
+    placeholder = st.empty()
+    placeholder.markdown(html, unsafe_allow_html=True)
+    try:
+        yield
+    finally:
+        placeholder.empty()
 
 
 # -----------------------------
@@ -521,11 +561,11 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
         else:
             next_id = pending.get("next_node")
             if next_id:
-                st.session_state.visited_stack.append(next_id)
-                st.session_state.node_id = next_id
-                st.session_state["_scroll_anchor"] = f"node-{next_id}"
-                st.session_state["_scroll_target"] = "top"
-                st.rerun()
+                    st.session_state.visited_stack.append(next_id)
+                    st.session_state.node_id = next_id
+                    st.session_state["_scroll_anchor"] = f"node-{next_id}"
+                    st.session_state["_scroll_target"] = "top"
+                    st.rerun()
             else:
                 st.session_state.flow_status = {
                     "type": "completed",
@@ -1255,62 +1295,12 @@ if go_back and len(st.session_state.visited_stack) > 1:
     st.session_state.node_id = st.session_state.visited_stack[-1]
     st.rerun()
 
-from contextlib import contextmanager
-
-from contextlib import contextmanager
-import streamlit as st
-
-@contextmanager
-def jeeves_spinner(
-    text: str = "🚀 Syncing your step with Jeeves Cloud...",
-    color: str = "#e6d81e",      # <-- set any color here or per-call
-    size_px: int = 22,           # ring diameter
-    thickness_px: int = 3,       # ring border thickness
-    speed_sec: float = 0.75      # rotation speed
-):
-    """
-    A reliable, brandable spinner that doesn't rely on Streamlit's built-in spinner.
-    Color/size are controlled via CSS variables on the wrapper, so each instance can differ.
-    """
-    html = f"""
-    <div class="jeeves-spinner-wrap"
-         style="--spin-color:{color};
-                --spin-size:{size_px}px;
-                --spin-thickness:{thickness_px}px;
-                --spin-speed:{speed_sec}s;
-                display:flex;align-items:center;gap:.5rem;">
-
-      <span class="jeeves-spinner"
-            style="width:var(--spin-size);height:var(--spin-size);
-                   border:var(--spin-thickness) solid rgba(255,255,255,.25);
-                   border-top-color:var(--spin-color);
-                   border-radius:50%;
-                   display:inline-block;vertical-align:middle;
-                   animation:jeeves-spin var(--spin-speed) linear infinite;"></span>
-
-      <span>{text}</span>
-    </div>
-
-    <style>
-      @keyframes jeeves-spin {{ to {{ transform: rotate(360deg); }} }}
-    </style>
-    """
-    ph = st.empty()
-    ph.markdown(html, unsafe_allow_html=True)
-    try:
-        yield
-    finally:
-        ph.empty()
 
 if go_next:
-    
-    # SPINNER_COLOR should be defined earlier, e.g. SPINNER_COLOR = "#d2e40b"
+    tip_placeholder = st.empty()
     with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", SPINNER_COLOR):
-        # This renders *under* the spinner line
-        st.markdown(
-            "<div class='spinner-tip' style='margin-top:10px; font-size:0.95rem;'>"
-            "✨ Uploading evidence, updating logs, and loading the next action..."
-            "</div>",
+        tip_placeholder.markdown(
+            "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
             unsafe_allow_html=True,
         )
         elapsed = None
@@ -1423,3 +1413,4 @@ if go_next:
                     }
                     st.session_state["_scroll_target"] = "top"
                     st.rerun()
+    tip_placeholder.empty()
