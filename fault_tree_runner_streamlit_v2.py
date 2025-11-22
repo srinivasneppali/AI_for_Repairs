@@ -1277,9 +1277,9 @@ def jeeves_spinner(
         ph.empty()
 
 if go_next:
-    
+    tip_placeholder = st.empty()
     with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", SPINNER_COLOR):
-        st.markdown(
+        tip_placeholder.markdown(
             "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
             unsafe_allow_html=True,
         )
