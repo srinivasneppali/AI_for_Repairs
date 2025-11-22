@@ -814,7 +814,7 @@ if available_flows:
     labels: List[str] = []
     label_to_path: Dict[str, Path] = {}
     seen_labels: Dict[str, int] = {}
-    default_index = 0
+    default_index: Optional[int] = None
     for idx, path in enumerate(available_flows):
         friendly = prettify_flow_label(path)
         label = friendly
@@ -833,21 +833,32 @@ if available_flows:
         f"<div style='font-size:1.2rem;font-weight:800;color:{issue_label_text_color};background:{issue_label_color};padding:0.5rem 0.9rem;border-radius:10px;margin-top:1.2rem;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.15);'>Select troubleshooting issue</div>",
         unsafe_allow_html=True,
     )
-    selected_label = st.selectbox(
-        "",
-        options=labels,
-        index=default_index,
-        label_visibility="collapsed",
-    )
-    chosen_path = label_to_path[selected_label]
-    if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
-        load_flow_from_path(chosen_path)
+    selected_label = None
+    if default_index is not None:
+        selected_label = st.selectbox(
+            "",
+            options=labels,
+            index=default_index,
+            label_visibility="collapsed",
+        )
+    else:
+        selected_label = st.selectbox(
+            "",
+            options=labels,
+            index=None,
+            placeholder="Choose an issue to begin",
+            label_visibility="collapsed",
+        )
+    if selected_label:
+        chosen_path = label_to_path[selected_label]
+        if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
+            load_flow_from_path(chosen_path)
 else:
     st.warning("No YAML flows found in the workspace. Upload one to begin.")
 
 tree = st.session_state.tree
 if not tree:
-    st.info("Upload and load a YAML to begin.")
+    st.info("Choose a troubleshooting issue from the list to get started.")
     st.stop()
 
 nodes = tree.get("nodes") or {}
@@ -970,6 +981,20 @@ node = nodes.get(node_id)
 if not node:
     st.error(f"Node '{node_id}' not found in tree.")
     st.stop()
+
+components.html(
+    """
+    <script>
+    const section = window.parent.document.querySelector('section.main');
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        window.parent.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    </script>
+    """,
+    height=0,
+)
 
 path_total_steps = count_progress_steps(nodes, st.session_state.second_visit_mode)
 st.session_state.path_total_steps = path_total_steps
