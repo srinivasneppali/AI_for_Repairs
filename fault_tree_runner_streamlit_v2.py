@@ -799,10 +799,10 @@ st.markdown(
         100% { box-shadow: 0 0 6px rgba(15, 23, 42, 0.5); }
     }
     .stSpinner > div > div {
-        border-top-color: #60a5fa !important;
-        border-right-color: #1d4ed8 !important;
-        border-bottom-color: #60a5fa !important;
-        border-left-color: rgba(96,165,250,0.4) !important;
+        border-top-color: #f59e0b !important;
+        border-right-color: #f97316 !important;
+        border-bottom-color: #f59e0b !important;
+        border-left-color: rgba(249, 115, 22, 0.4) !important;
     }
     </style>
     """,
