@@ -35,7 +35,7 @@ CAMERA_CAPTURE_ENABLED = (
     os.getenv("ENABLE_CAMERA_CAPTURE", "false").strip().lower() == "true"
 )
 
-SPINNER_COLOR = os.getenv("SPINNER_COLOR", "#e1ef20")
+SPINNER_COLOR = os.getenv("SPINNER_COLOR", "#dc0d3a")
 
 EVIDENCE_COLLECTION_ENABLED = (
     os.getenv("ENABLE_EVIDENCE_UPLOAD", "false").strip().lower() == "true"
