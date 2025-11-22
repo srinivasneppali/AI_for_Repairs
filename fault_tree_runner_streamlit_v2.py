@@ -1238,22 +1238,22 @@ if go_back and len(st.session_state.visited_stack) > 1:
     st.rerun()
 
 if go_next:
-    
+
 # --- Custom Spinner Color CSS ---
 st.markdown("""
-<style>
-div[data-testid="stSpinner"] svg {
-    stroke: #00c8ff !important;
-}
-div[data-testid="stSpinner"] svg {
-    width: 36px !important;
-    height: 36px !important;
-}
-div[data-testid="stSpinner"] svg circle {
-    stroke-width: 4 !important;
-}
-</style>
-""", unsafe_allow_html=True)
+            <style>
+            div[data-testid="stSpinner"] svg {
+            stroke: #00c8ff !important;
+            }
+            div[data-testid="stSpinner"] svg {
+            width: 36px !important;
+            height: 36px !important;
+            }
+            div[data-testid="stSpinner"] svg circle {
+                stroke-width: 4 !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
 
     with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
         st.markdown(
