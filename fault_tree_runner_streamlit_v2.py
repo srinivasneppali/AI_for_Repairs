@@ -727,21 +727,15 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
             }
 
             resp = None
+            spinner_tip = st.empty()
             try:
-                # ---- Spinner UX (exact order) ----
-                spinner_color = SPINNER_COLOR if "SPINNER_COLOR" in globals() else "#e6d81e"
-                with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", spinner_color):
-                    st.markdown(
-                        "<div style='margin-top:10px; font-size:0.95rem;'>"
-                        "✨ Uploading evidence, updating logs, and loading the next action..."
-                        "</div>",
+                with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", SPINNER_COLOR):
+                    spinner_tip.markdown(
+                        "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
                         unsafe_allow_html=True,
                     )
-
-                    # Make the finalize call *inside* spinner
                     resp = post_step_log(P2O_ENDPOINT, payload)
 
-                # ---- Handle response as before ----
                 if resp.get("ok", True):
                     token = resp.get("token", "(no token — endpoint not set)")
                     st.session_state.final_token = token
@@ -762,9 +756,11 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     detail = resp.get("text") or resp.get("status_code")
                 detail_msg = f"{base_err} ({detail})" if detail else base_err
                 st.error(f"Finalize failed: {detail_msg}")
+            finally:
+                spinner_tip.empty()
 
     else:
-        token = token or "(no token ? endpoint not set)"
+        token = token or "(no token — endpoint not set)"
         st.success("Gate token generated successfully.")
         render_token_copy(token)
         st.caption("Paste this token in Strider Notes until API integration.")
