@@ -1237,39 +1237,32 @@ if go_back and len(st.session_state.visited_stack) > 1:
     st.session_state.node_id = st.session_state.visited_stack[-1]
     st.rerun()
 
-# --- Global spinner styling (place near top of the file) ---
-st.markdown("""
-<style>
-/* Hide Streamlit's default spinner graphic */
-div[data-testid="stSpinner"] svg { display: none !important; }
+from contextlib import contextmanager
 
-/* Draw our own ring with your brand color */
-div[data-testid="stSpinner"] div[role="status"]::before {
-  content: "";
-  width: 22px; height: 22px;
-  margin-right: .5rem;
-  border: 3px solid rgba(255,255,255,0.25);   /* background arc */
-  border-top-color: #ffc915;                  /* <-- change color here */
-  border-radius: 50%;
-  display: inline-block;
-  vertical-align: middle;
-  animation: jeeves-spin 0.75s linear infinite;
-}
-
-/* Keep the text aligned with the ring */
-div[data-testid="stSpinner"] div[role="status"] {
-  display: flex; align-items: center;
-}
-
-/* Spin animation */
-@keyframes jeeves-spin { to { transform: rotate(360deg); } }
-</style>
-""", unsafe_allow_html=True)
-
+@contextmanager
+def jeeves_spinner(text="Syncing...", color="#00c8ff"):
+    html = f"""
+    <style>
+    .jeeves-spin::before {{
+      content: "";
+      width: 22px; height: 22px; margin-right: .5rem;
+      border: 3px solid rgba(255,255,255,0.25);
+      border-top-color: {color};
+      border-radius: 50%; display: inline-block; vertical-align: middle;
+      animation: jeeves-spin 0.75s linear infinite;
+    }}
+    @keyframes jeeves-spin {{ to {{ transform: rotate(360deg); }} }}
+    </style>
+    <div class="jeeves-spin"></div><span>{text}</span>
+    """
+    ph = st.empty()
+    ph.markdown(html, unsafe_allow_html=True)
+    try: yield
+    finally: ph.empty()
 
 if go_next:
     
-    with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
+    with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", "#00c8ff"):
         st.markdown(
             "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
             unsafe_allow_html=True,
