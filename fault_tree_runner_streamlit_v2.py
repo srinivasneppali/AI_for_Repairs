@@ -310,6 +310,8 @@ def discover_flow_files() -> List[Path]:
     seen = set()
     for pattern in ("*.yaml", "*.yml"):
         for path in BASE_DIR.glob(pattern):
+            if path.name.lower() == "p2o_flow_schema_v1.yaml":
+                continue
             resolved = path.resolve()
             if resolved not in seen:
                 seen.add(resolved)

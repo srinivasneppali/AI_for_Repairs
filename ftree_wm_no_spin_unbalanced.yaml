@@ -1,129 +1,304 @@
-# ftree_wm_no_spin_unbalanced.yaml
 meta:
   id: WM_TL_NO_SPIN_BALANCE_V1
-  title: "WM Top-Load: No-Spin / Out-of-Balance — Diagnose Before Replace"
-  version: "1.0"
-
-start: start
-
+  title: 'WM Top-Load: No-Spin / Out-of-Balance - Diagnose & Proof-to-Order'
+  version: '2.0'
+  language:
+  - en
+  sku_scope:
+  - WM TL Suspension Platform
+  sheet:
+    spreadsheet_id: <PUT_GOOGLE_SHEET_ID>
+    sheet_name: P2O_Responses
+  drive:
+    folder_id: <PUT_DRIVE_FOLDER_ID>
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+    token_field: GateToken
+  recommended_parts:
+  - Lid Lock / Switch Kit
+  - Suspension Rod Kit
+  - Balance Ring / Dampers
+  - Belt or Motor Coupler
+  - Drive Motor
+  - Main Control PCB
+start: p0_visit_type
 nodes:
-  start:
-    type: choice
-    prompt: "Symptom: No spin / frequent unbalance aborts. First checks?"
-    options:
-      - key: safe_lid
-        label: "Confirm lid-closed sensor & latch engagement"
-        next: lid_check
-        tags: ["correct"]
-        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: skip_to_motor
-        label: "Skip directly to motor replacement plan"
-        next: end_order
-        tags: ["unnecessary_part"]
-        penalty: { seconds: 10, mpd_risk: 0.7, rr_risk: 0.2 }
-
-  lid_check:
-    type: choice
-    prompt: "Lid switch status & continuity?"
-    options:
-      - key: failswitch
-        label: "No continuity when closed / damaged latch"
-        next: replace_lid_switch
-        tags: ["correct"]
-        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: switch_ok
-        label: "Switch OK"
-        next: balance_check
-        tags: ["correct"]
-        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  balance_check:
-    type: choice
-    prompt: "Suspension/level & load distribution?"
-    options:
-      - key: not_level
-        label: "Machine not level / suspension worn"
-        next: rectify_level
-        tags: ["correct"]
-        penalty: { seconds: 25, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: level_ok
-        label: "Level OK, suspension OK"
-        next: belt_coupler_check
-        tags: ["correct"]
-        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  rectify_level:
-    type: choice
-    prompt: "Levelled machine & adjusted suspension. Re-test spin."
-    options:
-      - key: spin_ok
-        label: "Spin OK now"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 40, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: still_unbalance
-        label: "Still unbalance / no spin"
-        next: belt_coupler_check
-        tags: ["correct"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  belt_coupler_check:
-    type: choice
-    prompt: "Inspect belt/coupler & basket free rotation."
-    options:
-      - key: worn_coupler
-        label: "Coupler worn / belt slipping — replace"
-        next: end_repair
-        tags: ["correct"]
-        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: mechanical_bind
-        label: "Mechanical bind present — clear obstruction"
-        next: end_repair
-        tags: ["correct"]
-        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: drive_ok
-        label: "Drive OK"
-        next: motor_test
-        tags: ["correct"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  motor_test:
-    type: choice
-    prompt: "Run motor test; current draw in spec?"
-    options:
-      - key: out_of_spec
-        label: "Out of spec → replace motor with evidence"
-        next: end_repair
-        tags: ["correct"]
-        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: in_spec
-        label: "In spec → check control signals / firmware errors"
-        next: end_diag
-        tags: ["correct"]
-        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  replace_lid_switch:
+  p0_visit_type:
+    id: p0_visit_type
+    type: decision
+    prompt:
+      en: Select visit type to load the appropriate troubleshooting path.
+    ui:
+      control: radio
+      options:
+      - First visit - Diagnose & troubleshoot
+      - Second visit - Replace ordered part
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - First visit - Diagnose & troubleshoot
+      - Second visit - Replace ordered part
+    resolution_prompt: false
+    branches:
+    - when: selection == 'First visit - Diagnose & troubleshoot'
+      next: p1_safety_lockout
+    - when: selection == 'Second visit - Replace ordered part'
+      next: p0_second_visit_intro
+  p0_second_visit_intro:
+    id: p0_second_visit_intro
+    type: note
+    prompt:
+      en: Second visit workflow - confirm safety, prep the area, and replace only the approved part.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    next: p0_second_visit_precheck
+  p0_second_visit_precheck:
+    id: p0_second_visit_precheck
+    type: action
+    prompt:
+      en: Power off washer, verify lockout/tagout, and remove the failed part that was ordered previously.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      confirm_required: true
+    resolution_prompt: false
+    next: p0_second_visit_install
+  p0_second_visit_install:
+    id: p0_second_visit_install
+    type: verify
+    prompt:
+      en: Install the ordered component, reassemble, and run rinse/spin to confirm balance and spin performance.
+    ui:
+      control: radio
+      options:
+      - Verified spin after replacement
+      - Issue persists after replacement
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      one_of:
+      - Verified spin after replacement
+      - Issue persists after replacement
+    branches:
+    - when: selection == 'Issue persists after replacement'
+      next: p0_restart_full_flow
+    next: p4_final_readout
+  p0_restart_full_flow:
+    id: p0_restart_full_flow
+    type: note
+    prompt:
+      en: Issue still present. Please rerun the complete troubleshooting path from step 1 with fresh evidence.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    force_restart: true
+    next: p1_safety_lockout
+  p1_safety_lockout:
+    id: p1_safety_lockout
+    type: action
+    prompt:
+      en: Disconnect power, verify lid locked open safely, and drain any remaining water before spin diagnostics.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: p1_lid_switch_check
+  p1_lid_switch_check:
+    id: p1_lid_switch_check
+    type: action
+    prompt:
+      en: Inspect lid switch/lock assembly. Confirm continuity when lid is closed and capture evidence.
+    ui:
+      control: confirm
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Photo of meter reading or damaged latch area.
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: p1_lid_switch_result
+  p1_lid_switch_result:
+    id: p1_lid_switch_result
+    type: verify
+    prompt:
+      en: Lid switch findings?
+    ui:
+      control: radio
+      options:
+      - Switch failed continuity / latch damaged
+      - Switch/latch OK
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Switch failed continuity / latch damaged
+      - Switch/latch OK
+    branches:
+    - when: selection == 'Switch failed continuity / latch damaged'
+      next: p4_final_readout
+    next: p2_level_suspension
+  p2_level_suspension:
+    id: p2_level_suspension
+    type: action
+    prompt:
+      en: Inspect cabinet level (front/back + side/side), suspension rods/dampers, and load distribution. Document the condition.
+    ui:
+      control: chips
+      options:
+      - Adjusted levelling feet
+      - Suspension wear detected
+      - Load redistributed / basket re-centered
+      - No mechanical issues found
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Photo showing bubble level or worn suspension component.
+    validation:
+      min_selected: 1
+    next: p2_rectify_level
+  p2_rectify_level:
+    id: p2_rectify_level
+    type: action
+    prompt:
+      en: Perform levelling or suspension corrections (replace rods if required) and ensure tub moves freely.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    next: p2_spin_retest
+  p2_spin_retest:
+    id: p2_spin_retest
+    type: verify
+    prompt:
+      en: Run a spin test after suspension/level corrections. Result?
+    ui:
+      control: radio
+      options:
+      - Spin stabilized after corrections
+      - Still unbalanced / no spin
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Spin stabilized after corrections
+      - Still unbalanced / no spin
+    branches:
+    - when: selection == 'Spin stabilized after corrections'
+      next: p4_final_readout
+    next: p3_drive_path
+  p3_drive_path:
+    id: p3_drive_path
+    type: action
+    prompt:
+      en: Inspect belt/coupler, clutch, and basket rotation with power off. Capture evidence before proceeding.
+    ui:
+      control: confirm
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Show worn belt/coupler or obstruction clearing.
+    next: p3_drive_outcome
+  p3_drive_outcome:
+    id: p3_drive_outcome
+    type: verify
+    prompt:
+      en: Drive system result?
+    ui:
+      control: radio
+      options:
+      - Replaced belt/coupler or cleared obstruction
+      - Drive path OK
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Replaced belt/coupler or cleared obstruction
+      - Drive path OK
+    branches:
+    - when: selection == 'Replaced belt/coupler or cleared obstruction'
+      next: p4_final_readout
+    next: p3_motor_test
+  p3_motor_test:
+    id: p3_motor_test
+    type: action
+    prompt:
+      en: Run motor diagnostics (service mode or standalone). Measure current draw and verify control signal.
+    ui:
+      control: confirm
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Photo of meter reading or service screen showing error/current.
+    next: p3_motor_outcome
+  p3_motor_outcome:
+    id: p3_motor_outcome
+    type: verify
+    prompt:
+      en: Motor/control findings?
+    ui:
+      control: radio
+      options:
+      - Motor out-of-spec, replacement justified
+      - Motor OK but control error present
+      - Both motor and control OK
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Motor out-of-spec, replacement justified
+      - Motor OK but control error present
+      - Both motor and control OK
+    branches:
+    - when: selection == 'Motor out-of-spec, replacement justified'
+      next: p4_final_readout
+    - when: selection == 'Motor OK but control error present'
+      next: p4_final_readout
+    next: p4_final_readout
+  p4_final_readout:
+    id: p4_final_readout
+    type: note
+    prompt:
+      en: All mandatory checks completed. Document spin outcome, capture part photos if ordering, then finalize to generate gate token.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    next: completion_ready
+  completion_ready:
+    id: completion_ready
     type: end
-    prompt: "Replace lid switch / latch — capture continuity evidence."
-
-  end_repair:
-    type: end
-    prompt: "Repair validated with evidence. Avoided unnecessary parts."
-
-  end_diag:
-    type: end
-    prompt: "Diagnosis complete; proceed with validated next-step (controls)."
-
-  end_order:
-    type: end
-    prompt: "Ordered part without full checks — MPD risk increased."
-
-injectors:
-  - when_node: balance_check
-    chance: 0.6
-    add_options:
-      - key: replace_drum_anyway
-        label: "Replace drum assembly 'to be safe'"
-        next: end_order
-        tags: ["unnecessary_part"]
-        penalty: { seconds: 30, mpd_risk: 0.7, rr_risk: 0.1 }
+    prompt:
+      en: All checks logged. Recommended parts apply only if spin remains faulty after these diagnostics.

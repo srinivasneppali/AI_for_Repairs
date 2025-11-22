@@ -1,179 +1,311 @@
-# ftree_wm_inlet_leak.yaml
 meta:
   id: WM_TL_INLET_L_PIPE_LEAK_V1
-  title: "WM Top-Load: Inlet L-Pipe Leak â€” Diagnose Before Replace"
-  version: "1.0"
-
-start: start
-
+  title: 'WM Top-Load: Inlet L-Pipe Leak - Diagnose & Proof-to-Order'
+  version: '2.0'
+  language:
+  - en
+  sku_scope:
+  - WM TL Inlet Module Platform
+  sheet:
+    spreadsheet_id: <PUT_GOOGLE_SHEET_ID>
+    sheet_name: P2O_Responses
+  drive:
+    folder_id: <PUT_DRIVE_FOLDER_ID>
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+    token_field: GateToken
+  recommended_parts:
+  - Inlet L-Pipe Kit
+  - Inlet Hose Assembly
+  - Seal & Gasket Pack
+  - Inlet Valve Assembly
+start: p0_visit_type
 nodes:
-  start:
-    type: choice
-    prompt: "Symptom: Water observed near the inlet area. First safe action?"
-    options:
-      - key: do_nothing
-        label: "Proceed without shutting water/power (save time)"
-        next: precond_warn
-        tags: ["unsafe"]
-        penalty: { seconds: 20, mpd_risk: 0.0, rr_risk: 0.6 }
-      - key: safe_isolate
-        label: "Turn OFF water & power; relieve pressure â‰¥5s"
-        next: inspect_leak_site
-        tags: ["correct"]
-        penalty: { seconds: 3, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  precond_warn:
-    type: choice
-    prompt: "Unsafe: Preconditions not met. What now?"
-    options:
-      - key: continue_anyway
-        label: "Continue anyway"
-        next: inspect_leak_site
-        tags: ["unsafe"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.5 }
-      - key: go_back_and_isolate
-        label: "Go back and isolate water/power; relieve pressure"
-        next: inspect_leak_site
-        tags: ["correct"]
-        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  inspect_leak_site:
-    type: choice
-    prompt: "Where exactly is the moisture just before disassembly?"
-    options:
-      - key: thread_interface
-        label: "At thread/seat interface (fitting)"
-        next: check_gasket_and_tape
-        tags: ["correct"]
-        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: hose_outer
-        label: "On hose outer surface / visible crack"
-        next: hose_path
-        tags: ["correct"]
-        penalty: { seconds: 5, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: inside_tub
-        label: "Inside tub only, no external leak"
-        next: wrong_symptom_path
-        tags: ["waste_time"]
-        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.2 }
-
-  wrong_symptom_path:
-    type: choice
-    prompt: "This symptom points elsewhere (not inlet L-pipe)."
-    options:
-      - key: redo_observation
-        label: "Re-check leak location carefully"
-        next: inspect_leak_site
-        tags: ["correct"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  check_gasket_and_tape:
-    type: choice
-    prompt: "Remove the fitting. What do you inspect/prepare?"
-    options:
-      - key: ignore_prep
-        label: "Skip gasket/tape inspection; just tighten harder later"
-        next: reinstall
-        tags: ["waste_time"]
-        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.2 }
-      - key: inspect_prep
-        label: "Inspect gasket; re-wrap male thread with 6 wraps PTFE tape"
-        next: reinstall
-        tags: ["correct"]
-        penalty: { seconds: 15, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  reinstall:
-    type: choice
-    prompt: "Reinstall the L-pipe. Torque strategy?"
-    options:
-      - key: undertorque
-        label: "Hand-tight + slight nudge (likely < 1.0 NÂ·m)"
-        next: leak_test
-        tags: ["waste_time"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.2 }
-      - key: overtighten
-        label: "Crank it hard (> 2.5 NÂ·m) so it never leaks again"
-        next: leak_test
-        tags: ["waste_time"]
-        penalty: { seconds: 10, mpd_risk: 0.0, rr_risk: 0.3 }
-      - key: torque_band
-        label: "Tighten within 1.2â€“1.8 NÂ·m torque window"
-        next: leak_test
-        tags: ["correct"]
-        penalty: { seconds: 8, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  leak_test:
-    type: choice
-    prompt: "Open water; run a 60-second leak observation. Result?"
-    options:
-      - key: leak_persists
-        label: "Drip persists at thread"
-        next: remediation
-        tags: ["waste_time"]
-        penalty: { seconds: 60, mpd_risk: 0.0, rr_risk: 0.2 }
-      - key: no_leak
-        label: "No leak for full 60 seconds"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 60, mpd_risk: 0.0, rr_risk: 0.0 }
-
-  remediation:
-    type: choice
-    prompt: "Leak persists. Best next step?"
-    options:
-      - key: replace_gasket
-        label: "Replace gasket, re-wrap 6x, re-seat, re-torque to 1.2â€“1.8 NÂ·m"
-        next: leak_test
-        tags: ["correct"]
-        penalty: { seconds: 90, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: order_valve_assembly
-        label: "Order new inlet valve assembly immediately"
-        next: end_order
-        tags: ["unnecessary_part"]
-        penalty: { seconds: 30, mpd_risk: 0.7, rr_risk: 0.1 }
-
-  hose_path:
-    type: choice
-    prompt: "Hose crack suspected. Best plan?"
-    options:
-      - key: replace_hose
-        label: "Replace hose; verify seating; torque band; 60-sec leak test"
-        next: end_pass
-        tags: ["correct"]
-        penalty: { seconds: 120, mpd_risk: 0.0, rr_risk: 0.0 }
-      - key: tape_the_crack
-        label: "Wrap outer crack with PTFE tape and return"
-        next: end_fail
-        tags: ["rr_risk"]
-        penalty: { seconds: 30, mpd_risk: 0.0, rr_risk: 0.6 }
-
-  end_pass:
+  p0_visit_type:
+    id: p0_visit_type
+    type: decision
+    prompt:
+      en: Select visit type to load the appropriate troubleshooting path.
+    ui:
+      control: radio
+      options:
+      - First visit - Diagnose & troubleshoot
+      - Second visit - Replace ordered part
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - First visit - Diagnose & troubleshoot
+      - Second visit - Replace ordered part
+    resolution_prompt: false
+    branches:
+    - when: selection == 'First visit - Diagnose & troubleshoot'
+      next: p1_safety_lockout
+    - when: selection == 'Second visit - Replace ordered part'
+      next: p0_second_visit_intro
+  p0_second_visit_intro:
+    id: p0_second_visit_intro
+    type: note
+    prompt:
+      en: Second visit workflow - confirm safety, prep the area, and replace only the approved part.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    next: p0_second_visit_precheck
+  p0_second_visit_precheck:
+    id: p0_second_visit_precheck
+    type: action
+    prompt:
+      en: Power off washer, shut inlet valves, relieve pressure, and remove the failed component.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      confirm_required: true
+    resolution_prompt: false
+    next: p0_second_visit_install
+  p0_second_visit_install:
+    id: p0_second_visit_install
+    type: verify
+    prompt:
+      en: Install the ordered part, reassemble, open valves, and run a 60-second leak observation.
+    ui:
+      control: radio
+      options:
+      - Verified leak resolved after replacement
+      - Issue persists after replacement
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      one_of:
+      - Verified leak resolved after replacement
+      - Issue persists after replacement
+    resolution_prompt: false
+    branches:
+    - when: selection == 'Issue persists after replacement'
+      next: p0_restart_full_flow
+    next: p3_final_readout
+  p0_restart_full_flow:
+    id: p0_restart_full_flow
+    type: note
+    prompt:
+      en: Leak still present. Please re-run the complete troubleshooting path from step 1 and capture new findings.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    force_restart: true
+    resolution_prompt: false
+    next: p1_safety_lockout
+  p1_safety_lockout:
+    id: p1_safety_lockout
+    type: action
+    prompt:
+      en: Disconnect power, close inlet valves, relieve residual pressure, and place absorbent towels.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: p1_leak_capture
+  p1_leak_capture:
+    id: p1_leak_capture
+    type: action
+    prompt:
+      en: Capture a clear photo of the moisture pattern before disassembly.
+    ui:
+      control: upload
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Show the inlet area and leak trail clearly before wiping.
+    next: p1_leak_location
+  p1_leak_location:
+    id: p1_leak_location
+    type: decision
+    prompt:
+      en: Where is the moisture localized?
+    ui:
+      control: radio
+      options:
+      - Thread/seat interface
+      - Hose outer surface or crack
+      - Inside tub only (no external leak)
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Thread/seat interface
+      - Hose outer surface or crack
+      - Inside tub only (no external leak)
+    branches:
+    - when: selection == 'Thread/seat interface'
+      next: p2_thread_preparation
+    - when: selection == 'Hose outer surface or crack'
+      next: p2_hose_plan
+    next: p1_wrong_symptom
+  p1_wrong_symptom:
+    id: p1_wrong_symptom
+    type: note
+    prompt:
+      en: Observation indicates an internal tub leak. Re-check symptom and reload the correct flow before proceeding.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    next: completion_ready
+  p2_thread_preparation:
+    id: p2_thread_preparation
+    type: action
+    prompt:
+      en: Remove the L-pipe fitting, inspect gasket, and apply 6 wraps of PTFE tape to male threads.
+    ui:
+      control: confirm
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Photo of gasket condition or re-wrapped threads.
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: p2_torque_strategy
+  p2_torque_strategy:
+    id: p2_torque_strategy
+    type: verify
+    prompt:
+      en: Torque selection for re-installation?
+    ui:
+      control: radio
+      options:
+      - Tightened within 1.2-1.8 N·m torque window
+      - Hand-tight only (<1.0 N·m)
+      - Over-torqued (>2.5 N·m)
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Tightened within 1.2-1.8 N·m torque window
+      - Hand-tight only (<1.0 N·m)
+      - Over-torqued (>2.5 N·m)
+    branches:
+    - when: selection == 'Tightened within 1.2-1.8 N·m torque window'
+      next: p2_leak_test
+    next: p2_leak_test
+  p2_leak_test:
+    id: p2_leak_test
+    type: verify
+    prompt:
+      en: Open water and run a 60-second leak observation. Result?
+    ui:
+      control: radio
+      options:
+      - No leak for full 60 seconds
+      - Drip persists at thread
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - No leak for full 60 seconds
+      - Drip persists at thread
+    branches:
+    - when: selection == 'No leak for full 60 seconds'
+      next: p3_final_readout
+    next: p2_remediation
+  p2_remediation:
+    id: p2_remediation
+    type: action
+    prompt:
+      en: Replace gasket/seal, re-wrap 6x, reseat, and torque within 1.2-1.8 N·m, then prepare for another leak test.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    require_pass: true
+    validation:
+      confirm_required: true
+    next: p2_leak_test
+  p2_hose_plan:
+    id: p2_hose_plan
+    type: action
+    prompt:
+      en: Inspect hose for cracks or abrasions, replace if damaged, and ensure clamp seating.
+    ui:
+      control: confirm
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: Show damaged section or new hose installation.
+    next: p2_hose_test
+  p2_hose_test:
+    id: p2_hose_test
+    type: verify
+    prompt:
+      en: After hose replacement/adjustment, run a 60-second leak test.
+    ui:
+      control: radio
+      options:
+      - Leak resolved after hose action
+      - Leak persists
+    evidence:
+      required: false
+      capture: none
+    validation:
+      one_of:
+      - Leak resolved after hose action
+      - Leak persists
+    branches:
+    - when: selection == 'Leak resolved after hose action'
+      next: p3_final_readout
+    next: p3_replace_recommend
+  p3_replace_recommend:
+    id: p3_replace_recommend
+    type: note
+    prompt:
+      en: Evidence supports replacing the inlet valve or hose assembly. Capture proof before ordering.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    next: p3_final_readout
+  p3_final_readout:
+    id: p3_final_readout
+    type: note
+    prompt:
+      en: All mandatory checks completed. Document resolution status, capture part photos if ordering, then finalize to generate gate token.
+    ui:
+      control: confirm
+    evidence:
+      required: false
+      capture: none
+    resolution_prompt: false
+    next: completion_ready
+  completion_ready:
+    id: completion_ready
     type: end
-    prompt: "PASS: No leak; job complete."
-
-  end_order:
-    type: end
-    prompt: "Ordered part: ensure evidence & approval. (MPD risk likely increased.)"
-
-  end_fail:
-    type: end
-    prompt: "FAIL: Temporary fix will likely cause repeat repair."
-
-injectors:
-  - when_node: remediation
-    chance: 1.0
-    add_options:
-      - key: order_inlet_valve_fast
-        label: "Order inlet valve (expedite) â€” skip further checks"
-        next: end_order
-        tags: ["unnecessary_part"]
-        penalty: { seconds: 30, mpd_risk: 0.7, rr_risk: 0.1 }
-
-  - when_node: inspect_leak_site
-    chance: 0.6
-    add_options:
-      - key: order_whole_assembly_now
-        label: "Order whole inlet assembly now (just to be safe)"
-        next: end_order
-        tags: ["unnecessary_part"]
-        penalty: { seconds: 20, mpd_risk: 0.6, rr_risk: 0.1 }
+    prompt:
+      en: All checks logged. Recommended parts apply if leak persists after these actions.
