@@ -1033,6 +1033,10 @@ components.html(
     <script>
     const selector = "{target_selector}";
     const doScroll = () => {{
+        if (selector === "body" || selector === "html") {{
+            window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
+            return;
+        }}
         const el = window.parent.document.querySelector(selector) || window.parent.document.querySelector("section.main");
         if (el) {{
             const rect = el.getBoundingClientRect();
