@@ -1244,7 +1244,7 @@ if go_next:
                 <style>
                 /* Customize spinner color */
                 div[data-testid="stSpinner"] svg {
-                    stroke: #00c8ff !important;   /* Change this hex color as desired */
+                    stroke: #ffc915 !important;   /* Change this hex color as desired */
                 }
 
                 /* Optional: spinner size */
