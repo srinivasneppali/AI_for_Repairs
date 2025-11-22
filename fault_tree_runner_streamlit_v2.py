@@ -500,8 +500,7 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
                 "all_valid": True,
                 "resolved_without_parts": not st.session_state.parts_used,
             }
-            st.session_state["_scroll_target"] = "node"
-            st.session_state["_scroll_target"] = "node"
+            st.session_state["_scroll_target"] = "top"
             st.rerun()
         elif force_restart or (
             pending.get("second_visit_mode") and choice == "No"
@@ -514,16 +513,14 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
             st.session_state.path_total_steps = count_progress_steps(
                 tree.get("nodes") or {}, False
             )
-            st.session_state["_scroll_target"] = "node"
-            st.session_state["_scroll_target"] = "node"
+            st.session_state["_scroll_target"] = "top"
             st.rerun()
         else:
             next_id = pending.get("next_node")
             if next_id:
                 st.session_state.visited_stack.append(next_id)
                 st.session_state.node_id = next_id
-                st.session_state["_scroll_target"] = "node"
-                st.session_state["_scroll_target"] = "node"
+                st.session_state["_scroll_target"] = "top"
                 st.rerun()
             else:
                 st.session_state.flow_status = {
@@ -531,8 +528,7 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
                     "node_id": prev_id,
                     "all_valid": pending.get("final_all_valid", True),
                 }
-                st.session_state["_scroll_target"] = "completion"
-                st.session_state["_scroll_target"] = "completion"
+                st.session_state["_scroll_target"] = "top"
                 st.rerun()
     return True
 
@@ -1028,6 +1024,7 @@ scroll_target = st.session_state.pop("_scroll_target", "node")
 selector_map = {
     "node": "section.main",
     "completion": "section.main div[data-testid='stVerticalBlock']:last-child",
+    "top": "body",
 }
 target_selector = selector_map.get(scroll_target, selector_map["node"])
 
