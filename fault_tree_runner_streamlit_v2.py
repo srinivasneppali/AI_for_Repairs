@@ -1240,7 +1240,7 @@ if go_back and len(st.session_state.visited_stack) > 1:
 from contextlib import contextmanager
 
 @contextmanager
-def jeeves_spinner(text="Syncing...", color="#00c8ff"):
+def jeeves_spinner(text="Syncing...", color="#ffc915"):
     html = f"""
     <style>
     .jeeves-spin::before {{
