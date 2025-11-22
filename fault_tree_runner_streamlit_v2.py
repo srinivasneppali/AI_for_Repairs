@@ -32,7 +32,7 @@ INPUT_VALUE_PREFIX = "ctrl_value_"
 INPUT_LABEL_PREFIX = "ctrl_label_"
 BASE_DIR = Path(__file__).resolve().parent
 CAMERA_CAPTURE_ENABLED = (
-    os.getenv("ENABLE_CAMERA_CAPTURE", "false").strip().lower() == "true"
+    os.getenv("ENABLE_CAMERA_CAPTURE", "true").strip().lower() == "true"
 )
 
 SPINNER_COLOR = os.getenv("SPINNER_COLOR", "#dc0d3a")
@@ -585,8 +585,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 
     if photos_required:
         st.warning(
-            "Recommended parts to order if symptoms persist: "
-            + ", ".join(recommended_parts)
+            "Recommended parts to order if symptoms persist: " + ", ".join(recommended_parts)
         )
         st.info("Capture clear photos of each part you plan to order.")
         for part in photos_required:
@@ -598,50 +597,50 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     st.success("Photo captured.")
                     if st.button(f"Retake photo - {part}", key=f"retake_{slug}"):
                         part_photos.pop(part, None)
+                        # reset cam preference so camera opens again by default
                         st.session_state.pop(f"cam_pref_{slug}", None)
                         st.rerun()
                 else:
                     upload = None
                     cam = None
                     cam_pref_key = f"cam_pref_{slug}"
-                    use_camera = st.session_state.get(cam_pref_key, True)
-                    if CAMERA_CAPTURE_ENABLED:
-                        if use_camera:
-                            cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
-                            if st.button(
-                                f"Use gallery/upload for {part}", key=f"closecam_{slug}"
-                            ):
-                                st.session_state[cam_pref_key] = False
-                                st.rerun()
-                        else:
-                            st.caption(
-                                "Need a live photo? Tap below to open your device camera."
-                            )
-                            if st.button(
-                                f"Use camera for {part}", key=f"opencam_{slug}"
-                            ):
+                    # ✅ default to camera ON the first time (if enabled)
+                    default_cam_on = CAMERA_CAPTURE_ENABLED
+                    if cam_pref_key not in st.session_state:
+                        st.session_state[cam_pref_key] = default_cam_on
+
+                    use_camera = st.session_state.get(cam_pref_key, default_cam_on)
+
+                    if CAMERA_CAPTURE_ENABLED and use_camera:
+                        # NOTE: Streamlit cannot force rear camera; the OS/browser picker decides.
+                        # On mobile, switch to rear camera using the native UI toggle.
+                        st.caption("Tip: switch to the rear camera in the picker for part photos.")
+                        cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
+                        if st.button(f"Use gallery/upload for {part}", key=f"closecam_{slug}"):
+                            st.session_state[cam_pref_key] = False
+                            st.rerun()
+                    else:
+                        if CAMERA_CAPTURE_ENABLED:
+                            if st.button(f"Use camera for {part}", key=f"opencam_{slug}"):
                                 st.session_state[cam_pref_key] = True
                                 st.rerun()
-                    upload = cam
-                    if upload is None:
                         upload = st.file_uploader(
                             f"Upload photo for {part}",
                             type=["jpg", "jpeg", "png"],
                             key=f"upload_{slug}",
                         )
+
+                    upload = cam or upload
                     if upload:
                         encoded, mime = b64_of_uploaded(upload)
                         if encoded:
-                            part_photos[part] = {
-                                "photo_b64": encoded,
-                                "photo_mime": mime,
-                            }
+                            part_photos[part] = {"photo_b64": encoded, "photo_mime": mime}
                             st.rerun()
                     else:
                         all_photos_ready = False
 
         if photos_required:
-            all_photos_ready = all(part in part_photos for part in photos_required)
+            all_photos_ready = all(part in part_photos for part in photos_required)  
 
     # -----------------------------
     # Finalize / Gate token
