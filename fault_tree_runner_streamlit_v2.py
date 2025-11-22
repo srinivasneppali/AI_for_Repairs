@@ -500,6 +500,8 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
                 "all_valid": True,
                 "resolved_without_parts": not st.session_state.parts_used,
             }
+            st.session_state["_scroll_target"] = "node"
+            st.session_state["_scroll_target"] = "node"
             st.rerun()
         elif force_restart or (
             pending.get("second_visit_mode") and choice == "No"
@@ -512,12 +514,16 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
             st.session_state.path_total_steps = count_progress_steps(
                 tree.get("nodes") or {}, False
             )
+            st.session_state["_scroll_target"] = "node"
+            st.session_state["_scroll_target"] = "node"
             st.rerun()
         else:
             next_id = pending.get("next_node")
             if next_id:
                 st.session_state.visited_stack.append(next_id)
                 st.session_state.node_id = next_id
+                st.session_state["_scroll_target"] = "node"
+                st.session_state["_scroll_target"] = "node"
                 st.rerun()
             else:
                 st.session_state.flow_status = {
@@ -525,6 +531,8 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
                     "node_id": prev_id,
                     "all_valid": pending.get("final_all_valid", True),
                 }
+                st.session_state["_scroll_target"] = "completion"
+                st.session_state["_scroll_target"] = "completion"
                 st.rerun()
     return True
 
@@ -558,6 +566,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
         )
         if st.button("Restart Troubleshooting"):
             reset_tree_progress(tree)
+            st.session_state["_scroll_target"] = "node"
             st.rerun()
         return True
     else:
@@ -1015,21 +1024,29 @@ if not node:
     st.error(f"Node '{node_id}' not found in tree.")
     st.stop()
 
+scroll_target = st.session_state.pop("_scroll_target", "node")
+selector_map = {
+    "node": "section.main",
+    "completion": "section.main div[data-testid='stVerticalBlock']:last-child",
+}
+target_selector = selector_map.get(scroll_target, selector_map["node"])
+
 components.html(
-    """
+    f"""
     <script>
-    const doScroll = () => {
-        const main = window.parent.document.querySelector('section.main');
-        if (main) {
-            const rect = main.getBoundingClientRect();
+    const selector = "{target_selector}";
+    const doScroll = () => {{
+        const el = window.parent.document.querySelector(selector) || window.parent.document.querySelector("section.main");
+        if (el) {{
+            const rect = el.getBoundingClientRect();
             const centerOffset = rect.top + window.parent.scrollY - (window.parent.innerHeight / 2) + (rect.height / 2);
-            window.parent.scrollTo({ top: Math.max(centerOffset, 0), behavior: 'smooth' });
-        } else {
-            window.parent.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
+            window.parent.scrollTo({{ top: Math.max(centerOffset, 0), behavior: 'smooth' }});
+        }} else {{
+            window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
+        }}
+    }};
     window.parent.requestAnimationFrame(doScroll);
-    setTimeout(doScroll, 200);
+    setTimeout(doScroll, 250);
     </script>
     """,
     height=0,
@@ -1119,6 +1136,7 @@ with input_col:
         if st.session_state.get(timer_key) is None:
             if st.button(f"Start {secs}s timer"):
                 st.session_state[timer_key] = int(time.time())
+                st.session_state["_scroll_target"] = "node"
                 st.rerun()
             elapsed = 0
             remaining = secs
@@ -1134,6 +1152,7 @@ with input_col:
             cols = st.columns(2)
             if cols[0].button("Reset timer"):
                 st.session_state[timer_key] = None
+                st.session_state["_scroll_target"] = "completion"
                 st.rerun()
             if cols[1].button("Complete timer"):
                 elapsed = secs
