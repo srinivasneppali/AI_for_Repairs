@@ -520,6 +520,7 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
             if next_id:
                 st.session_state.visited_stack.append(next_id)
                 st.session_state.node_id = next_id
+                st.session_state["_scroll_anchor"] = f"node-{next_id}"
                 st.session_state["_scroll_target"] = "top"
                 st.rerun()
             else:
@@ -1020,7 +1021,12 @@ if not node:
     st.error(f"Node '{node_id}' not found in tree.")
     st.stop()
 
+# Anchor for this node so we can scroll to it reliably on mobile
+st.markdown(f'<div id="node-{node_id}"></div>', unsafe_allow_html=True)
+
 scroll_target = st.session_state.pop("_scroll_target", "node")
+scroll_anchor = st.session_state.pop("_scroll_anchor", None)
+
 selector_map = {
     "node": "section.main",
     "completion": "section.main div[data-testid='stVerticalBlock']:last-child",
@@ -1031,8 +1037,21 @@ target_selector = selector_map.get(scroll_target, selector_map["node"])
 components.html(
     f"""
     <script>
+    const anchorId = {json.dumps(scroll_anchor)};
     const selector = "{target_selector}";
-    const doScroll = () => {{
+
+    const scrollToAnchor = () => {{
+        if (!anchorId) return false;
+        const el = window.parent.document.getElementById(anchorId);
+        if (!el) return false;
+        // Scroll the anchor near the top (mobile friendly)
+        el.scrollIntoView({{ block: 'start', behavior: 'instant' }});
+        // Nudge a tiny bit to avoid being hidden under any fixed headers
+        window.parent.scrollBy(0, -10);
+        return true;
+    }};
+
+    const scrollFallback = () => {{
         if (selector === "body" || selector === "html") {{
             window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
             return;
@@ -1040,12 +1059,19 @@ components.html(
         const el = window.parent.document.querySelector(selector) || window.parent.document.querySelector("section.main");
         if (el) {{
             const rect = el.getBoundingClientRect();
-            const centerOffset = rect.top + window.parent.scrollY - (window.parent.innerHeight / 2) + (rect.height / 2);
-            window.parent.scrollTo({{ top: Math.max(centerOffset, 0), behavior: 'smooth' }});
+            const top = Math.max(window.parent.scrollY + rect.top - 10, 0);
+            window.parent.scrollTo({{ top, behavior: 'smooth' }});
         }} else {{
             window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
         }}
     }};
+
+    const doScroll = () => {{
+        if (!scrollToAnchor()) {{
+            scrollFallback();
+        }}
+    }};
+
     window.parent.requestAnimationFrame(doScroll);
     setTimeout(doScroll, 250);
     </script>
@@ -1316,6 +1342,8 @@ if go_next:
                 if next_id:
                     st.session_state.visited_stack.append(next_id)
                     st.session_state.node_id = next_id
+                    st.session_state["_scroll_anchor"] = f"node-{next_id}"
+                    st.session_state["_scroll_target"] = "top"
                     st.rerun()
                 else:
                     st.session_state.flow_status = {
@@ -1323,4 +1351,5 @@ if go_next:
                         "node_id": node_id,
                         "all_valid": (final_entry or {}).get("final_all_valid", True),
                     }
+                    st.session_state["_scroll_target"] = "top"
                     st.rerun()
