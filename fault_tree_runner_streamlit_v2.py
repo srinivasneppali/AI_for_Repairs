@@ -34,6 +34,9 @@ BASE_DIR = Path(__file__).resolve().parent
 CAMERA_CAPTURE_ENABLED = (
     os.getenv("ENABLE_CAMERA_CAPTURE", "false").strip().lower() == "true"
 )
+
+SPINNER_COLOR = os.getenv("SPINNER_COLOR", "#00c8ff")
+
 EVIDENCE_COLLECTION_ENABLED = (
     os.getenv("ENABLE_EVIDENCE_UPLOAD", "false").strip().lower() == "true"
 )
@@ -1286,7 +1289,7 @@ def jeeves_spinner(
 
 if go_next:
     
-    with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", "#00c8ff"):
+    with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", SPINNER_COLOR):
         st.markdown(
             "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
             unsafe_allow_html=True,
