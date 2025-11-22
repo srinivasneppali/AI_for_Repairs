@@ -1243,7 +1243,7 @@ if go_next:
 st.markdown("""
 <style>
 div[data-testid="stSpinner"] svg {
-    stroke: #00c8ff !important;       /* spinner border color */
+    stroke: #00c8ff !important;
 }
 div[data-testid="stSpinner"] svg {
     width: 36px !important;
@@ -1254,13 +1254,6 @@ div[data-testid="stSpinner"] svg circle {
 }
 </style>
 """, unsafe_allow_html=True)
-
-
-# ------------------------------------------------------------
-# This part should ALREADY exist in your script ↓
-# ------------------------------------------------------------
-with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
-    submit_result = send_step_to_cloud(...)
 
     with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
         st.markdown(
