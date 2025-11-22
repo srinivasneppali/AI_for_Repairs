@@ -660,6 +660,9 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
         )
 
         if finalize_clicked:
+            # keep viewport sane after rerun
+            st.session_state["_scroll_target"] = "top"
+
             sku_value = st.session_state.case.get("sku", "") or "NA"
             payload = {
                 "flow_id": meta.get("id", ""),
@@ -685,7 +688,20 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 
             resp = None
             try:
-                resp = post_step_log(P2O_ENDPOINT, payload)
+                # ---- Spinner UX (exact order) ----
+                spinner_color = SPINNER_COLOR if "SPINNER_COLOR" in globals() else "#e6d81e"
+                with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", spinner_color):
+                    st.markdown(
+                        "<div style='margin-top:10px; font-size:0.95rem;'>"
+                        "✨ Uploading evidence, updating logs, and loading the next action..."
+                        "</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                    # Make the finalize call *inside* spinner
+                    resp = post_step_log(P2O_ENDPOINT, payload)
+
+                # ---- Handle response as before ----
                 if resp.get("ok", True):
                     token = resp.get("token", "(no token — endpoint not set)")
                     st.session_state.final_token = token
@@ -694,19 +710,19 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     render_token_copy(token)
                     st.caption("Paste this token in Strider Notes until API integration.")
                 else:
-                    # non-OK from endpoint
                     base_err = resp.get("error") or "Finalize call failed."
                     detail = resp.get("text") or resp.get("status_code")
                     detail_msg = f"{base_err} ({detail})" if detail else base_err
                     st.error(f"Finalize failed: {detail_msg}")
+
             except Exception as e:
-                # hard failure (network, JSON, etc.)
                 base_err = str(e)
                 detail = None
                 if isinstance(resp, dict):
                     detail = resp.get("text") or resp.get("status_code")
                 detail_msg = f"{base_err} ({detail})" if detail else base_err
                 st.error(f"Finalize failed: {detail_msg}")
+
     else:
         token = token or "(no token ? endpoint not set)"
         st.success("Gate token generated successfully.")
