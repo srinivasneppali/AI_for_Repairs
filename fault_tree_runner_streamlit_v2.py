@@ -604,7 +604,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     upload = None
                     cam = None
                     cam_pref_key = f"cam_pref_{slug}"
-                    use_camera = st.session_state.get(cam_pref_key, False)
+                    use_camera = st.session_state.get(cam_pref_key, True)
                     if CAMERA_CAPTURE_ENABLED:
                         if use_camera:
                             cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
