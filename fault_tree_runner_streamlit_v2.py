@@ -669,9 +669,10 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
             }
 
             resp = None
+            tip_placeholder = st.empty()
             try:
                 with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
-                    st.markdown(
+                    tip_placeholder.markdown(
                         "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
                         unsafe_allow_html=True,
                     )
@@ -697,6 +698,8 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     detail = resp.get("text") or resp.get("status_code")
                 detail_msg = f"{base_err} ({detail})" if detail else base_err
                 st.error(f"Finalize failed: {detail_msg}")
+            finally:
+                tip_placeholder.empty()
     else:
         token = token or "(no token ? endpoint not set)"
         st.success("Gate token generated successfully.")
@@ -1393,3 +1396,4 @@ if go_next:
                     }
                     st.session_state["_scroll_target"] = "top"
                     st.rerun()
+    tip_placeholder.empty()
