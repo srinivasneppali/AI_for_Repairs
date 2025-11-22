@@ -50,7 +50,7 @@ nodes:
     id: p0_second_visit_intro
     type: note
     prompt:
-      en: Second visit workflow — confirm safety, prep the area, and replace only the approved part.
+      en: Second visit workflow - confirm safety, prep the area, and replace only the approved part.
     ui:
       control: confirm
     evidence:
@@ -196,7 +196,7 @@ nodes:
     id: p2_hose_siphon_check
     type: action
     prompt:
-      en: Inspect drain hose routing — confirm air gap at standpipe, depth 4–6 inches, outlet above tub water level, and no kinks/bends.
+      en: Inspect drain hose routing - confirm air gap at standpipe, depth 4-6 inches, outlet above tub water level, and no kinks/bends.
     ui:
       control: chips
       options:
