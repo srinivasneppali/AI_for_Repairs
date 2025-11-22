@@ -1239,6 +1239,27 @@ if go_back and len(st.session_state.visited_stack) > 1:
 
 if go_next:
 
+    # --- Custom Spinner Color CSS (top-level inside go_next) ---
+    st.markdown("""
+                <style>
+                /* Customize spinner color */
+                div[data-testid="stSpinner"] svg {
+                    stroke: #00c8ff !important;   /* Change this hex color as desired */
+                }
+
+                /* Optional: spinner size */
+                div[data-testid="stSpinner"] svg {
+                    width: 36px !important;
+                    height: 36px !important;
+                }
+
+                /* Optional: spinner border thickness */
+                div[data-testid="stSpinner"] svg circle {
+                    stroke-width: 4 !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+    
     with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
         st.markdown(
             "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
