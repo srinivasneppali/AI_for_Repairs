@@ -1237,28 +1237,37 @@ if go_back and len(st.session_state.visited_stack) > 1:
     st.session_state.node_id = st.session_state.visited_stack[-1]
     st.rerun()
 
+# --- Global spinner styling (place near top of the file) ---
+st.markdown("""
+<style>
+/* Hide Streamlit's default spinner graphic */
+div[data-testid="stSpinner"] svg { display: none !important; }
+
+/* Draw our own ring with your brand color */
+div[data-testid="stSpinner"] div[role="status"]::before {
+  content: "";
+  width: 22px; height: 22px;
+  margin-right: .5rem;
+  border: 3px solid rgba(255,255,255,0.25);   /* background arc */
+  border-top-color: #00c8ff;                  /* <-- change color here */
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  animation: jeeves-spin 0.75s linear infinite;
+}
+
+/* Keep the text aligned with the ring */
+div[data-testid="stSpinner"] div[role="status"] {
+  display: flex; align-items: center;
+}
+
+/* Spin animation */
+@keyframes jeeves-spin { to { transform: rotate(360deg); } }
+</style>
+""", unsafe_allow_html=True)
+
+
 if go_next:
-
-    # --- Custom Spinner Color CSS (top-level inside go_next) ---
-    st.markdown("""
-                <style>
-                /* Customize spinner color */
-                div[data-testid="stSpinner"] svg {
-                    stroke: #ffc915 !important;   /* Change this hex color as desired */
-                }
-
-                /* Optional: spinner size */
-                div[data-testid="stSpinner"] svg {
-                    width: 36px !important;
-                    height: 36px !important;
-                }
-
-                /* Optional: spinner border thickness */
-                div[data-testid="stSpinner"] svg circle {
-                    stroke-width: 4 !important;
-                }
-                </style>
-                """, unsafe_allow_html=True)
     
     with st.spinner("🚀 Syncing your step with Jeeves Cloud..."):
         st.markdown(
