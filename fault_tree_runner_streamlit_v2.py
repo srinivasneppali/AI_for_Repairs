@@ -850,6 +850,26 @@ st.markdown(
         font-weight: 700;
         color: #0a437c;
         margin-bottom: 0.1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .main-title::after {
+        content: "";
+        position: absolute;
+        top: -160%;
+        left: -30%;
+        width: 60%;
+        height: 400%;
+        background: linear-gradient(
+            120deg,
+            rgba(255,255,255,0) 30%,
+            rgba(255,255,255,0.6) 50%,
+            rgba(255,255,255,0) 70%
+        );
+        transform: translateX(-120%) rotate(20deg);
+        animation: titleSheen 4.5s linear infinite;
+        opacity: 0.55;
+        pointer-events: none;
     }
     .sub-caption {
         font-size: 0.95rem;
@@ -921,6 +941,17 @@ st.markdown(
         border-bottom-color: #f59e0b !important;
         border-left-color: rgba(249, 115, 22, 0.4) !important;
     }
+    @keyframes glowPulse {
+        0% { box-shadow: 0 10px 25px rgba(114, 9, 183, 0.25); }
+        50% { box-shadow: 0 20px 45px rgba(247, 37, 133, 0.45); }
+        100% { box-shadow: 0 10px 25px rgba(114, 9, 183, 0.25); }
+    }
+    @keyframes titleSheen {
+        0% { transform: translateX(-120%) rotate(20deg); opacity: 0; }
+        30% { opacity: 0.7; }
+        60% { opacity: 0.7; }
+        100% { transform: translateX(260%) rotate(20deg); opacity: 0; }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -934,7 +965,7 @@ title_colors = {
 }
 title_color = "linear-gradient(135deg, #3a0ca3, #7209b7, #f72585)"
 title_block = f"""
-<div class='main-title' style="background:{title_color};padding:0.85rem 1.6rem;border-radius:18px;text-align:center;margin:0.25rem auto 0.85rem auto;max-width:820px;font-size:1.55rem;letter-spacing:0.04em;color:#ffffff;text-shadow:0 4px 14px rgba(0,0,0,0.35);box-shadow:0 15px 35px rgba(114,9,183,0.35);display:flex;justify-content:center;align-items:center;gap:0.4rem;border:1px solid rgba(255,255,255,0.2);">
+<div class='main-title' style="background:{title_color};padding:0.85rem 1.6rem;border-radius:18px;text-align:center;margin:0.25rem auto 0.85rem auto;max-width:820px;font-size:1.55rem;letter-spacing:0.04em;color:#ffffff;text-shadow:0 4px 14px rgba(0,0,0,0.35);box-shadow:0 15px 35px rgba(114,9,183,0.35);display:flex;justify-content:center;align-items:center;gap:0.4rem;border:1px solid rgba(255,255,255,0.2);position:relative;overflow:hidden;animation:glowPulse 5s ease-in-out infinite;">
 ✨ AI driven Interactive Troubleshooting - Automated Flow
 </div>
 """
