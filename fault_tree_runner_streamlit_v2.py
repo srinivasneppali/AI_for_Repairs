@@ -1313,44 +1313,44 @@ if go_next:
         elif evidence_required_now and not photo_b64:
             st.error("Evidence required - please capture or upload a photo.")
         else:
-        st.session_state.passed[node_id] = True
-        st.session_state.answers[node_id] = {
-            "value": val,
-            "label_value": step_extra.get("label_value"),
-            "elapsed_sec": elapsed,
-        }
-        log_entry = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "step_id": node_id,
-            "step_label": step_label(node, lang),
-            "value": val,
+            st.session_state.passed[node_id] = True
+            st.session_state.answers[node_id] = {
+                "value": val,
+                "label_value": step_extra.get("label_value"),
+                "elapsed_sec": elapsed,
+            }
+            log_entry = {
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "step_id": node_id,
+                "step_label": step_label(node, lang),
+                "value": val,
                 "elapsed_sec": elapsed,
                 "photo_attached": bool(photo_b64),
             }
             log_local_step(log_entry)
 
             sku_value = st.session_state.case.get("sku", "") or "NA"
-        answers_state = st.session_state.answers.get(node_id, {})
-        payload = {
-            "flow_id": meta.get("id", ""),
-            "case_id": st.session_state.case.get("case_id", ""),
-            "sku": sku_value,
-            "st_id": st.session_state.case.get("st_id", ""),
-            "step_id": node_id,
-            "step_label": step_label(node, lang),
-            "answers": answers_state.get("value"),
-            "label_value": answers_state.get("label_value"),
-            "elapsed_sec": answers_state.get("elapsed_sec"),
-            "pass": True,
-            "photo_b64": photo_b64,
-            "photo_mime": photo_mime,
-            "finalize": False,
-            "all_steps_valid": False,
-            "token_pattern": (meta.get("gating") or {}).get(
-                "token_pattern", "{FAULT}-{SKU}-{RAND5}"
-            ),
-            "fault_code": fault_code_from_meta(meta.get("id", "")),
-        }
+            answers_state = st.session_state.answers.get(node_id, {})
+            payload = {
+                "flow_id": meta.get("id", ""),
+                "case_id": st.session_state.case.get("case_id", ""),
+                "sku": sku_value,
+                "st_id": st.session_state.case.get("st_id", ""),
+                "step_id": node_id,
+                "step_label": step_label(node, lang),
+                "answers": answers_state.get("value"),
+                "label_value": answers_state.get("label_value"),
+                "elapsed_sec": answers_state.get("elapsed_sec"),
+                "pass": True,
+                "photo_b64": photo_b64,
+                "photo_mime": photo_mime,
+                "finalize": False,
+                "all_steps_valid": False,
+                "token_pattern": (meta.get("gating") or {}).get(
+                    "token_pattern", "{FAULT}-{SKU}-{RAND5}"
+                ),
+                "fault_code": fault_code_from_meta(meta.get("id", "")),
+            }
             resp = post_step_log(P2O_ENDPOINT, payload)
             if not resp.get("ok", True):
                 st.warning(f"Log post failed: {resp.get('error')}")
