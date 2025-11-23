@@ -731,7 +731,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
             resp = None
             spinner_tip = st.empty()
             try:
-                with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", SPINNER_COLOR):
+                with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud..._", SPINNER_COLOR):
                     spinner_tip.markdown(
                         "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
                         unsafe_allow_html=True,
@@ -1296,7 +1296,7 @@ if go_back and len(st.session_state.visited_stack) > 1:
 
 if go_next:
     tip_placeholder = st.empty()
-    with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud..._", SPINNER_COLOR):
+    with jeeves_spinner("🚀 Syncing your step with Jeeves Cloud...", SPINNER_COLOR):
         tip_placeholder.markdown(
             "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
             unsafe_allow_html=True,
