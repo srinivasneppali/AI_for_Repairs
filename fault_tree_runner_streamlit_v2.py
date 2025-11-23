@@ -932,7 +932,7 @@ title_colors = {
     "blue": "#118ab2",
     "red": "#ef476f",
 }
-title_color = title_colors.get(os.getenv("FLOW_SELECT_COLOR", "yellow").lower(), "#ffd166")
+title_color = title_colors.get(os.getenv("FLOW_SELECT_COLOR", "yellow").lower(), "#ec1109")
 st.markdown(
     f"<div class='main-title' style='background:{title_color};padding:0.6rem 1.2rem;border-radius:10px;text-align:center;margin:0.2rem auto 0.6rem auto;max-width:760px;font-size:1.4rem;letter-spacing:0.03em;'>✨ AI driven Interactive Troubleshooting - Automated Flow</div>",
     unsafe_allow_html=True,
