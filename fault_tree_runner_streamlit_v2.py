@@ -848,28 +848,35 @@ st.markdown(
     .main-title {
         font-size: 2rem;
         font-weight: 700;
-        color: #0a437c;
-        margin-bottom: 0.1rem;
+        color: #ffffff;
+        margin: 0.35rem auto 1rem auto;
         position: relative;
         overflow: hidden;
         z-index: 0;
-    }
-    .main-title span {
-        position: relative;
-        z-index: 3;
+        border-radius: 24px;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.6rem;
+        min-height: 95px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 22px 55px rgba(15, 23, 42, 0.55);
+        background-size: 260% 260%;
+        animation: glowPulse 6s ease-in-out infinite, gradientShift 18s ease-in-out infinite;
     }
     .main-title::before {
         content: "";
         position: absolute;
-        inset: -2px;
+        inset: -3px;
         background-image:
-            radial-gradient(circle at 10% 20%, rgba(255,255,255,0.25) 0px, transparent 80px),
-            radial-gradient(circle at 80% 0%, rgba(255,255,255,0.2) 0px, transparent 70px),
-            repeating-linear-gradient(120deg, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 2px, transparent 2px, transparent 14px),
-            repeating-linear-gradient(60deg, rgba(10, 14, 64, 0.4) 0px, rgba(10,14,64,0.4) 1px, transparent 1px, transparent 18px);
+            radial-gradient(circle at 12% 20%, rgba(255,255,255,0.25) 0px, transparent 90px),
+            radial-gradient(circle at 80% 10%, rgba(255,255,255,0.2) 0px, transparent 70px),
+            repeating-linear-gradient(120deg, rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 2px, transparent 2px, transparent 16px),
+            repeating-linear-gradient(60deg, rgba(10, 14, 64, 0.45) 0px, rgba(10,14,64,0.45) 1px, transparent 1px, transparent 18px);
         mix-blend-mode: screen;
         opacity: 0.35;
-        animation: circuitDrift 18s linear infinite;
+        animation: circuitDrift 22s linear infinite;
         pointer-events: none;
         z-index: 1;
     }
@@ -883,14 +890,93 @@ st.markdown(
         background: linear-gradient(
             120deg,
             rgba(255,255,255,0) 30%,
-            rgba(255,255,255,0.6) 50%,
+            rgba(255,255,255,0.7) 50%,
             rgba(255,255,255,0) 70%
         );
         transform: translateX(-120%) rotate(20deg);
         animation: titleSheen 4.5s linear infinite;
         opacity: 0.55;
         pointer-events: none;
+        z-index: 4;
+    }
+    .title-aurora,
+    .title-grid,
+    .title-orb,
+    .title-sparkles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+    .title-aurora {
+        background: conic-gradient(from 120deg, rgba(58,12,163,0.35), rgba(114,9,183,0.4), rgba(247,37,133,0.35), rgba(58,12,163,0.35));
+        filter: blur(32px);
+        opacity: 0.55;
+        z-index: 0;
+        animation: auroraFlow 14s ease-in-out infinite;
+    }
+    .title-grid {
+        background-image:
+            linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px);
+        background-size: 28px 28px;
+        opacity: 0.15;
+        z-index: 1;
+        animation: circuitDrift 26s linear infinite;
+    }
+    .title-orb {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.65), rgba(255,255,255,0));
+        filter: blur(10px);
+        opacity: 0.4;
         z-index: 2;
+        animation: orbDrift 10s ease-in-out infinite;
+    }
+    .title-orb.orb-left {
+        left: -70px;
+        top: -10px;
+        animation-delay: -2s;
+    }
+    .title-orb.orb-right {
+        right: -60px;
+        bottom: -20px;
+        animation-delay: 1.4s;
+    }
+    .title-sparkles {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.9);
+        box-shadow: 0 0 18px rgba(255,255,255,0.9);
+        z-index: 3;
+        animation: sparklePulse 3.4s ease-in-out infinite;
+    }
+    .title-sparkles.sparkle-one {
+        top: 24%;
+        left: 18%;
+    }
+    .title-sparkles.sparkle-two {
+        bottom: 18%;
+        right: 16%;
+        width: 11px;
+        height: 11px;
+        animation-delay: 1.3s;
+    }
+    .title-symbol {
+        font-size: 2.4rem;
+        line-height: 1;
+        filter: drop-shadow(0 0 8px rgba(255,255,255,0.8));
+        z-index: 5;
+        animation: symbolDance 4.8s ease-in-out infinite;
+    }
+    .title-core {
+        position: relative;
+        z-index: 5;
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-shadow: 0 12px 34px rgba(0,0,0,0.55);
     }
     .sub-caption {
         font-size: 0.95rem;
@@ -967,6 +1053,26 @@ st.markdown(
         50% { box-shadow: 0 20px 45px rgba(247, 37, 133, 0.45); }
         100% { box-shadow: 0 10px 25px rgba(114, 9, 183, 0.25); }
     }
+    @keyframes auroraFlow {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.05); }
+        100% { transform: rotate(360deg) scale(1); }
+    }
+    @keyframes orbDrift {
+        0% { transform: translate3d(0px, 0px, 0) scale(1); opacity: 0.4; }
+        50% { transform: translate3d(20px, -10px, 0) scale(1.1); opacity: 0.55; }
+        100% { transform: translate3d(0px, 0px, 0) scale(1); opacity: 0.4; }
+    }
+    @keyframes sparklePulse {
+        0% { transform: scale(0.8); opacity: 0.6; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(0.8); opacity: 0.6; }
+    }
+    @keyframes symbolDance {
+        0% { transform: translateY(0px) rotate(-3deg); }
+        50% { transform: translateY(-6px) rotate(3deg); }
+        100% { transform: translateY(0px) rotate(-3deg); }
+    }
     @keyframes gradientShift {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -995,8 +1101,15 @@ title_colors = {
 }
 title_color = "linear-gradient(135deg, #3a0ca3, #7209b7, #f72585)"
 title_block = f"""
-<div class='main-title' style="background:{title_color};background-size:250% 250%;padding:0.9rem 1.8rem;border-radius:20px;text-align:center;margin:0.3rem auto 0.95rem auto;max-width:860px;font-size:1.58rem;letter-spacing:0.05em;color:#ffffff;text-shadow:0 4px 14px rgba(0,0,0,0.35);box-shadow:0 18px 40px rgba(114,9,183,0.35);display:flex;justify-content:center;align-items:center;gap:0.45rem;border:1px solid rgba(255,255,255,0.25);position:relative;overflow:hidden;animation:glowPulse 5s ease-in-out infinite, gradientShift 16s linear infinite;">
-<span>✨ AI driven Interactive Troubleshooting - Automated Flow</span>
+<div class='main-title' style="background:{title_color};">
+  <div class='title-aurora'></div>
+  <div class='title-grid'></div>
+  <div class='title-orb orb-left'></div>
+  <div class='title-orb orb-right'></div>
+  <div class='title-sparkles sparkle-one'></div>
+  <div class='title-sparkles sparkle-two'></div>
+  <div class='title-symbol'>⚡</div>
+  <div class='title-core'>✨ AI driven Interactive Troubleshooting - Automated Flow</div>
 </div>
 """
 st.markdown(title_block, unsafe_allow_html=True)
