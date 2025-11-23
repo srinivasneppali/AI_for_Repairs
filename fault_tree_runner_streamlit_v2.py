@@ -713,9 +713,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                 "st_id": st.session_state.case.get("st_id", ""),
                 "step_id": node_id or "",
                 "step_label": step_label(node, lang) if node else "",
-                "answers": answers_state.get("value"),
-                "label_value": answers_state.get("label_value"),
-                "elapsed_sec": answers_state.get("elapsed_sec"),
+                "answers": answers_state,
                 "pass": True,
                 "photo_b64": None,
                 "photo_mime": None,
@@ -1313,12 +1311,13 @@ if go_next:
         elif evidence_required_now and not photo_b64:
             st.error("Evidence required - please capture or upload a photo.")
         else:
-            st.session_state.passed[node_id] = True
-            st.session_state.answers[node_id] = {
+            answers_payload = {
                 "value": val,
                 "label_value": step_extra.get("label_value"),
                 "elapsed_sec": elapsed,
             }
+            st.session_state.passed[node_id] = True
+            st.session_state.answers[node_id] = answers_payload
             log_entry = {
                 "timestamp": datetime.utcnow().isoformat() + "Z",
                 "step_id": node_id,
@@ -1330,7 +1329,6 @@ if go_next:
             log_local_step(log_entry)
 
             sku_value = st.session_state.case.get("sku", "") or "NA"
-            answers_state = st.session_state.answers.get(node_id, {})
             payload = {
                 "flow_id": meta.get("id", ""),
                 "case_id": st.session_state.case.get("case_id", ""),
@@ -1338,9 +1336,7 @@ if go_next:
                 "st_id": st.session_state.case.get("st_id", ""),
                 "step_id": node_id,
                 "step_label": step_label(node, lang),
-                "answers": answers_state.get("value"),
-                "label_value": answers_state.get("label_value"),
-                "elapsed_sec": answers_state.get("elapsed_sec"),
+                "answers": answers_payload,
                 "pass": True,
                 "photo_b64": photo_b64,
                 "photo_mime": photo_mime,
