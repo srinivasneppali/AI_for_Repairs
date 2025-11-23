@@ -296,6 +296,27 @@ def validate_node(
     return True, ""
 
 
+def format_answer_value(
+    ctrl: Optional[str],
+    raw_value: Any,
+    elapsed_sec: Optional[int] = None,
+    ui: Optional[Dict[str, Any]] = None,
+) -> Any:
+    """
+    Convert raw widget values into human-friendly strings for logging/ValueJSON.
+    Keeps lists/numerics intact; normalizes booleans and timers to readable text.
+    """
+    ui = ui or {}
+    if ctrl == "timer":
+        if elapsed_sec is not None:
+            return f"Timer completed ({elapsed_sec}s)"
+        target = ui.get("seconds")
+        return f"Timer in progress ({target}s target)" if target else "Timer in progress"
+    if isinstance(raw_value, bool):
+        return "Done" if raw_value else "Not done"
+    return raw_value
+
+
 def get_prompt(node: Dict[str, Any], lang: str) -> str:
     prompt = node.get("prompt") or {}
     if isinstance(prompt, dict):
@@ -705,6 +726,24 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 
             sku_value = st.session_state.case.get("sku", "") or "NA"
             answers_state = st.session_state.answers.get(node_id, {})
+            final_ctrl = (node or {}).get("ui", {}).get("control") if node else None
+            raw_final_value = answers_state.get("raw_value", answers_state.get("value"))
+            final_answer_value = format_answer_value(
+                final_ctrl,
+                raw_final_value,
+                elapsed_sec=answers_state.get("elapsed_sec"),
+                ui=(node or {}).get("ui"),
+            )
+            if answers_state:
+                st.session_state.answers[node_id] = {
+                    **answers_state,
+                    "value": final_answer_value,
+                }
+            answers_for_payload = {
+                "value": final_answer_value,
+                "label_value": answers_state.get("label_value"),
+                "elapsed_sec": answers_state.get("elapsed_sec"),
+            }
             parts_used_list = sorted(st.session_state.parts_used)
             payload = {
                 "flow_id": meta.get("id", ""),
@@ -713,10 +752,10 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                 "st_id": st.session_state.case.get("st_id", ""),
                 "step_id": node_id or "",
                 "step_label": step_label(node, lang) if node else "",
-                "answers": answers_state,
-                "answer_value": answers_state.get("value"),
-                "label_value": answers_state.get("label_value"),
-                "elapsed_sec": answers_state.get("elapsed_sec"),
+                "answers": answers_for_payload,
+                "answer_value": answers_for_payload.get("value"),
+                "label_value": answers_for_payload.get("label_value"),
+                "elapsed_sec": answers_for_payload.get("elapsed_sec"),
                 "pass": True,
                 "photo_b64": None,
                 "photo_mime": None,
@@ -1156,13 +1195,16 @@ ctrl = ui.get("control")
 val: Any = None
 step_extra: Dict[str, Any] = {}
 stored_answer = st.session_state.answers.get(node_id, {})
+stored_value = stored_answer.get("raw_value", stored_answer.get("value"))
 control_key = f"{INPUT_VALUE_PREFIX}{node_id}"
 
 ev_required, ev_capture, ev_meta = require_evidence(node)
 
 with input_col:
     if ctrl == "confirm":
-        ensure_widget_state(control_key, stored_answer.get("value", "Done"))
+        ensure_widget_state(
+            control_key, stored_value if stored_value is not None else "Done"
+        )
         val = st.radio("Confirm", options=["Done"], horizontal=True, key=control_key)
     elif ctrl == "numeric":
         rng = ui.get("range") or [None, None]
@@ -1170,7 +1212,7 @@ with input_col:
         max_value = float(rng[1]) if rng[1] is not None else None
         decimals = ui.get("decimals") or 0
         step = 1.0 if decimals else 1
-        default_value = stored_answer.get("value", ui.get("default"))
+        default_value = stored_value if stored_value is not None else ui.get("default")
         if default_value is None:
             default_value = min_value if min_value is not None else 0.0
         try:
@@ -1200,18 +1242,16 @@ with input_col:
     elif ctrl == "radio":
         options = ui.get("options") or node.get("options") or []
         if options:
-            default_option = (
-                stored_answer.get("value") if stored_answer.get("value") in options else options[0]
-            )
+            default_option = stored_value if stored_value in options else options[0]
             ensure_widget_state(control_key, default_option)
             val = st.radio("Select one", options=options, key=control_key)
         else:
             st.warning("No options configured for this step; please enter a note.")
-            ensure_widget_state(control_key, stored_answer.get("value", ""))
+            ensure_widget_state(control_key, stored_value if stored_value is not None else "")
             val = st.text_input("Manual response", key=control_key)
     elif ctrl == "chips":
         options = ui.get("options") or []
-        default_multi = stored_answer.get("value", [])
+        default_multi = stored_value if stored_value is not None else []
         if not isinstance(default_multi, list):
             default_multi = [default_multi]
         ensure_widget_state(control_key, default_multi)
@@ -1250,7 +1290,12 @@ with input_col:
         val = "TimerDone" if st.session_state.get(timer_key) and elapsed >= secs else None
     else:
         st.info("No control configured; mark this step complete when ready.")
-        ensure_widget_state(control_key, stored_answer.get("value", False))
+        default_checkbox = (
+            stored_value
+            if isinstance(stored_value, bool)
+            else (bool(stored_value) if stored_value is not None else False)
+        )
+        ensure_widget_state(control_key, default_checkbox)
         val = st.checkbox("Step completed?", key=control_key)
 
     validation_cfg = node.get("validation") or {}
@@ -1314,8 +1359,10 @@ if go_next:
         elif evidence_required_now and not photo_b64:
             st.error("Evidence required - please capture or upload a photo.")
         else:
+            logged_value = format_answer_value(ctrl, val, elapsed_sec=elapsed, ui=ui)
             answers_payload = {
-                "value": val,
+                "value": logged_value,
+                "raw_value": val,
                 "label_value": step_extra.get("label_value"),
                 "elapsed_sec": elapsed,
             }
@@ -1325,13 +1372,16 @@ if go_next:
                 "timestamp": datetime.utcnow().isoformat() + "Z",
                 "step_id": node_id,
                 "step_label": step_label(node, lang),
-                "value": val,
+                "value": logged_value,
                 "elapsed_sec": elapsed,
                 "photo_attached": bool(photo_b64),
             }
             log_local_step(log_entry)
 
             sku_value = st.session_state.case.get("sku", "") or "NA"
+            answers_for_payload = {
+                key: value for key, value in answers_payload.items() if key != "raw_value"
+            }
             payload = {
                 "flow_id": meta.get("id", ""),
                 "case_id": st.session_state.case.get("case_id", ""),
@@ -1339,10 +1389,10 @@ if go_next:
                 "st_id": st.session_state.case.get("st_id", ""),
                 "step_id": node_id,
                 "step_label": step_label(node, lang),
-                "answers": answers_payload,
-                "answer_value": answers_payload.get("value"),
-                "label_value": answers_payload.get("label_value"),
-                "elapsed_sec": answers_payload.get("elapsed_sec"),
+                "answers": answers_for_payload,
+                "answer_value": answers_for_payload.get("value"),
+                "label_value": answers_for_payload.get("label_value"),
+                "elapsed_sec": answers_for_payload.get("elapsed_sec"),
                 "pass": True,
                 "photo_b64": photo_b64,
                 "photo_mime": photo_mime,
