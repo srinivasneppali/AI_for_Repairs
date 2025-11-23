@@ -934,7 +934,7 @@ title_colors = {
 }
 title_color = title_colors.get(os.getenv("FLOW_SELECT_COLOR", "yellow").lower(), "#ffd166")
 st.markdown(
-    f"<div class='main-title' style='background:{title_color};padding:0.6rem 1.2rem;border-radius:10px;text-align:center;margin:0.2rem auto 0.6rem auto;max-width:760px;font-size:1.4rem;letter-spacing:0.03em;'>AI based Interactive Troubleshooting - Automated Flow</div>",
+    f"<div class='main-title' style='background:{title_color};padding:0.6rem 1.2rem;border-radius:10px;text-align:center;margin:0.2rem auto 0.6rem auto;max-width:760px;font-size:1.4rem;letter-spacing:0.03em;'>✨ AI driven Interactive Troubleshooting - Automated Flow</div>",
     unsafe_allow_html=True,
 )
 st.markdown(
