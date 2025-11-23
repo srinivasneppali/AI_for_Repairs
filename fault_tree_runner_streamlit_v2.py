@@ -43,6 +43,7 @@ EVIDENCE_COLLECTION_ENABLED = (
 )
 RECOMMENDED_PARTS_KEY = "recommended_parts"
 ISSUE_LABEL_COLOR = os.getenv("ISSUE_LABEL_COLOR", "#f00c0c")
+YAML_FALLBACK_ENCODINGS = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
 
 
 @contextmanager
@@ -385,9 +386,25 @@ def apply_loaded_tree(tree: Dict[str, Any], source_label: Optional[str]) -> None
     reset_tree_progress(tree)
 
 
+def decode_yaml_bytes(data: bytes, source_label: str) -> str:
+    errors = []
+    for encoding in YAML_FALLBACK_ENCODINGS:
+        try:
+            return data.decode(encoding)
+        except UnicodeDecodeError as exc:
+            errors.append(f"{encoding}: {exc}")
+    detail = "; ".join(errors) if errors else "Unknown decoding error"
+    raise ValueError(
+        f"Unable to decode {source_label}. Tried encodings: "
+        f"{', '.join(YAML_FALLBACK_ENCODINGS)}. Details: {detail}"
+    )
+
+
 def load_flow_from_path(flow_path: Path) -> None:
     try:
-        yaml_data = yaml.safe_load(flow_path.read_text(encoding="utf-8"))
+        raw_bytes = flow_path.read_bytes()
+        yaml_text = decode_yaml_bytes(raw_bytes, str(flow_path))
+        yaml_data = yaml.safe_load(yaml_text)
         tree = normalize_tree(yaml_data)
         apply_loaded_tree(tree, str(flow_path))
     except Exception as exc:
@@ -396,7 +413,9 @@ def load_flow_from_path(flow_path: Path) -> None:
 
 def load_flow_from_upload(upload) -> None:
     try:
-        yaml_data = yaml.safe_load(upload.read().decode("utf-8"))
+        raw_bytes = upload.read()
+        yaml_text = decode_yaml_bytes(raw_bytes, upload.name or "uploaded YAML")
+        yaml_data = yaml.safe_load(yaml_text)
         tree = normalize_tree(yaml_data)
         apply_loaded_tree(tree, None)
         st.success("Custom YAML loaded.")
