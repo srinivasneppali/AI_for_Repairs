@@ -852,6 +852,26 @@ st.markdown(
         margin-bottom: 0.1rem;
         position: relative;
         overflow: hidden;
+        z-index: 0;
+    }
+    .main-title span {
+        position: relative;
+        z-index: 3;
+    }
+    .main-title::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        background-image:
+            radial-gradient(circle at 10% 20%, rgba(255,255,255,0.25) 0px, transparent 80px),
+            radial-gradient(circle at 80% 0%, rgba(255,255,255,0.2) 0px, transparent 70px),
+            repeating-linear-gradient(120deg, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 2px, transparent 2px, transparent 14px),
+            repeating-linear-gradient(60deg, rgba(10, 14, 64, 0.4) 0px, rgba(10,14,64,0.4) 1px, transparent 1px, transparent 18px);
+        mix-blend-mode: screen;
+        opacity: 0.35;
+        animation: circuitDrift 18s linear infinite;
+        pointer-events: none;
+        z-index: 1;
     }
     .main-title::after {
         content: "";
@@ -870,6 +890,7 @@ st.markdown(
         animation: titleSheen 4.5s linear infinite;
         opacity: 0.55;
         pointer-events: none;
+        z-index: 2;
     }
     .sub-caption {
         font-size: 0.95rem;
@@ -946,6 +967,15 @@ st.markdown(
         50% { box-shadow: 0 20px 45px rgba(247, 37, 133, 0.45); }
         100% { box-shadow: 0 10px 25px rgba(114, 9, 183, 0.25); }
     }
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    @keyframes circuitDrift {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 200% 200%; }
+    }
     @keyframes titleSheen {
         0% { transform: translateX(-120%) rotate(20deg); opacity: 0; }
         30% { opacity: 0.7; }
@@ -965,8 +995,8 @@ title_colors = {
 }
 title_color = "linear-gradient(135deg, #3a0ca3, #7209b7, #f72585)"
 title_block = f"""
-<div class='main-title' style="background:{title_color};padding:0.85rem 1.6rem;border-radius:18px;text-align:center;margin:0.25rem auto 0.85rem auto;max-width:820px;font-size:1.55rem;letter-spacing:0.04em;color:#ffffff;text-shadow:0 4px 14px rgba(0,0,0,0.35);box-shadow:0 15px 35px rgba(114,9,183,0.35);display:flex;justify-content:center;align-items:center;gap:0.4rem;border:1px solid rgba(255,255,255,0.2);position:relative;overflow:hidden;animation:glowPulse 5s ease-in-out infinite;">
-✨ AI driven Interactive Troubleshooting - Automated Flow
+<div class='main-title' style="background:{title_color};background-size:250% 250%;padding:0.9rem 1.8rem;border-radius:20px;text-align:center;margin:0.3rem auto 0.95rem auto;max-width:860px;font-size:1.58rem;letter-spacing:0.05em;color:#ffffff;text-shadow:0 4px 14px rgba(0,0,0,0.35);box-shadow:0 18px 40px rgba(114,9,183,0.35);display:flex;justify-content:center;align-items:center;gap:0.45rem;border:1px solid rgba(255,255,255,0.25);position:relative;overflow:hidden;animation:glowPulse 5s ease-in-out infinite, gradientShift 16s linear infinite;">
+<span>✨ AI driven Interactive Troubleshooting - Automated Flow</span>
 </div>
 """
 st.markdown(title_block, unsafe_allow_html=True)
