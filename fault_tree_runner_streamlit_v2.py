@@ -1,4 +1,4 @@
-import os
+﻿import os
 import time
 import base64
 import json
@@ -932,11 +932,13 @@ title_colors = {
     "blue": "#118ab2",
     "red": "#ef476f",
 }
-title_color = "#ff0000"
-st.markdown(
-    f"<div class='main-title' style='background:{title_color};padding:0.6rem 1.2rem;border-radius:10px;text-align:center;margin:0.2rem auto 0.6rem auto;max-width:760px;font-size:1.4rem;letter-spacing:0.03em;'>✨ AI driven Interactive Troubleshooting - Automated Flow</div>",
-    unsafe_allow_html=True,
-)
+title_color = "linear-gradient(135deg, #3a0ca3, #7209b7, #f72585)"
+title_block = f"""
+<div class='main-title' style="background:{title_color};padding:0.85rem 1.6rem;border-radius:18px;text-align:center;margin:0.25rem auto 0.85rem auto;max-width:820px;font-size:1.55rem;letter-spacing:0.04em;color:#ffffff;text-shadow:0 4px 14px rgba(0,0,0,0.35);box-shadow:0 15px 35px rgba(114,9,183,0.35);display:flex;justify-content:center;align-items:center;gap:0.4rem;border:1px solid rgba(255,255,255,0.2);">
+✨ AI driven Interactive Troubleshooting - Automated Flow
+</div>
+"""
+st.markdown(title_block, unsafe_allow_html=True)
 st.markdown(
     "<div class='sub-caption' style='color:#ffffff;font-weight:700;text-align:center;'>Train decision-making, not just steps. Logs MPD/RR risk proxies for coaching.</div>",
     unsafe_allow_html=True,
