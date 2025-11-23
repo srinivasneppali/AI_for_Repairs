@@ -309,7 +309,7 @@ def format_answer_value(
     ui = ui or {}
     if ctrl == "timer":
         if elapsed_sec is not None:
-            return f"Timer completed ({elapsed_sec}s)"
+            return f"{elapsed_sec}s elapsed"
         target = ui.get("seconds")
         return f"Timer in progress ({target}s target)" if target else "Timer in progress"
     if isinstance(raw_value, bool):
