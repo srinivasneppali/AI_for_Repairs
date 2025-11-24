@@ -1571,7 +1571,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if ACCESS_PIN:
+if ACCESS_PIN and not st.session_state.get("access_granted"):
     pin_in = st.text_input("Access PIN", type="password")
     if pin_in:
         components.html(
@@ -1585,7 +1585,12 @@ if ACCESS_PIN:
             """,
             height=0,
         )
-    if pin_in != ACCESS_PIN:
+    if not pin_in:
+        st.stop()
+    if pin_in == ACCESS_PIN:
+        st.session_state.access_granted = True
+    else:
+        st.error("Incorrect PIN. Please try again.")
         st.stop()
 
 selected_product = st.session_state.get("selected_product")
