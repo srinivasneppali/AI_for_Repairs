@@ -5,6 +5,7 @@ import json
 import re
 import html
 import uuid
+from functools import lru_cache
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -43,6 +44,20 @@ EVIDENCE_COLLECTION_ENABLED = (
 )
 RECOMMENDED_PARTS_KEY = "recommended_parts"
 ISSUE_LABEL_COLOR = os.getenv("ISSUE_LABEL_COLOR", "#f00c0c")
+PRODUCT_IMAGES_DIR = BASE_DIR / "product_images"
+PRODUCT_CATEGORIES = [
+    {"id": "TV", "label": "TV", "image": "TV.png", "available": False},
+    {"id": "WM", "label": "Washing Machine", "image": "WM.png", "available": True},
+    {"id": "AC", "label": "AC", "image": "AC.png", "available": False},
+    {"id": "REF", "label": "REF", "image": "REF.png", "available": False},
+    {"id": "MWO", "label": "MWO", "image": "MWO.png", "available": False},
+    {"id": "CHIMNEY", "label": "Chimney", "image": "Chimney.png", "available": False},
+]
+PRODUCT_CATEGORY_LABELS = {entry["id"]: entry["label"] for entry in PRODUCT_CATEGORIES}
+AVAILABLE_FLOW_CATEGORIES = {entry["id"] for entry in PRODUCT_CATEGORIES if entry["available"]}
+CATEGORY_FLOW_PATTERNS = {
+    "WM": ("wm", "washingmachine", "washing_machine"),
+}
 YAML_FALLBACK_ENCODINGS = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
 
 
@@ -107,6 +122,9 @@ def init_session_state() -> None:
     st.session_state.setdefault("second_visit_mode", False)
     st.session_state.setdefault("pending_resolution", None)
     st.session_state.setdefault("selected_flow_path", None)
+    st.session_state.setdefault("selected_product", None)
+    st.session_state.setdefault("product_notice", None)
+    st.session_state.setdefault("_product_selector_css_loaded", False)
 
 
 def normalize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
@@ -543,6 +561,341 @@ def render_token_copy(token: str) -> None:
     )
 
 
+def inject_product_selector_styles() -> None:
+    if st.session_state.get("_product_selector_css_loaded"):
+        return
+    st.session_state["_product_selector_css_loaded"] = True
+    st.markdown(
+        """
+        <style>
+        .magic-grid-row {
+            margin-top: 1rem;
+        }
+        .magic-product-card {
+            position: relative;
+            border-radius: 30px;
+            padding: 1.5px;
+            margin: 0.8rem auto 1rem;
+            max-width: 360px;
+            background: linear-gradient(135deg, rgba(147,51,234,0.8), rgba(59,130,246,0.8));
+            box-shadow: 0 25px 60px rgba(8, 12, 40, 0.6);
+            overflow: hidden;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .magic-product-card.magic-clickable .card-core {
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+        .magic-product-card.magic-clickable:hover .card-core {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 30px 65px rgba(24, 20, 55, 0.8);
+        }
+        .magic-product-card.magic-clickable:active .card-core {
+            transform: translateY(0px) scale(0.98);
+        }
+        .magic-product-card.magic-disabled {
+            pointer-events: none;
+            filter: grayscale(0.1);
+        }
+        .magic-product-card::before {
+            content: "";
+            position: absolute;
+            inset: -60% -20%;
+            background: conic-gradient(from 120deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
+            animation: auroraDrift 14s linear infinite;
+            pointer-events: none;
+        }
+        .magic-product-card .card-core {
+            position: relative;
+            z-index: 2;
+            background: rgba(7,11,35,0.92);
+            border-radius: 29px;
+            padding: 1.05rem;
+            overflow: hidden;
+        }
+        .magic-product-card .card-core::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 10%, rgba(255,215,0,0.18), transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(59,130,246,0.22), transparent 60%);
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        .magic-product-card .card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 3;
+        }
+        .magic-product-card .card-chip {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: #f8fbff;
+            text-transform: uppercase;
+        }
+        .magic-product-card .card-badge {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0b132b;
+            background: linear-gradient(120deg, #f9d423, #ff4e50);
+            padding: 0.2rem 0.8rem;
+            border-radius: 999px;
+            box-shadow: 0 8px 25px rgba(249, 212, 35, 0.4);
+        }
+        .magic-product-card .card-image {
+            height: 140px;
+            border-radius: 20px;
+            margin: 1.1rem 0;
+            background-size: cover;
+            background-position: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.35);
+            animation: floatPulse 7s ease-in-out infinite;
+        }
+        .magic-product-card .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 3;
+        }
+        .magic-product-card .card-desc {
+            font-size: 0.88rem;
+            color: #cdd4ff;
+            line-height: 1.4;
+            flex: 1;
+        }
+        .magic-product-card .card-status {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .magic-product-card .card-status.available {
+            color: #04f6c5;
+            border-color: rgba(4,246,197,0.35);
+        }
+        .magic-product-card .card-status.soon {
+            color: #ff99c8;
+            border-color: rgba(255,153,200,0.35);
+        }
+        .magic-product-card .card-cta {
+            margin-top: 0.8rem;
+            padding: 0.75rem 1.2rem;
+            border-radius: 14px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            display: inline-flex;
+            gap: 0.35rem;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 40px rgba(255, 0, 128, 0.35);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .magic-product-card .card-cta.available {
+            background: linear-gradient(120deg, #ff8b5f, #f72585);
+            color: #fff8f9;
+        }
+        .magic-product-card.magic-clickable:hover .card-cta.available {
+            box-shadow: 0 25px 60px rgba(255, 142, 95, 0.45);
+        }
+        .magic-product-card .card-cta.soon {
+            background: linear-gradient(120deg, #3f3d56, #1d1b2f);
+            color: #b0b7de;
+            box-shadow: none;
+        }
+        @keyframes auroraDrift {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes floatPulse {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-6px) scale(1.02); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+        @media (max-width: 900px) {
+            .magic-product-card {
+                border-radius: 22px;
+                max-width: 100%;
+            }
+            .magic-product-card .card-core {
+                padding: 0.85rem;
+            }
+            .magic-product-card .card-chip {
+                font-size: 0.95rem;
+            }
+            .magic-product-card .card-image {
+                height: 110px;
+                border-radius: 16px;
+            }
+            .magic-product-card .card-desc {
+                font-size: 0.82rem;
+            }
+            .magic-product-card .card-cta {
+                font-size: 0.78rem;
+                padding: 0.6rem 1rem;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_product_selector() -> None:
+    inject_product_selector_styles()
+    st.markdown(
+        "<div class='product-grid-headline'>Choose the product you are troubleshooting</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<div class='product-grid-subtitle'>Tap a product card to continue the AI-powered flow.</div>",
+        unsafe_allow_html=True,
+    )
+    pending_notice = st.session_state.pop("product_notice", None)
+    if pending_notice:
+        st.warning(
+            f"Troubleshooting paths for **{pending_notice}** are coming soon. "
+            "Please select Washing Machine (WM) for now."
+        )
+
+    cards_per_row = 2
+    for start in range(0, len(PRODUCT_CATEGORIES), cards_per_row):
+        cols = st.columns(cards_per_row)
+        for offset, col in enumerate(cols):
+            idx = start + offset
+            if idx >= len(PRODUCT_CATEGORIES):
+                break
+            category = PRODUCT_CATEGORIES[idx]
+            available_flag = category["available"]
+            desc_text = (
+                "Beam into full AI troubleshooting with holo-guided steps."
+                if available_flag
+                else "Holograms charging - this flow unlocks soon."
+            )
+            status_label = "AI Ready" if available_flag else "Calibrating"
+            cta_label = "✨ Launch AI Flow" if available_flag else "🚧 Coming Soon"
+            wrapper_tag = "a" if available_flag else "div"
+            wrapper_classes = (
+                "magic-product-card magic-clickable"
+                if available_flag
+                else "magic-product-card magic-disabled"
+            )
+            wrapper_attrs = f'class="{wrapper_classes}"'
+            if available_flag:
+                wrapper_attrs += f' href="?product={category["id"]}" target="_self"'
+            else:
+                wrapper_attrs += ' role="button" aria-disabled="true"'
+            image_bytes = load_product_image(category["image"])
+            image_b64 = (
+                base64.b64encode(image_bytes).decode("ascii") if image_bytes else ""
+            )
+            bg_image = (
+                f"linear-gradient(135deg, rgba(15,23,42,0.6), rgba(56,189,248,0.15)), url('data:image/png;base64,{image_b64}')"
+                if image_b64
+                else "linear-gradient(135deg,#1f0a39,#3f2b96)"
+            )
+            card_html = f"""
+            <{wrapper_tag} {wrapper_attrs}>
+                <div class="card-core">
+                    <div class="card-title">
+                        <span class="card-chip">{html.escape(category['label'])}</span>
+                        <span class="card-badge">{status_label}</span>
+                    </div>
+                    <div class="card-image" style="background-image:{bg_image};"></div>
+                    <div class="card-meta">
+                        <div class="card-desc">{html.escape(desc_text)}</div>
+                        <div class="card-status {'available' if available_flag else 'soon'}">
+                            {cta_label}
+                        </div>
+                    </div>
+                    <div class="card-cta {'available' if available_flag else 'soon'}">
+                        {cta_label}
+                    </div>
+                </div>
+            </{wrapper_tag}>
+            """
+            with col:
+                st.markdown(card_html, unsafe_allow_html=True)
+
+def product_label(product_id: Optional[str]) -> str:
+    if not product_id:
+        return ""
+    return PRODUCT_CATEGORY_LABELS.get(product_id, product_id)
+
+
+@lru_cache(maxsize=32)
+def load_product_image(image_name: str) -> Optional[bytes]:
+    if not image_name:
+        return None
+    path = PRODUCT_IMAGES_DIR / image_name
+    if not path.exists():
+        return None
+    try:
+        return path.read_bytes()
+    except OSError:
+        return None
+
+
+def set_selected_product(product_id: Optional[str]) -> None:
+    st.session_state.selected_product = product_id
+    st.session_state.product_notice = None
+    st.session_state.selected_flow_path = None
+    st.session_state.tree = None
+    st.session_state.meta = {}
+    st.session_state.node_id = None
+    st.session_state.visited_stack = []
+    st.session_state.passed = {}
+    st.session_state.answers = {}
+    st.session_state.parts_used = set()
+    st.session_state.part_photos = {}
+    st.session_state.flow_status = None
+    st.session_state.final_token = None
+    st.session_state.pending_resolution = None
+    st.session_state.path_total_steps = 0
+    st.session_state.second_visit_mode = False
+    st.session_state[SESSION_HISTORY_KEY] = []
+
+
+def filter_flows_for_category(files: List[Path], category_id: Optional[str]) -> List[Path]:
+    if not category_id:
+        return []
+    if category_id not in CATEGORY_FLOW_PATTERNS:
+        return files if category_id in AVAILABLE_FLOW_CATEGORIES else []
+    patterns = CATEGORY_FLOW_PATTERNS[category_id]
+    filtered: List[Path] = []
+    for path in files:
+        name = path.stem.lower()
+        if any(pattern in name for pattern in patterns):
+            filtered.append(path)
+    return filtered
+
+
+def handle_product_query_param() -> None:
+    params = st.query_params
+    product_vals = params.get("product")
+    if not product_vals:
+        return
+    product_choice = product_vals if isinstance(product_vals, str) else product_vals[0]
+    product_choice = (product_choice or "").strip().upper()
+    st.query_params.clear()
+    if product_choice in AVAILABLE_FLOW_CATEGORIES:
+        set_selected_product(product_choice)
+        st.session_state["_scroll_target"] = "top"
+        st.rerun()
+    elif product_choice:
+        st.session_state.product_notice = product_label(product_choice)
+
+
 def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
     pending = st.session_state.get("pending_resolution")
     if not pending:
@@ -841,6 +1194,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 # UI - Header & PIN
 # -----------------------------
 init_session_state()
+handle_product_query_param()
 
 st.markdown(
     """
@@ -978,6 +1332,19 @@ st.markdown(
         letter-spacing: 0.05em;
         text-shadow: 0 12px 34px rgba(0,0,0,0.55);
     }
+    .selected-product-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        color: #ffffff;
+        font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.22);
+        margin: 0.3rem 0 0.8rem 0;
+        box-shadow: 0 4px 18px rgba(15,23,42,0.4);
+    }
     .sub-caption {
         font-size: 0.95rem;
         color: #1d6fa5;
@@ -989,6 +1356,92 @@ st.markdown(
         color: #0f3057;
         margin-top: 1.2rem;
         margin-bottom: 0.4rem;
+    }
+    .product-grid-headline {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #f4f5ff;
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+    .product-grid-subtitle {
+        text-align: center;
+        color: #bfd2ff;
+        margin-bottom: 0.8rem;
+    }
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 1.1rem;
+        margin: 1rem 0 1.3rem 0;
+    }
+    .product-card-link {
+        text-decoration: none;
+        border-radius: 26px;
+        overflow: hidden;
+        display: block;
+        min-height: 235px;
+        position: relative;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.55);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .product-card-link:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 28px 60px rgba(99, 102, 241, 0.55);
+    }
+    .product-card-link[data-available="false"] {
+        cursor: not-allowed;
+    }
+    .product-card-visual {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 235px;
+        background-size: cover;
+        background-position: center;
+        border-radius: inherit;
+        overflow: hidden;
+    }
+    .product-card-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(7, 11, 41, 0.15) 0%, rgba(7,11,41,0.75) 75%);
+        mix-blend-mode: multiply;
+    }
+    .product-card-top-badge {
+        position: absolute;
+        top: 12px;
+        left: 14px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.25);
+        font-weight: 700;
+        color: #fdfdfd;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        z-index: 2;
+        backdrop-filter: blur(6px);
+    }
+    .product-card-bottom-cta {
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0.35rem 1.4rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.65);
+        color: #ffffff;
+        font-weight: 700;
+        background: rgba(255,255,255,0.12);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        z-index: 2;
+        box-shadow: 0 12px 30px rgba(5, 10, 35, 0.65);
+    }
+    .product-card-link[data-available="false"] .product-card-bottom-cta {
+        background: rgba(0,0,0,0.35);
+        border-color: rgba(255,255,255,0.25);
+        letter-spacing: 0.08em;
     }
     .progress-pill {
         background: linear-gradient(90deg, #00a8cc, #407088);
@@ -1135,12 +1588,43 @@ if ACCESS_PIN:
     if pin_in != ACCESS_PIN:
         st.stop()
 
+selected_product = st.session_state.get("selected_product")
+if not selected_product:
+    render_product_selector()
+    st.stop()
+else:
+    pill_col, action_col = st.columns([3, 1])
+    with pill_col:
+        st.markdown(
+            f"<div class='selected-product-pill'>Selected Product · {product_label(selected_product)}</div>",
+            unsafe_allow_html=True,
+        )
+    with action_col:
+        if st.button("Change product", use_container_width=True):
+            st.query_params.clear()
+            set_selected_product(None)
+            st.rerun()
+
 
 # -----------------------------
 # Load YAML / Flow selection
 # -----------------------------
-available_flows = discover_flow_files()
+all_flows = discover_flow_files()
+available_flows = filter_flows_for_category(all_flows, selected_product)
+available_flow_paths = {str(path) for path in available_flows}
 selected_flow_path = st.session_state.get("selected_flow_path")
+if selected_flow_path and selected_flow_path not in available_flow_paths:
+    st.session_state.selected_flow_path = None
+    selected_flow_path = None
+
+if not available_flows:
+    st.info(
+        f"Troubleshooting flows for **{product_label(selected_product)}** are not available yet."
+    )
+    if st.button("Choose a different product", type="secondary"):
+        set_selected_product(None)
+        st.rerun()
+    st.stop()
 
 if available_flows:
     labels: List[str] = []
