@@ -802,7 +802,7 @@ def inject_product_selector_styles() -> None:
             background-size: cover;
             background-position: center;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.35);
-            animation: cinematicZoom 10s ease-in-out infinite;
+            animation: imagePulseZoom 8s ease-in-out infinite;
             position: relative;
             overflow: hidden;
         }
@@ -888,9 +888,11 @@ def inject_product_selector_styles() -> None:
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        @keyframes cinematicZoom {
+        @keyframes imagePulseZoom {
             0% { transform: scale(1.0); }
-            50% { transform: scale(1.08); }
+            40% { transform: scale(1.08); }
+            60% { transform: scale(1.05); }
+            80% { transform: scale(1.10); }
             100% { transform: scale(1.0); }
         }
         @keyframes smokeScreen {
