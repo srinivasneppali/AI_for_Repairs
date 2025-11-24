@@ -702,17 +702,25 @@ def inject_product_selector_styles() -> None:
             color: inherit;
             perspective: 1000px;
         }
+        .magic-product-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to top, rgba(10, 15, 40, 0.7) 0%, transparent 50%),
+                linear-gradient(to bottom, rgba(10, 15, 40, 0.7) 0%, transparent 40%);
+            background-size: 100% 100%;
+            animation: smokeScreen 7s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 3;
+        }
         .magic-product-card.magic-clickable .card-core {
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                         box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             animation: cinematicGlow 4s ease-in-out infinite;
         }
         .magic-product-card.magic-clickable:hover .card-core {
-            transform: translateY(-10px) scale(1.05) rotateY(8deg) rotateX(6deg);
-            box-shadow: 0 55px 95px rgba(24, 20, 55, 0.95),
-                        0 0 35px rgba(59, 130, 246, 0.8),
-                        0 0 55px rgba(147, 51, 234, 0.7);
-            animation: none; /* Turn off default glow on hover to replace it */
+            animation: glitch 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
         }
         .magic-product-card.magic-clickable:active .card-core {
             transform: translateY(0px) scale(0.97);
@@ -794,27 +802,25 @@ def inject_product_selector_styles() -> None:
             background-size: cover;
             background-position: center;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.35);
-            animation: floatPulse 8s ease-in-out infinite;
+            animation: cinematicZoom 10s ease-in-out infinite;
             position: relative;
             overflow: hidden;
         }
         .magic-product-card .card-image::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image:
-                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.25) 1px, transparent 0),
-                radial-gradient(circle at 2px 2px, rgba(255,255,255,0.25) 1px, transparent 0);
-            background-size: 30px 30px, 30px 30px;
-            background-position: 0 0, 15px 15px;
-            animation: starfield 50s linear infinite;
-            opacity: 0.35; /* Always visible */
+            inset: 0;
+            background:
+                radial-gradient(circle, rgba(255, 255, 255, 0.1) 10%, transparent 10.5%) 0 0,
+                radial-gradient(circle, rgba(255, 255, 255, 0.1) 10%, transparent 10.5%) 10px 10px,
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1.5px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1.5px);
+            background-size: 20px 20px, 20px 20px, 10px 10px, 10px 10px;
+            animation: flowingEnergy 15s linear infinite;
+            opacity: 0.5;
         }
         .magic-product-card.magic-clickable:hover .card-image::before {
-            animation-duration: 15s; /* Faster starfield on hover */
+            animation-duration: 5s; /* Faster energy flow on hover */
         }
         .magic-product-card .card-meta {
             display: flex;
@@ -882,17 +888,37 @@ def inject_product_selector_styles() -> None:
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        @keyframes floatPulse {
-            0% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-8px) scale(1.03); }
-            100% { transform: translateY(0px) scale(1); }
+        @keyframes cinematicZoom {
+            0% { transform: scale(1.0); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1.0); }
+        }
+        @keyframes smokeScreen {
+            0% { background-position: 0 100%, 0 -100%; opacity: 0; }
+            20% { opacity: 0.1; }
+            80% { opacity: 0.1; }
+            100% { background-position: 0 -100%, 0 100%; opacity: 0; }
         }
         @keyframes cardShine {
             100% { left: 150%; }
         }
-        @keyframes starfield {
-            from { background-position: 0 0, 15px 15px; }
-            to { background-position: -1000px 500px, -985px 485px; }
+        @keyframes flowingEnergy {
+            0% { background-position: 0 0, 10px 10px, 0 0, 0 0; }
+            100% { background-position: -40px -40px, -30px -30px, -20px -20px, -10px -10px; }
+        }
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px, 0) skew(0deg); }
+            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
+            62% { transform: translate(0, 0) skew(5deg); }
+        }
+        .magic-product-card.magic-clickable:hover .card-chip {
+            animation: glitch-text 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+        }
+        @keyframes glitch-text {
+            0%, 100% { text-shadow: none; }
+            25% { text-shadow: 2px 2px 0 #ff00ff, -2px -2px 0 #00ffff; }
+            50% { text-shadow: 2px -2px 0 #ff00ff, -2px 2px 0 #00ffff; }
+            75% { text-shadow: -2px 2px 0 #ff00ff, 2px -2px 0 #00ffff; }
         }
         @media (max-width: 900px) {
             .magic-product-card {
