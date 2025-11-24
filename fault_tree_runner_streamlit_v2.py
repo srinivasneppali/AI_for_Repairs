@@ -847,6 +847,7 @@ def load_product_image(image_name: str) -> Optional[bytes]:
 
 
 def set_selected_product(product_id: Optional[str]) -> None:
+    access_ok = st.session_state.get("access_granted", False)
     st.session_state.selected_product = product_id
     st.session_state.product_notice = None
     st.session_state.selected_flow_path = None
@@ -864,6 +865,8 @@ def set_selected_product(product_id: Optional[str]) -> None:
     st.session_state.path_total_steps = 0
     st.session_state.second_visit_mode = False
     st.session_state[SESSION_HISTORY_KEY] = []
+    if access_ok:
+        st.session_state.access_granted = True
 
 
 def filter_flows_for_category(files: List[Path], category_id: Optional[str]) -> List[Path]:
