@@ -705,12 +705,14 @@ def inject_product_selector_styles() -> None:
         .magic-product-card.magic-clickable .card-core {
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                         box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            animation: cinematicGlow 4s ease-in-out infinite;
         }
         .magic-product-card.magic-clickable:hover .card-core {
-            transform: translateY(-8px) scale(1.03) rotateY(5deg) rotateX(5deg);
-            box-shadow: 0 45px 85px rgba(24, 20, 55, 0.9),
-                        0 0 25px rgba(59, 130, 246, 0.7),
-                        0 0 45px rgba(147, 51, 234, 0.6);
+            transform: translateY(-10px) scale(1.05) rotateY(8deg) rotateX(6deg);
+            box-shadow: 0 55px 95px rgba(24, 20, 55, 0.95),
+                        0 0 35px rgba(59, 130, 246, 0.8),
+                        0 0 55px rgba(147, 51, 234, 0.7);
+            animation: none; /* Turn off default glow on hover to replace it */
         }
         .magic-product-card.magic-clickable:active .card-core {
             transform: translateY(0px) scale(0.97);
@@ -724,8 +726,8 @@ def inject_product_selector_styles() -> None:
             content: "";
             position: absolute;
             inset: -60% -20%;
-            background: conic-gradient(from 120deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
-            animation: auroraDrift 14s linear infinite;
+            background: conic-gradient(from 120deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            animation: auroraDrift 12s linear infinite;
             pointer-events: none;
         }
         .magic-product-card .card-core {
@@ -740,10 +742,10 @@ def inject_product_selector_styles() -> None:
             content: "";
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 20% 10%, rgba(255,215,0,0.18), transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(59,130,246,0.22), transparent 60%);
+            background: radial-gradient(circle at 20% 10%, rgba(255,215,0,0.2), transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(59,130,246,0.25), transparent 60%);
             pointer-events: none;
-            opacity: 0.8;
+            opacity: 0.9;
         }
         .magic-product-card .card-core::after {
             content: '';
@@ -753,11 +755,13 @@ def inject_product_selector_styles() -> None:
             width: 200%;
             height: 100%;
             transform: skewX(-20deg);
-            background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
             pointer-events: none;
+            animation: cardShine 4s ease-in-out infinite;
+            animation-delay: 1s;
         }
         .magic-product-card.magic-clickable:hover .card-core::after {
-            animation: cardShine 1.5s ease-in-out;
+            animation: cardShine 1.2s ease-in-out 0s 1; /* Faster shine on hover */
         }
         .magic-product-card .card-title {
             display: flex;
@@ -790,7 +794,7 @@ def inject_product_selector_styles() -> None:
             background-size: cover;
             background-position: center;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.35);
-            animation: floatPulse 7s ease-in-out infinite;
+            animation: floatPulse 8s ease-in-out infinite;
             position: relative;
             overflow: hidden;
         }
@@ -806,12 +810,11 @@ def inject_product_selector_styles() -> None:
                 radial-gradient(circle at 2px 2px, rgba(255,255,255,0.25) 1px, transparent 0);
             background-size: 30px 30px, 30px 30px;
             background-position: 0 0, 15px 15px;
-            animation: starfield 60s linear infinite;
-            opacity: 0;
-            transition: opacity 0.5s ease;
+            animation: starfield 50s linear infinite;
+            opacity: 0.35; /* Always visible */
         }
         .magic-product-card.magic-clickable:hover .card-image::before {
-            opacity: 0.3;
+            animation-duration: 15s; /* Faster starfield on hover */
         }
         .magic-product-card .card-meta {
             display: flex;
@@ -870,17 +873,22 @@ def inject_product_selector_styles() -> None:
             color: #b0b7de;
             box-shadow: none;
         }
+        @keyframes cinematicGlow {
+            0% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), 0 0 25px rgba(147, 51, 234, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.6), 0 0 40px rgba(147, 51, 234, 0.5); }
+            100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), 0 0 25px rgba(147, 51, 234, 0.3); }
+        }
         @keyframes auroraDrift {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         @keyframes floatPulse {
             0% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-6px) scale(1.02); }
+            50% { transform: translateY(-8px) scale(1.03); }
             100% { transform: translateY(0px) scale(1); }
         }
         @keyframes cardShine {
-            100% { left: 200%; }
+            100% { left: 150%; }
         }
         @keyframes starfield {
             from { background-position: 0 0, 15px 15px; }
