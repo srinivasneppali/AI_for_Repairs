@@ -700,16 +700,21 @@ def inject_product_selector_styles() -> None:
             display: block;
             text-decoration: none;
             color: inherit;
+            perspective: 1000px;
         }
         .magic-product-card.magic-clickable .card-core {
-            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .magic-product-card.magic-clickable:hover .card-core {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 30px 65px rgba(24, 20, 55, 0.8);
+            transform: translateY(-8px) scale(1.03) rotateY(5deg) rotateX(5deg);
+            box-shadow: 0 45px 85px rgba(24, 20, 55, 0.9),
+                        0 0 25px rgba(59, 130, 246, 0.7),
+                        0 0 45px rgba(147, 51, 234, 0.6);
         }
         .magic-product-card.magic-clickable:active .card-core {
-            transform: translateY(0px) scale(0.98);
+            transform: translateY(0px) scale(0.97);
+            transition-duration: 0.15s;
         }
         .magic-product-card.magic-disabled {
             pointer-events: none;
@@ -739,6 +744,20 @@ def inject_product_selector_styles() -> None:
                         radial-gradient(circle at 80% 20%, rgba(59,130,246,0.22), transparent 60%);
             pointer-events: none;
             opacity: 0.8;
+        }
+        .magic-product-card .card-core::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -200%;
+            width: 200%;
+            height: 100%;
+            transform: skewX(-20deg);
+            background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            pointer-events: none;
+        }
+        .magic-product-card.magic-clickable:hover .card-core::after {
+            animation: cardShine 1.5s ease-in-out;
         }
         .magic-product-card .card-title {
             display: flex;
@@ -772,6 +791,27 @@ def inject_product_selector_styles() -> None:
             background-position: center;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.35);
             animation: floatPulse 7s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        .magic-product-card .card-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.25) 1px, transparent 0),
+                radial-gradient(circle at 2px 2px, rgba(255,255,255,0.25) 1px, transparent 0);
+            background-size: 30px 30px, 30px 30px;
+            background-position: 0 0, 15px 15px;
+            animation: starfield 60s linear infinite;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .magic-product-card.magic-clickable:hover .card-image::before {
+            opacity: 0.3;
         }
         .magic-product-card .card-meta {
             display: flex;
@@ -838,6 +878,13 @@ def inject_product_selector_styles() -> None:
             0% { transform: translateY(0px) scale(1); }
             50% { transform: translateY(-6px) scale(1.02); }
             100% { transform: translateY(0px) scale(1); }
+        }
+        @keyframes cardShine {
+            100% { left: 200%; }
+        }
+        @keyframes starfield {
+            from { background-position: 0 0, 15px 15px; }
+            to { background-position: -1000px 500px, -985px 485px; }
         }
         @media (max-width: 900px) {
             .magic-product-card {
