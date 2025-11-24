@@ -6,6 +6,9 @@ import re
 import html
 import uuid
 import secrets
+import hashlib
+import hmac
+import binascii
 from functools import lru_cache
 from pathlib import Path
 from datetime import datetime
@@ -61,8 +64,9 @@ CATEGORY_FLOW_PATTERNS = {
     "WM": ("wm", "washingmachine", "washing_machine"),
 }
 YAML_FALLBACK_ENCODINGS = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
+ACCESS_TOKEN_PARAM = "access_token"
+ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 ACCESS_TOKEN_TTL_SECONDS = max(int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "3600")), 60)
-_ACTIVE_ACCESS_TOKENS: Dict[str, float] = {}
 
 
 @contextmanager
@@ -133,44 +137,82 @@ def init_session_state() -> None:
     st.session_state.setdefault("access_token", None)
 
 
-def _cleanup_access_tokens(now: Optional[float] = None) -> None:
-    now = now or time.time()
-    expired = [token for token, expiry in _ACTIVE_ACCESS_TOKENS.items() if expiry <= now]
-    for token in expired:
-        _ACTIVE_ACCESS_TOKENS.pop(token, None)
+def _access_token_secret() -> Optional[str]:
+    secret = ACCESS_TOKEN_SECRET or ACCESS_PIN
+    return secret
 
 
-def _touch_access_token(token: Optional[str]) -> Optional[str]:
-    if not token:
+def _sign_access_payload(payload: str) -> Optional[str]:
+    secret = _access_token_secret()
+    if not secret:
         return None
-    now = time.time()
-    _cleanup_access_tokens(now)
-    expiry = _ACTIVE_ACCESS_TOKENS.get(token)
-    if not expiry or expiry <= now:
-        _ACTIVE_ACCESS_TOKENS.pop(token, None)
+    return hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def _encode_access_token(payload: str, signature: str) -> str:
+    token_bytes = f"{payload}:{signature}".encode("utf-8")
+    return base64.urlsafe_b64encode(token_bytes).decode("ascii")
+
+
+def _decode_access_token(token: str) -> Optional[Tuple[str, str, str]]:
+    try:
+        decoded = base64.urlsafe_b64decode(token.encode("ascii")).decode("utf-8")
+    except (ValueError, UnicodeDecodeError, binascii.Error):
         return None
-    _ACTIVE_ACCESS_TOKENS[token] = now + ACCESS_TOKEN_TTL_SECONDS
+    parts = decoded.split(":")
+    if len(parts) != 3:
+        return None
+    ts_str, nonce, signature = parts
+    return ts_str, nonce, signature
+
+
+def _issue_access_token() -> Optional[str]:
+    if not _access_token_secret():
+        return None
+    payload = f"{int(time.time())}:{secrets.token_hex(8)}"
+    signature = _sign_access_payload(payload)
+    if not signature:
+        return None
+    token = _encode_access_token(payload, signature)
+    st.session_state.access_token = token
+    st.session_state.access_granted = True
     return token
+
+
+def _validate_access_token(token: Optional[str]) -> Optional[str]:
+    if not token or not _access_token_secret():
+        return None
+    decoded = _decode_access_token(token)
+    if not decoded:
+        return None
+    ts_str, nonce, signature = decoded
+    payload = f"{ts_str}:{nonce}"
+    expected = _sign_access_payload(payload)
+    if not expected or not hmac.compare_digest(signature, expected):
+        return None
+    try:
+        ts_val = int(ts_str)
+    except ValueError:
+        return None
+    if time.time() - ts_val > ACCESS_TOKEN_TTL_SECONDS:
+        return None
+    return _encode_access_token(payload, signature)
 
 
 def ensure_session_access_token() -> Optional[str]:
     if not ACCESS_PIN:
         return None
-    token = _touch_access_token(st.session_state.get("access_token"))
+    token = _validate_access_token(st.session_state.get("access_token"))
     if token:
         st.session_state.access_token = token
         return token
-    _cleanup_access_tokens()
-    token = secrets.token_urlsafe(16)
-    st.session_state.access_token = token
-    _ACTIVE_ACCESS_TOKENS[token] = time.time() + ACCESS_TOKEN_TTL_SECONDS
-    return token
+    return _issue_access_token()
 
 
 def current_access_token() -> Optional[str]:
     if not ACCESS_PIN:
         return None
-    token = _touch_access_token(st.session_state.get("access_token"))
+    token = _validate_access_token(st.session_state.get("access_token"))
     st.session_state.access_token = token
     return token
 
@@ -178,27 +220,28 @@ def current_access_token() -> Optional[str]:
 def restore_access_from_token_query() -> None:
     if not ACCESS_PIN:
         return
-    token_vals = st.query_params.get("access_token")
+    token_vals = st.query_params.get(ACCESS_TOKEN_PARAM)
     if not token_vals:
         return
     token = token_vals if isinstance(token_vals, str) else token_vals[0]
-    token = _touch_access_token(token)
+    token = _validate_access_token(token)
     if token:
         st.session_state.access_granted = True
         st.session_state.access_token = token
+        st.query_params[ACCESS_TOKEN_PARAM] = token
 
 
 def persist_access_token_query_param() -> None:
     token = current_access_token()
     if token:
-        st.query_params["access_token"] = token
+        st.query_params[ACCESS_TOKEN_PARAM] = token
 
 
 def clear_query_params_preserving_access_token() -> None:
     token = current_access_token()
     st.query_params.clear()
     if token:
-        st.query_params["access_token"] = token
+        st.query_params[ACCESS_TOKEN_PARAM] = token
 
 
 def normalize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
@@ -869,7 +912,7 @@ def render_product_selector() -> None:
             if available_flag:
                 query_bits = {"product": category["id"]}
                 if active_token:
-                    query_bits["access_token"] = active_token
+                    query_bits[ACCESS_TOKEN_PARAM] = active_token
                 wrapper_attrs += f' href="?{urlencode(query_bits)}" target="_self"'
             else:
                 wrapper_attrs += ' role="button" aria-disabled="true"'
