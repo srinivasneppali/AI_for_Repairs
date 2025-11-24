@@ -714,25 +714,6 @@ def inject_product_selector_styles() -> None:
             color: #b0b7de;
             box-shadow: none;
         }
-        .magic-card-shell {
-            position: relative;
-        }
-        .magic-card-shell + div[data-testid="stButton"] {
-            margin-top: -235px;
-            height: 0;
-        }
-        .magic-card-shell + div[data-testid="stButton"] > button {
-            width: 100%;
-            height: 235px;
-            opacity: 0;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-        }
-        .magic-card-shell + div[data-testid="stButton"] > button:focus-visible {
-            opacity: 0.25;
-            outline: 2px solid rgba(255,255,255,0.35);
-        }
         @keyframes auroraDrift {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -804,11 +785,17 @@ def render_product_selector() -> None:
             )
             status_label = "AI Ready" if available_flag else "Calibrating"
             cta_label = "✨ Launch AI Flow" if available_flag else "🚧 Coming Soon"
+            wrapper_tag = "a" if available_flag else "div"
             wrapper_classes = (
                 "magic-product-card magic-clickable"
                 if available_flag
                 else "magic-product-card magic-disabled"
             )
+            wrapper_attrs = f'class="{wrapper_classes}"'
+            if available_flag:
+                wrapper_attrs += f' href="?product={category["id"]}" target="_self"'
+            else:
+                wrapper_attrs += ' role="button" aria-disabled="true"'
             image_bytes = load_product_image(category["image"])
             image_b64 = (
                 base64.b64encode(image_bytes).decode("ascii") if image_bytes else ""
@@ -819,7 +806,7 @@ def render_product_selector() -> None:
                 else "linear-gradient(135deg,#1f0a39,#3f2b96)"
             )
             card_html = f"""
-            <div class="{wrapper_classes}">
+            <{wrapper_tag} {wrapper_attrs}>
                 <div class="card-core">
                     <div class="card-title">
                         <span class="card-chip">{html.escape(category['label'])}</span>
@@ -836,20 +823,10 @@ def render_product_selector() -> None:
                         {cta_label}
                     </div>
                 </div>
-            </div>
+            </{wrapper_tag}>
             """
             with col:
-                shell_html = f"<div class='magic-card-shell'>{card_html}</div>"
-                st.markdown(shell_html, unsafe_allow_html=True)
-                if available_flag:
-                    if st.button(
-                        "",
-                        key=f"product_select_{category['id']}",
-                        help=cta_label,
-                    ):
-                        set_selected_product(category["id"])
-                        st.session_state["_scroll_target"] = "top"
-                        st.rerun()
+                st.markdown(card_html, unsafe_allow_html=True)
 
 def product_label(product_id: Optional[str]) -> str:
     if not product_id:
