@@ -5,11 +5,13 @@ import json
 import re
 import html
 import uuid
+import secrets
 from functools import lru_cache
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from contextlib import contextmanager
+from urllib.parse import urlencode
 
 import requests
 import streamlit as st
@@ -59,6 +61,8 @@ CATEGORY_FLOW_PATTERNS = {
     "WM": ("wm", "washingmachine", "washing_machine"),
 }
 YAML_FALLBACK_ENCODINGS = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
+ACCESS_TOKEN_TTL_SECONDS = max(int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "3600")), 60)
+_ACTIVE_ACCESS_TOKENS: Dict[str, float] = {}
 
 
 @contextmanager
@@ -126,6 +130,75 @@ def init_session_state() -> None:
     st.session_state.setdefault("product_notice", None)
     st.session_state.setdefault("_product_selector_css_loaded", False)
     st.session_state.setdefault("access_granted", False)
+    st.session_state.setdefault("access_token", None)
+
+
+def _cleanup_access_tokens(now: Optional[float] = None) -> None:
+    now = now or time.time()
+    expired = [token for token, expiry in _ACTIVE_ACCESS_TOKENS.items() if expiry <= now]
+    for token in expired:
+        _ACTIVE_ACCESS_TOKENS.pop(token, None)
+
+
+def _touch_access_token(token: Optional[str]) -> Optional[str]:
+    if not token:
+        return None
+    now = time.time()
+    _cleanup_access_tokens(now)
+    expiry = _ACTIVE_ACCESS_TOKENS.get(token)
+    if not expiry or expiry <= now:
+        _ACTIVE_ACCESS_TOKENS.pop(token, None)
+        return None
+    _ACTIVE_ACCESS_TOKENS[token] = now + ACCESS_TOKEN_TTL_SECONDS
+    return token
+
+
+def ensure_session_access_token() -> Optional[str]:
+    if not ACCESS_PIN:
+        return None
+    token = _touch_access_token(st.session_state.get("access_token"))
+    if token:
+        st.session_state.access_token = token
+        return token
+    _cleanup_access_tokens()
+    token = secrets.token_urlsafe(16)
+    st.session_state.access_token = token
+    _ACTIVE_ACCESS_TOKENS[token] = time.time() + ACCESS_TOKEN_TTL_SECONDS
+    return token
+
+
+def current_access_token() -> Optional[str]:
+    if not ACCESS_PIN:
+        return None
+    token = _touch_access_token(st.session_state.get("access_token"))
+    st.session_state.access_token = token
+    return token
+
+
+def restore_access_from_token_query() -> None:
+    if not ACCESS_PIN:
+        return
+    token_vals = st.query_params.get("access_token")
+    if not token_vals:
+        return
+    token = token_vals if isinstance(token_vals, str) else token_vals[0]
+    token = _touch_access_token(token)
+    if token:
+        st.session_state.access_granted = True
+        st.session_state.access_token = token
+
+
+def persist_access_token_query_param() -> None:
+    token = current_access_token()
+    if token:
+        st.query_params["access_token"] = token
+
+
+def clear_query_params_preserving_access_token() -> None:
+    token = current_access_token()
+    st.query_params.clear()
+    if token:
+        st.query_params["access_token"] = token
 
 
 def normalize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
@@ -768,6 +841,7 @@ def render_product_selector() -> None:
             f"Troubleshooting paths for **{pending_notice}** are coming soon. "
             "Please select Washing Machine (WM) for now."
         )
+    active_token = current_access_token()
 
     cards_per_row = 2
     for start in range(0, len(PRODUCT_CATEGORIES), cards_per_row):
@@ -793,7 +867,10 @@ def render_product_selector() -> None:
             )
             wrapper_attrs = f'class="{wrapper_classes}"'
             if available_flag:
-                wrapper_attrs += f' href="?product={category["id"]}" target="_self"'
+                query_bits = {"product": category["id"]}
+                if active_token:
+                    query_bits["access_token"] = active_token
+                wrapper_attrs += f' href="?{urlencode(query_bits)}" target="_self"'
             else:
                 wrapper_attrs += ' role="button" aria-disabled="true"'
             image_bytes = load_product_image(category["image"])
@@ -892,7 +969,7 @@ def handle_product_query_param() -> None:
         return
     product_choice = product_vals if isinstance(product_vals, str) else product_vals[0]
     product_choice = (product_choice or "").strip().upper()
-    st.query_params.clear()
+    clear_query_params_preserving_access_token()
     if product_choice in AVAILABLE_FLOW_CATEGORIES:
         set_selected_product(product_choice)
         st.session_state["_scroll_target"] = "top"
@@ -1199,6 +1276,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 # UI - Header & PIN
 # -----------------------------
 init_session_state()
+restore_access_from_token_query()
 handle_product_query_param()
 
 st.markdown(
@@ -1594,6 +1672,8 @@ if ACCESS_PIN and not st.session_state.get("access_granted"):
         st.stop()
     if pin_in == ACCESS_PIN:
         st.session_state.access_granted = True
+        ensure_session_access_token()
+        persist_access_token_query_param()
     else:
         st.error("Incorrect PIN. Please try again.")
         st.stop()
@@ -1611,7 +1691,7 @@ else:
         )
     with action_col:
         if st.button("Change product", use_container_width=True):
-            st.query_params.clear()
+            clear_query_params_preserving_access_token()
             set_selected_product(None)
             st.rerun()
 
