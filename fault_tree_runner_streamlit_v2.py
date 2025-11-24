@@ -125,6 +125,7 @@ def init_session_state() -> None:
     st.session_state.setdefault("selected_product", None)
     st.session_state.setdefault("product_notice", None)
     st.session_state.setdefault("_product_selector_css_loaded", False)
+    st.session_state.setdefault("access_granted", False)
 
 
 def normalize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
