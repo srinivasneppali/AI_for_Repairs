@@ -8,14 +8,6 @@ meta:
     require_all_steps: true
     generate_token: true
     token_pattern: "{FAULT}-{SKU}-{RAND5}"
-  recommended_parts:
-    - "Brake Wire"
-    - "Safety Switch"
-    - "Main Wiring Harness"
-    - "Capacitor"
-    - "Spin Timer"
-    - "Spin Motor"
-    - "Buffer Seal/Bellow"
 
 start: "s1_load_balance_check"
 
@@ -114,6 +106,7 @@ steps:
       capture: "photo"
       instructions:
         en: "Photo of the broken brake wire."
+    recommends_part: "Brake Wire"
     next: "end_flow_parts_order"
 
   - id: "s3_safety_switch_check"
@@ -177,6 +170,7 @@ steps:
       capture: "photo"
       instructions:
         en: "Photo of the broken safety switch."
+    recommends_part: "Safety Switch"
     next: "end_flow_parts_order"
 
   - id: "s4_rat_bite_check"
@@ -240,6 +234,7 @@ steps:
       capture: "photo"
       instructions:
         en: "Photo of the heavily damaged wiring harness."
+    recommends_part: "Main Wiring Harness"
     next: "end_flow_parts_order"
 
   - id: "s5_capacitor_check"
@@ -277,6 +272,7 @@ steps:
       capture: "photo"
       instructions:
         en: "IMPORTANT: Photo must clearly show the capacitor's rating (e.g., 5 MFD, 6 MFD)."
+    recommends_part: "Capacitor"
     next: "end_flow_parts_order"
 
   - id: "s6_timer_check"
@@ -330,6 +326,7 @@ steps:
       capture: "photo"
       instructions:
         en: "Photo of the spin timer to be replaced."
+    recommends_part: "Spin Timer"
     next: "end_flow_parts_order"
 
   - id: "s7_leak_check"
@@ -396,6 +393,7 @@ steps:
       en: "A critical fault (leakage, jam, or grounding) is confirmed. You MUST order both the Spin Motor and the Buffer Seal. You will be prompted to take a photo of each part."
     ui:
       control: "none"
+    recommends_parts: ["Spin Motor", "Buffer Seal/Bellow"]
     next: "s7_photo_motor"
 
   - id: "s7_photo_motor"

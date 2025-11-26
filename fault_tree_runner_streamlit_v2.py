@@ -137,6 +137,7 @@ def init_session_state() -> None:
     st.session_state.setdefault("_product_selector_css_loaded", False)
     st.session_state.setdefault("access_granted", False)
     st.session_state.setdefault("access_token", None)
+    st.session_state.setdefault("recommended_parts_dynamic", set())
 
 
 def _access_token_secret() -> Optional[str]:
@@ -293,6 +294,7 @@ def reset_tree_progress(tree: Dict[str, Any]) -> None:
     st.session_state.visited_stack = [start_id] if start_id else []
     st.session_state.second_visit_mode = False
     st.session_state.pending_resolution = None
+    st.session_state.recommended_parts_dynamic = set()
     keys_to_clear = [
         key
         for key in list(st.session_state.keys())
@@ -499,6 +501,28 @@ def log_local_step(entry: Dict[str, Any]) -> None:
     # keep the list from growing indefinitely
     if len(history) > 500:
         del history[0]
+
+
+def update_recommended_parts(node: Optional[Dict[str, Any]]) -> None:
+    """Check the current node for part recommendations and add them to session state."""
+    if not node:
+        return
+
+    parts_set = st.session_state.get("recommended_parts_dynamic", set())
+
+    # Handle single part recommendation
+    single_part = node.get("recommends_part")
+    if single_part and isinstance(single_part, str):
+        parts_set.add(single_part)
+
+    # Handle multiple parts recommendation
+    multiple_parts = node.get("recommends_parts")
+    if multiple_parts and isinstance(multiple_parts, list):
+        for part in multiple_parts:
+            if isinstance(part, str):
+                parts_set.add(part)
+
+    st.session_state.recommended_parts_dynamic = parts_set
 
 
 def discover_flow_files() -> List[Path]:
@@ -1098,6 +1122,7 @@ def set_selected_product(product_id: Optional[str]) -> None:
     st.session_state.path_total_steps = 0
     st.session_state.second_visit_mode = False
     st.session_state[SESSION_HISTORY_KEY] = []
+    st.session_state.recommended_parts_dynamic = set()
     if access_ok:
         st.session_state.access_granted = True
 
@@ -1219,6 +1244,12 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
     if not flow_status:
         return False
 
+    if st.session_state.final_token is None:
+        if st.button(BACK_BUTTON_LABEL, key="back_from_completion", use_container_width=True):
+            st.session_state.flow_status = None
+            st.rerun()
+        apply_button_style_by_label(BACK_BUTTON_LABEL, BACK_BUTTON_CLASS)
+
     status = flow_status.get("type", "completed")
     node_id = flow_status.get("node_id") or st.session_state.node_id
     nodes = tree.get("nodes") or {}
@@ -1244,7 +1275,9 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
     # -----------------------------
     # Part photos (for recommended parts)
     # -----------------------------
-    recommended_parts = meta.get(RECOMMENDED_PARTS_KEY) or []
+    recommended_parts = sorted(
+        list(st.session_state.get("recommended_parts_dynamic", set()))
+    )
     if "part_photos" not in st.session_state:
         st.session_state.part_photos = {}
     part_photos = st.session_state.part_photos
@@ -1978,6 +2011,12 @@ if not st.session_state.visited_stack:
     st.session_state.visited_stack = [st.session_state.node_id]
 elif st.session_state.visited_stack[-1] != st.session_state.node_id:
     st.session_state.visited_stack.append(st.session_state.node_id)
+
+current_node_id = st.session_state.get("node_id")
+if current_node_id and nodes:
+    node = nodes.get(current_node_id)
+    if node:
+        update_recommended_parts(node)
 
 meta = st.session_state.meta
 lang_options = language_options(meta)
