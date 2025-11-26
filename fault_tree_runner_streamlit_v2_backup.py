@@ -67,8 +67,6 @@ YAML_FALLBACK_ENCODINGS = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
 ACCESS_TOKEN_PARAM = "access_token"
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 ACCESS_TOKEN_TTL_SECONDS = max(int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "3600")), 60)
-BACK_BUTTON_LABEL = "⬅️ Back to Previous Step"
-BACK_BUTTON_CLASS = "back-step-button"
 
 
 @contextmanager
@@ -677,32 +675,6 @@ def render_token_copy(token: str) -> None:
         </script>
         """,
         height=210,
-    )
-
-
-def apply_button_style_by_label(label: str, css_class: str) -> None:
-    """
-    Attach a CSS class to a Streamlit button by matching its label in the
-    rendered DOM so we can style it without affecting other controls.
-    """
-    if not label or not css_class:
-        return
-    components.html(
-        f"""
-        <script>
-        (function() {{
-            const doc = window.parent.document;
-            if (!doc) return;
-            const target = Array.from(doc.querySelectorAll('button')).find(
-                (btn) => btn.textContent.trim().startsWith({json.dumps(label)})
-            );
-            if (target) {{
-                target.classList.add({json.dumps(css_class)});
-            }}
-        }})();
-        </script>
-        """,
-        height=0,
     )
 
 
@@ -1455,18 +1427,6 @@ st.markdown(
         box-shadow: 0 22px 55px rgba(15, 23, 42, 0.55);
         background-size: 260% 260%;
         animation: glowPulse 6s ease-in-out infinite, gradientShift 18s ease-in-out infinite;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .main-title:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 30px 70px rgba(15, 23, 42, 0.7),
-                    0 0 25px rgba(247, 37, 133, 0.8),
-                    0 0 50px rgba(114, 9, 183, 0.7),
-                    0 0 75px rgba(67, 97, 238, 0.6);
-        animation-play-state: paused;
-    }
-    .main-title:hover .title-core {
-        text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 16px rgba(255, 255, 255, 0.6);
     }
     .main-title::before {
         content: "";
@@ -1580,7 +1540,6 @@ st.markdown(
         font-weight: 700;
         letter-spacing: 0.05em;
         text-shadow: 0 12px 34px rgba(0,0,0,0.55);
-        transition: text-shadow 0.3s ease-in-out;
     }
     .selected-product-pill {
         display: inline-flex;
@@ -1701,34 +1660,6 @@ st.markdown(
         font-weight: 600;
         box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         margin: 0.6rem 0;
-    }
-    @keyframes glowing-blue-grey {
-        0% { box-shadow: 0 2px 3px rgba(38, 50, 56, 0.3), 0 0 3px rgba(120, 144, 156, 0.4), 0 0 5px rgba(120, 144, 156, 0.4); }
-        50% { box-shadow: 0 3px 6px rgba(38, 50, 56, 0.4), 0 0 7px rgba(144, 164, 174, 0.6), 0 0 11px rgba(144, 164, 174, 0.6); }
-        100% { box-shadow: 0 2px 3px rgba(38, 50, 56, 0.3), 0 0 3px rgba(120, 144, 156, 0.4), 0 0 5px rgba(120, 144, 156, 0.4); }
-    }
-    .back-step-button {
-        background-color: #546E7A !important; /* Blue-Grey, Text 2 */
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-        border-radius: 12px !important;
-        border: 1px solid #263238 !important;
-        box-shadow: 0 2px 4px rgba(38, 50, 56, 0.3); /* 3D Effect */
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-        animation: glowing-blue-grey 2.2s ease-in-out infinite;
-        position: relative;
-    }
-    .back-step-button:hover {
-        background-color: #607D8B !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(38, 50, 56, 0.4), 0 0 16px rgba(144, 164, 174, 0.9), 0 0 24px rgba(144, 164, 174, 0.9) !important;
-        animation-play-state: paused;
-    }
-    .back-step-button:active {
-        transform: translateY(1px);
-        box-shadow: 0 1px 2px rgba(38, 50, 56, 0.3), inset 0 1px 3px rgba(0,0,0,0.2) !important;
     }
     .resolution-radio div[data-baseweb="radiogroup"] {
         display: flex;
@@ -2151,17 +2082,6 @@ st.markdown(
     f"<div class='progress-pill'>Steps: {current_step_number} of {path_total_steps}</div>",
     unsafe_allow_html=True,
 )
-
-# Back button
-if len(st.session_state.visited_stack) > 1:
-    back_clicked = st.button(
-        BACK_BUTTON_LABEL, key="back_to_previous_step", use_container_width=True
-    )
-    apply_button_style_by_label(BACK_BUTTON_LABEL, BACK_BUTTON_CLASS)
-    if back_clicked:
-        st.session_state.visited_stack.pop()
-        st.session_state.node_id = st.session_state.visited_stack[-1]
-        st.rerun()
 st.subheader(get_prompt(node, lang))
 input_col, action_col = st.columns([3, 1], vertical_alignment="top")
 
@@ -2301,9 +2221,21 @@ with input_col:
             photo_b64, photo_mime = b64_of_uploaded(camera_file)
 
 with action_col:
+    go_back = st.button(
+        "Previous Step",
+        disabled=len(st.session_state.visited_stack) <= 1,
+        use_container_width=True,
+        key=f"back_{node_id}",
+    )
     go_next = st.button(
         "Submit Step", type="primary", use_container_width=True, key=f"submit_{node_id}"
     )
+
+if go_back and len(st.session_state.visited_stack) > 1:
+    st.session_state.visited_stack.pop()
+    st.session_state.node_id = st.session_state.visited_stack[-1]
+    st.rerun()
+
 
 if go_next:
     tip_placeholder = st.empty()
