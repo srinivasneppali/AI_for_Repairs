@@ -273,11 +273,21 @@ steps:
     resolution_prompt: false
     branches:
       - when: "selection == 'Yes, it is swollen, leaked, or burst'"
-        next: "s5_order_capacitor"
+        next: "s5_recommend_capacitor"
       - when: "selection == 'Yes, the motor is humming but not spinning'"
-        next: "s5_order_capacitor"
+        next: "s5_recommend_capacitor"
       - when: "selection == 'No, capacitor looks fine and motor sound is normal'"
         next: "s6_timer_check"
+
+  - id: "s5_recommend_capacitor"
+    type: "note"
+    recommends_part: "Capacitor"
+    prompt:
+      en: "Capacitor fault confirmed based on the last observation. Replace the Capacitor with a matching rating."
+    ui:
+      control: "none"
+    resolution_prompt: false
+    next: "s5_order_capacitor"
 
   - id: "s5_order_capacitor"
     type: "photo"
