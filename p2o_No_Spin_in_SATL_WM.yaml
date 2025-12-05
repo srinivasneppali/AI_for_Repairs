@@ -65,6 +65,7 @@ steps:
       instructions:
         en: "Capture a photo of the brake wire and motor assembly."
     require_pass: true
+    resolution_prompt: false
     branches:
       - when: "selection == 'Yes, it works correctly (No issue found)'"
         next: "s3_safety_switch_check"
@@ -79,7 +80,7 @@ steps:
       en: "The brake is locking the motor. Please tighten the loose brake cable now."
     ui:
       control: "confirm"
-      options: ["Done, cable tightened"]
+    options: ["Done, cable tightened"]
     evidence:
       required: true
       capture: "photo"
@@ -87,6 +88,7 @@ steps:
         en: "Take a photo showing the tightened cable."
     validation:
       confirm_required: true
+    resolution_prompt: false
     next: "s2_verify_after_tighten"
 
   - id: "s2_verify_after_tighten"
@@ -115,6 +117,7 @@ steps:
       instructions:
         en: "Photo of the broken brake wire."
     recommends_part: "Brake Wire"
+    recommends_parts: ["Brake Wire"]
     next: "end_flow_parts_order"
 
   - id: "s3_safety_switch_check"
@@ -133,6 +136,7 @@ steps:
       instructions:
         en: "Photo of the safety switch contacts."
     require_pass: true
+    resolution_prompt: false
     branches:
       - when: "selection == 'Carbon/Rust is present on contacts'"
         next: "s3_clean_switch"
@@ -150,6 +154,7 @@ steps:
       options: ["Done, contacts cleaned"]
     validation:
       confirm_required: true
+    resolution_prompt: false
     next: "s3_verify_after_clean"
 
   - id: "s3_verify_after_clean"
@@ -170,6 +175,7 @@ steps:
   - id: "s3_recommend_switch_after_clean"
     type: "note"
     recommends_part: "Safety Switch"
+    recommends_parts: ["Safety Switch"]
     prompt:
       en: "Since cleaning the contacts did not resolve the issue, the **Safety Switch** is likely faulty. A replacement is recommended. Proceeding to the next check."
     ui:
@@ -188,6 +194,7 @@ steps:
       instructions:
         en: "Photo of the broken safety switch."
     recommends_part: "Safety Switch"
+    recommends_parts: ["Safety Switch"]
     next: "end_flow_parts_order"
 
   - id: "s4_rat_bite_check"
@@ -224,6 +231,7 @@ steps:
       options: ["Done, wires repaired"]
     validation:
       confirm_required: true
+    resolution_prompt: false
     next: "s4_verify_after_repair"
 
   - id: "s4_verify_after_repair"
@@ -252,6 +260,7 @@ steps:
       instructions:
         en: "Photo of the heavily damaged wiring harness."
     recommends_part: "Main Wiring Harness"
+    recommends_parts: ["Main Wiring Harness"]
     next: "end_flow_parts_order"
 
   - id: "s5_capacitor_check"
@@ -301,6 +310,7 @@ steps:
       instructions:
         en: "IMPORTANT: Photo must clearly show the capacitor's rating (e.g., 5 MFD, 6 MFD)."
     recommends_part: "Capacitor"
+    recommends_parts: ["Capacitor"]
     next: "end_flow_parts_order"
 
   - id: "s6_timer_check"
@@ -355,6 +365,7 @@ steps:
       instructions:
         en: "Photo of the spin timer to be replaced."
     recommends_part: "Spin Timer"
+    recommends_parts: ["Spin Timer"]
     next: "end_flow_parts_order"
 
   - id: "s7_leak_check"
