@@ -44,6 +44,7 @@ steps:
       options:
         - "Done, back panel is open. Proceed to next check."
     require_pass: true
+    resolution_prompt: false
     branches:
       - when: "selection == 'Done, back panel is open. Proceed to next check.'"
         next: "s2_check_brake_wire_action"
@@ -160,6 +161,7 @@ steps:
       options: ["Yes, issue is resolved", "No, issue persists"]
     validation:
       requires_selection: ["Yes, issue is resolved", "No, issue persists"]
+    resolution_prompt: false
     branches:
       - when: "selection == 'No, issue persists'"
         next: "s3_recommend_switch_after_clean"
@@ -204,6 +206,7 @@ steps:
       instructions:
         en: "Photo of the main wiring harness area."
     require_pass: true
+    resolution_prompt: false
     branches:
       - when: "selection == 'Yes, minor cuts found (repairable)'"
         next: "s4_repair_wires"
@@ -267,6 +270,7 @@ steps:
       instructions:
         en: "Take a photo of the capacitor. Ensure the rating is visible if possible."
     require_pass: true
+    resolution_prompt: false
     branches:
       - when: "selection == 'Yes, it is swollen, leaked, or burst'"
         next: "s5_order_capacitor"
