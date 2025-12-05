@@ -1,8 +1,8 @@
-# WM_SA_NO_SPIN_V1.2
+# WM_SA_NO_SPIN_V1.3
 meta:
   id: "WM_SA_NO_SPIN_V1"
   title: "WM Semi-Automatic: Spin Not Working"
-  version: "1.2"
+  version: "1.3"
   language: ["en"]
   gating:
     require_all_steps: true
@@ -36,13 +36,12 @@ steps:
     next: "s2_brake_wire_intro" # Continues flow if resolution fails
 
   - id: "s2_brake_wire_intro"
-    type: "action"
-    ask_if_resolved: false
+    type: "note"
     prompt:
       en: "Step 2: Door Switch & Brake Cable Check (Most Common Issue). Open the back panel of the machine to proceed."
     ui:
       control: "confirm"
-      options: ["Done, back panel is open"]
+      options: ["Proceed"]
     next: "s2_check_brake_wire_action"
 
   - id: "s2_check_brake_wire_action"
@@ -150,7 +149,6 @@ steps:
 
   - id: "s3_verify_after_clean"
     type: "verify"
-    ask_if_resolved: false
     prompt:
       en: "After cleaning the contacts, test the spin cycle. Does it work now?"
     ui:
@@ -165,7 +163,6 @@ steps:
 
   - id: "s3_recommend_switch_after_clean"
     type: "note"
-    ask_if_resolved: false
     recommends_part: "Safety Switch"
     prompt:
       en: "Since cleaning the contacts did not resolve the issue, the **Safety Switch** is likely faulty. A replacement is recommended. Proceeding to the next check."
@@ -189,7 +186,6 @@ steps:
 
   - id: "s4_rat_bite_check"
     type: "quiz"
-    ask_if_resolved: false
     prompt:
       en: "Step 4: Rat Bite & Wiring Check. Look carefully at the wiring harness inside the back panel. Are any wires cut by rats?"
     ui:
@@ -253,7 +249,6 @@ steps:
 
   - id: "s5_capacitor_check"
     type: "quiz"
-    ask_if_resolved: false
     prompt:
       en: "Step 5: Capacitor Check. Is the capacitor swollen/leaked/burst? OR Does the motor make a 'humming' sound but won't rotate (with brake free)?"
     ui:
@@ -292,7 +287,6 @@ steps:
 
   - id: "s6_timer_check"
     type: "quiz"
-    ask_if_resolved: false
     prompt:
       en: "Step 6: Spin Timer Check. Turn the spin knob. What do you observe?"
     ui:
@@ -312,7 +306,6 @@ steps:
 
   - id: "s6_bypass_test"
     type: "quiz"
-    ask_if_resolved: false
     prompt:
       en: "Perform a bypass test: connect the two main wires of the timer directly. Does the motor start running now?"
     ui:
@@ -348,7 +341,6 @@ steps:
 
   - id: "s7_leak_check"
     type: "quiz"
-    ask_if_resolved: false
     prompt:
       en: "Step 7: Motor & Seal Check. Look at the spin motor shaft and the rubber seal (Buffer/Bellow) above it. Is there water leaking onto the motor, or is the motor heavily rusted?"
     ui:
@@ -370,7 +362,6 @@ steps:
 
   - id: "s7_jam_check"
     type: "quiz"
-    ask_if_resolved: false
     prompt:
       en: "Jamming Check: With the brake released (lid closed), try to rotate the Spin Drum coupling by hand. Does it rotate freely?"
     ui:
@@ -387,7 +378,6 @@ steps:
 
   - id: "s7_grounding_check"
     type: "quiz"
-    ask_if_resolved: false
     prompt:
       en: "Motor Grounding Check: Use a multimeter to check if the motor body is grounded."
     ui:
