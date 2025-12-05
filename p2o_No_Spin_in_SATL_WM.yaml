@@ -1,490 +1,592 @@
 # WM_SA_NO_SPIN_V1.3
 meta:
   id: WM_SA_NO_SPIN_V1
-  title: 'DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working'
-  version: '1.3'
+  title: "DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working"
+  version: "1.3"
   language:
-  - en
+    - en
   gating:
     require_all_steps: true
     generate_token: true
-    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+    token_pattern: "{FAULT}-{SKU}-{RAND5}"
+
 start: s1_load_balance_check
+
 steps:
-- id: s1_load_balance_check
-  type: action
-  prompt:
-    en: 'Step 1: Load Balance Check. Open the spin lid. Check for unevenly dumped
-      clothes OR a small cloth (sock/handkerchief) fallen between the tub and outer
-      body, jamming the drum.'
-  ui:
-    control: radio
-    options:
-    - Clothes were uneven -> Spread evenly & pressed with Safety Cover
-    - Small cloth was jamming the drum -> Removed
-    - No issue found with load balance or jamming
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Take a photo of the inside of the spin tub after performing the action.
-  require_pass: true
-  validation:
-    confirm_required: true
-  branches:
-  - when: selection == 'No issue found with load balance or jamming'
+  - id: s1_load_balance_check
+    type: action
+    prompt:
+      en: >
+        Step 1: Load Balance Check. Open the spin lid. Check for unevenly dumped
+        clothes OR a small cloth (sock/handkerchief) fallen between the tub and
+        outer body, jamming the drum.
+    ui:
+      control: radio
+      options:
+        - "Clothes were uneven -> Spread evenly & pressed with Safety Cover"
+        - "Small cloth was jamming the drum -> Removed"
+        - "No issue found with load balance or jamming"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Take a photo of the inside of the spin tub after performing the action."
+    require_pass: true
+    validation:
+      confirm_required: true
+    branches:
+      - when: "selection == 'No issue found with load balance or jamming'"
+        next: s2_brake_wire_intro
     next: s2_brake_wire_intro
-  next: s2_brake_wire_intro
-- id: s2_brake_wire_intro
-  type: quiz
-  prompt:
-    en: 'Step 2: Door Switch & Brake Cable Check (Most Common Issue). Open the back
-      panel of the machine to proceed.'
-  ui:
-    control: radio
-    options:
-    - Done, back panel is open. Proceed to next check.
-  require_pass: true
-  resolution_prompt: false
-  branches:
-  - when: selection == 'Done, back panel is open. Proceed to next check.'
-    next: s2_check_brake_wire_action
-- id: s2_check_brake_wire_action
-  type: quiz
-  prompt:
-    en: Inspect the brake wire connecting the Spin Lid to the Motor Brake assembly.
-      When you close the Spin Lid, does the brake wire correctly pull and release
-      the brake band from the pulley?
-  ui:
-    control: radio
-    options:
-    - Yes, it works correctly (No issue found)
-    - No, the cable is loose
-    - No, the cable is broken/cut
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Capture a photo of the brake wire and motor assembly.
-  require_pass: true
-  resolution_prompt: false
-  branches:
-  - when: selection == 'Yes, it works correctly (No issue found)'
+
+  - id: s2_brake_wire_intro
+    type: quiz
+    prompt:
+      en: >
+        Step 2: Door Switch & Brake Cable Check (Most Common Issue).
+        Open the back panel of the machine to proceed.
+    ui:
+      control: radio
+      options:
+        - "Done, back panel is open. Proceed to next check."
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: "selection == 'Done, back panel is open. Proceed to next check.'"
+        next: s2_check_brake_wire_action
+
+  - id: s2_check_brake_wire_action
+    type: quiz
+    prompt:
+      en: >
+        Inspect the brake wire connecting the Spin Lid to the Motor Brake assembly.
+        When you close the Spin Lid, does the brake wire correctly pull and release
+        the brake band from the pulley?
+    ui:
+      control: radio
+      options:
+        - "Yes, it works correctly (No issue found)"
+        - "No, the cable is loose"
+        - "No, the cable is broken/cut"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo showing the brake cable and brake band area."
+    require_pass: true
+    branches:
+      - when: "selection == 'Yes, it works correctly (No issue found)'"
+        next: s3_safety_switch_check
+      - when: "selection == 'No, the cable is loose'"
+        next: s2_tighten_brake_wire
+      - when: "selection == 'No, the cable is broken/cut'"
+        next: s2_order_brake_wire
     next: s3_safety_switch_check
-  - when: selection == 'No, the cable is loose'
-    next: s2_tighten_brake_wire
-  - when: selection == 'No, the cable is broken/cut'
-    next: s2_order_brake_wire
-- id: s2_tighten_brake_wire
-  type: action
-  prompt:
-    en: The brake is locking the motor. Please tighten the loose brake cable now.
-  ui:
-    control: confirm
-  options:
-  - Done, cable tightened
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Take a photo showing the tightened cable.
-  validation:
-    confirm_required: true
-  next: s2_verify_after_tighten
-- id: s2_verify_after_tighten
-  type: verify
-  prompt:
-    en: After tightening the cable, test the spin cycle. Does the spin work now?
-  ui:
-    control: radio
-    options:
-    - Yes, issue is resolved
-    - No, issue persists
-  validation:
-    requires_selection:
-    - Yes, issue is resolved
-    - No, issue persists
-  branches:
-  - when: selection == 'No, issue persists'
-    next: s3_safety_switch_check
-  next: null
-- id: s2_order_brake_wire
-  type: photo
-  prompt:
-    en: The brake wire is broken and must be replaced. Order a new **Brake Wire**.
-      Capture a clear photo of the broken wire for evidence before finalizing.
-  ui:
-    control: none
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the broken brake wire.
-  recommends_part: Brake Wire
-  next: end_flow_parts_order
-  recommends_parts:
-  - Brake Wire
-- id: s3_safety_switch_check
-  type: quiz
-  prompt:
-    en: 'Step 3: Check Safety Switch. Inspect the switch contacts near the lid hinge.
-      When the lid is closed, the two copper strips must touch tightly. What is the
-      condition?'
-  ui:
-    control: radio
-    options:
-    - Carbon/Rust is present on contacts
-    - The switch assembly is physically broken
-    - Switch appears to be OK (no rust, not broken)
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the safety switch contacts.
-  require_pass: true
-  resolution_prompt: false
-  branches:
-  - when: selection == 'Carbon/Rust is present on contacts'
-    next: s3_clean_switch
-  - when: selection == 'The switch assembly is physically broken'
-    next: s3_order_safety_switch
-  - when: selection == 'Switch appears to be OK (no rust, not broken)'
+
+  - id: s2_tighten_brake_wire
+    type: action
+    prompt:
+      en: >
+        Tighten the brake cable so that the brake band fully releases from the
+        pulley when the Spin Lid is closed.
+    ui:
+      control: checkbox
+      options:
+        - "Brake cable tightened and adjusted correctly."
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo showing the adjusted brake cable."
+    require_pass: true
+    branches:
+      - when: "selection and 'Brake cable tightened and adjusted correctly.' in selection"
+        next: s2_verify_after_tighten
+    next: s2_verify_after_tighten
+
+  - id: s2_verify_after_tighten
+    type: verify
+    prompt:
+      en: >
+        After tightening the brake cable, close the Spin Lid and run the spin cycle.
+        Does the spin function work now?
+    ui:
+      control: radio
+      options:
+        - "Yes, spin is working normally now"
+        - "No, issue persists"
+    require_pass: true
+    branches:
+      - when: "selection == 'No, issue persists'"
+        next: s3_safety_switch_check
+    next: null
+
+  - id: s2_order_brake_wire
+    type: photo
+    prompt:
+      en: >
+        The brake cable is broken or cut. Order a new **Brake Wire** assembly.
+        Capture a clear photo of the damaged cable.
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Photo of the damaged or cut brake cable."
+    recommends_part: "Brake Wire"
+    recommends_parts:
+      - "Brake Wire"
+    next: end_flow_parts_order
+
+  - id: s3_safety_switch_check
+    type: quiz
+    prompt:
+      en: >
+        Step 3: Check Safety Switch. Inspect the switch contacts near the lid hinge.
+        When the lid is closed, the two copper strips must touch tightly.
+        What is the condition?
+    ui:
+      control: radio
+      options:
+        - "Carbon/Rust is present on contacts"
+        - "Contacts are clean and touching properly"
+        - "Contacts are bent/broken"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo showing the safety switch contacts clearly."
+    require_pass: true
+    branches:
+      - when: "selection == 'Carbon/Rust is present on contacts'"
+        next: s3_clean_switch
+      - when: "selection == 'Contacts are clean and touching properly'"
+        next: s4_rat_bite_check
+      - when: "selection == 'Contacts are bent/broken'"
+        next: s3_order_safety_switch
     next: s4_rat_bite_check
-- id: s3_clean_switch
-  type: action
-  prompt:
-    en: Clean the carbon/rust from the copper strips using sandpaper.
-  ui:
-    control: confirm
-    options:
-    - Done, contacts cleaned
-  validation:
-    confirm_required: true
-  resolution_prompt: false
-  next: s3_verify_after_clean
-- id: s3_verify_after_clean
-  type: verify
-  prompt:
-    en: After cleaning the contacts, test the spin cycle. Does it work now?
-  ui:
-    control: radio
-    options:
-    - Yes, issue is resolved
-    - No, issue persists
-  validation:
-    requires_selection:
-    - Yes, issue is resolved
-    - No, issue persists
-  resolution_prompt: false
-  branches:
-  - when: selection == 'No, issue persists'
-    next: s3_recommend_switch_after_clean
-  next: null
-- id: s3_recommend_switch_after_clean
-  type: note
-  recommends_part: Safety Switch
-  prompt:
-    en: Since cleaning the contacts did not resolve the issue, the **Safety Switch**
-      is likely faulty. A replacement is recommended. Proceeding to the next check.
-  ui:
-    control: none
-  next: s4_rat_bite_check
-  recommends_parts:
-  - Safety Switch
-- id: s3_order_safety_switch
-  type: photo
-  prompt:
-    en: The Safety Switch is broken. Order a new **Safety Switch assembly**. Capture
-      a photo of the broken part before finalizing.
-  ui:
-    control: none
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the broken safety switch.
-  recommends_part: Safety Switch
-  next: end_flow_parts_order
-  recommends_parts:
-  - Safety Switch
-- id: s4_rat_bite_check
-  type: quiz
-  prompt:
-    en: 'Step 4: Rat Bite & Wiring Check. Look carefully at the wiring harness inside
-      the back panel. Are any wires cut by rats?'
-  ui:
-    control: radio
-    options:
-    - Yes, minor cuts found (repairable)
-    - Yes, heavy damage found (not repairable)
-    - No, all wires are intact
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the main wiring harness area.
-  require_pass: true
-  resolution_prompt: false
-  branches:
-  - when: selection == 'Yes, minor cuts found (repairable)'
-    next: s4_repair_wires
-  - when: selection == 'Yes, heavy damage found (not repairable)'
-    next: s4_order_harness
-  - when: selection == 'No, all wires are intact'
+
+  - id: s3_clean_switch
+    type: action
+    prompt:
+      en: >
+        Clean the carbon/rust from the copper strips using sandpaper. Ensure both
+        strips are shiny and flat.
+    ui:
+      control: checkbox
+      options:
+        - "Switch contacts cleaned using sandpaper."
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo of the cleaned switch contacts."
+    require_pass: true
+    branches:
+      - when: "selection and 'Switch contacts cleaned using sandpaper.' in selection"
+        next: s3_verify_after_clean
+    next: s3_verify_after_clean
+
+  - id: s3_verify_after_clean
+    type: verify
+    prompt:
+      en: >
+        After cleaning the contacts, close the lid and test the spin cycle.
+        Does it work now?
+    ui:
+      control: radio
+      options:
+        - "Yes, spin is working now"
+        - "No, issue persists"
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: "selection == 'No, issue persists'"
+        next: s3_recommend_switch_after_clean
+      - when: "selection == 'Yes, spin is working now'"
+        next: null
+    next: null
+
+  - id: s3_recommend_switch_after_clean
+    type: note
+    prompt:
+      en: >
+        Since cleaning the contacts did not resolve the issue, the **Safety Switch**
+        is likely faulty. A replacement is recommended. Proceeding to the next check.
+    ui:
+      control: none
+    recommends_part: "Safety Switch"
+    recommends_parts:
+      - "Safety Switch"
+    next: s4_rat_bite_check
+
+  - id: s3_order_safety_switch
+    type: photo
+    prompt:
+      en: >
+        The Safety Switch is broken. Order a new **Safety Switch assembly**.
+        Capture a photo of the broken part before finalizing.
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Photo of the broken safety switch."
+    recommends_part: "Safety Switch"
+    recommends_parts:
+      - "Safety Switch"
+    next: end_flow_parts_order
+
+  - id: s4_rat_bite_check
+    type: quiz
+    prompt:
+      en: >
+        Step 4: Rat Bite & Wiring Check. Look carefully at the wiring harness inside
+        the back panel. Are any wires cut by rats?
+    ui:
+      control: radio
+      options:
+        - "Yes, minor cuts found (repairable)"
+        - "Yes, heavy damage found (not repairable)"
+        - "No, all wires are intact"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo showing the wiring harness area clearly."
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: "selection == 'Yes, minor cuts found (repairable)'"
+        next: s4_repair_wires
+      - when: "selection == 'Yes, heavy damage found (not repairable)'"
+        next: s4_order_harness
+      - when: "selection == 'No, all wires are intact'"
+        next: s5_capacitor_check
     next: s5_capacitor_check
-- id: s4_repair_wires
-  type: action
-  prompt:
-    en: Reconnect the cut wires securely using insulation tape.
-  ui:
-    control: confirm
-    options:
-    - Done, wires repaired
-  validation:
-    confirm_required: true
-  resolution_prompt: false
-  next: s4_verify_after_repair
-- id: s4_verify_after_repair
-  type: verify
-  prompt:
-    en: After repairing the wires, test the spin cycle. Does it work now?
-  ui:
-    control: radio
-    options:
-    - Yes, issue is resolved
-    - No, issue persists
-  validation:
-    requires_selection:
-    - Yes, issue is resolved
-    - No, issue persists
-  branches:
-  - when: selection == 'No, issue persists'
-    next: s5_capacitor_check
-  next: null
-  resolution_prompt: false
-- id: s4_order_harness
-  type: photo
-  prompt:
-    en: The wiring harness is too damaged to repair. Order a new **Main Wiring Harness**.
-      Capture a photo of the damage before finalizing.
-  ui:
-    control: none
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the heavily damaged wiring harness.
-  recommends_part: Main Wiring Harness
-  next: end_flow_parts_order
-  recommends_parts:
-  - Main Wiring Harness
-- id: s5_capacitor_check
-  type: quiz
-  prompt:
-    en: 'Step 5: Capacitor Check. Is the capacitor swollen/leaked/burst? OR Does the
-      motor make a ''humming'' sound but won''t rotate (with brake free)?'
-  ui:
-    control: radio
-    options:
-    - Yes, it is swollen, leaked, or burst
-    - Yes, the motor is humming but not spinning
-    - No, capacitor looks fine and motor sound is normal
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Take a photo of the capacitor. Ensure the rating is visible if possible.
-  require_pass: true
-  resolution_prompt: false
-  branches:
-  - when: selection == 'Yes, it is swollen, leaked, or burst'
-    next: s5_recommend_capacitor
-  - when: selection == 'Yes, the motor is humming but not spinning'
-    next: s5_recommend_capacitor
-  - when: selection == 'No, capacitor looks fine and motor sound is normal'
+
+  - id: s4_repair_wires
+    type: action
+    prompt:
+      en: >
+        Repair the minor cuts using proper insulation (sleeves/tape). Ensure there
+        is no exposed copper.
+    ui:
+      control: checkbox
+      options:
+        - "Damaged wires repaired and insulated properly."
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo of the repaired and insulated wiring."
+    require_pass: true
+    branches:
+      - when: "selection and 'Damaged wires repaired and insulated properly.' in selection"
+        next: s4_verify_after_repair
+    next: s4_verify_after_repair
+
+  - id: s4_verify_after_repair
+    type: verify
+    prompt:
+      en: >
+        After repairing the wires, run the spin cycle. Does the spin function work now?
+    ui:
+      control: radio
+      options:
+        - "Yes, spin is working now"
+        - "No, issue persists"
+    require_pass: true
+    branches:
+      - when: "selection == 'No, issue persists'"
+        next: s5_capacitor_check
+      - when: "selection == 'Yes, spin is working now'"
+        next: null
+    next: null
+
+  - id: s4_order_harness
+    type: photo
+    prompt:
+      en: >
+        The wiring harness has heavy damage due to rat bite. Order a new **Main Wiring
+        Harness**. Capture a photo of the damaged harness.
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Photo of the damaged wiring harness."
+    recommends_part: "Main Wiring Harness"
+    recommends_parts:
+      - "Main Wiring Harness"
+    next: end_flow_parts_order
+
+  - id: s5_capacitor_check
+    type: quiz
+    prompt:
+      en: >
+        Step 5: Capacitor Check. Is the capacitor swollen/leaked/burst?
+        OR Does the motor make a 'humming' sound but won't rotate (with brake free)?
+    ui:
+      control: radio
+      options:
+        - "Yes, it is swollen, leaked, or burst"
+        - "Yes, the motor is humming but not spinning"
+        - "No, capacitor looks fine and motor sound is normal"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Take a photo of the capacitor. Ensure the rating is visible if possible."
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: "selection == 'Yes, it is swollen, leaked, or burst'"
+        next: s5_recommend_capacitor
+      - when: "selection == 'Yes, the motor is humming but not spinning'"
+        next: s5_recommend_capacitor
+      - when: "selection == 'No, capacitor looks fine and motor sound is normal'"
+        next: s6_timer_check
     next: s6_timer_check
-- id: s5_recommend_capacitor
-  type: note
-  recommends_part: Capacitor
-  recommends_parts:
-  - Capacitor
-  prompt:
-    en: Capacitor fault confirmed based on the last observation. Replace the Capacitor
-      with a matching rating.
-  ui:
-    control: none
-  next: s5_order_capacitor
-- id: s5_order_capacitor
-  type: photo
-  prompt:
-    en: The capacitor is faulty. Order a new **Capacitor**. Capture a clear photo showing
-      the rating (e.g., 5 MFD). You MUST mention this rating in the order remarks.
-  ui:
-    control: none
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: 'IMPORTANT: Photo must clearly show the capacitor''s rating (e.g., 5 MFD,
-        6 MFD).'
-  recommends_part: Capacitor
-  next: end_flow_parts_order
-  recommends_parts:
-  - Capacitor
-- id: s6_timer_check
-  type: quiz
-  prompt:
-    en: 'Step 6: Spin Timer Check. Turn the spin knob. What do you observe?'
-  ui:
-    control: radio
-    options:
-    - No 'Tick-Tick' sound (knob is free/slipping)
-    - I hear 'Tick-Tick', but the motor doesn't run
-    - Timer sounds OK
-  require_pass: true
-  branches:
-  - when: selection == 'No ''Tick-Tick'' sound (knob is free/slipping)'
-    next: s6_order_timer
-  - when: selection == 'I hear ''Tick-Tick'', but the motor doesn''t run'
-    next: s6_bypass_test
-  - when: selection == 'Timer sounds OK'
+
+  - id: s5_recommend_capacitor
+    type: note
+    prompt:
+      en: >
+        Capacitor fault confirmed based on the last observation.
+        Replace the Capacitor with a matching rating.
+    ui:
+      control: none
+    recommends_part: "Capacitor"
+    recommends_parts:
+      - "Capacitor"
+    next: s5_order_capacitor
+
+  - id: s5_order_capacitor
+    type: photo
+    prompt:
+      en: >
+        The capacitor is faulty. Order a new **Capacitor**.
+        Capture a clear photo showing the rating (e.g., 5 MFD).
+        You MUST mention this rating in the order remarks.
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: >
+          IMPORTANT: Photo must clearly show the capacitor's rating (e.g., 5 MFD, 6 MFD).
+    recommends_part: "Capacitor"
+    recommends_parts:
+      - "Capacitor"
+    next: end_flow_parts_order
+
+  - id: s6_timer_check
+    type: quiz
+    prompt:
+      en: >
+        Step 6: Spin Timer Check. Rotate the spin timer knob and listen carefully.
+        Does it move smoothly with proper ticking sound and does the timer advance?
+    ui:
+      control: radio
+      options:
+        - "Timer is not moving / no ticking sound"
+        - "Timer knob is jammed/stuck"
+        - "Timer is working normally"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo of the spin timer and its knob."
+    require_pass: true
+    branches:
+      - when: "selection == 'Timer is not moving / no ticking sound'"
+        next: s6_bypass_test
+      - when: "selection == 'Timer knob is jammed/stuck'"
+        next: s6_order_timer
+      - when: "selection == 'Timer is working normally'"
+        next: s7_leak_check
     next: s7_leak_check
-- id: s6_bypass_test
-  type: quiz
-  prompt:
-    en: 'Perform a bypass test: connect the two main wires of the timer directly.
-      Does the motor start running now?'
-  ui:
-    control: radio
-    options:
-    - Yes, motor runs after bypassing the timer
-    - No, motor still does not run
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo showing the wires being bypassed (for verification).
-  require_pass: true
-  branches:
-  - when: selection == 'Yes, motor runs after bypassing the timer'
-    next: s6_order_timer
-  - when: selection == 'No, motor still does not run'
+
+  - id: s6_bypass_test
+    type: quiz
+    prompt:
+      en: >
+        For trained technicians only: Bypass the spin timer temporarily and feed
+        direct power to the spin motor circuit. Does the motor run when directly powered?
+    ui:
+      control: radio
+      options:
+        - "Yes, motor runs when bypassed"
+        - "No, motor does not run even when bypassed"
+        - "Bypass test not performed (not trained / not safe)"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo of the wiring setup used for bypass (if performed)."
+    require_pass: true
+    branches:
+      - when: "selection == 'Yes, motor runs when bypassed'"
+        next: s6_order_timer
+      - when: "selection == 'No, motor does not run even when bypassed'"
+        next: s7_leak_check
+      - when: "selection == 'Bypass test not performed (not trained / not safe)'"
+        next: s7_leak_check
     next: s7_leak_check
-- id: s6_order_timer
-  type: photo
-  prompt:
-    en: The Spin Timer is faulty. Order a new **Spin Timer**. Capture a photo of the
-      faulty timer before finalizing.
-  ui:
-    control: none
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the spin timer to be replaced.
-  recommends_part: Spin Timer
-  next: end_flow_parts_order
-  recommends_parts:
-  - Spin Timer
-- id: s7_leak_check
-  type: quiz
-  prompt:
-    en: 'Step 7: Motor & Seal Check. Look at the spin motor shaft and the rubber seal
-      (Buffer/Bellow) above it. Is there water leaking onto the motor, or is the motor
-      heavily rusted?'
-  ui:
-    control: radio
-    options:
-    - Yes, water is leaking or motor is rusted
-    - No, the area is dry and clean
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the motor shaft and seal area.
-  require_pass: true
-  branches:
-  - when: selection == 'Yes, water is leaking or motor is rusted'
-    next: s7_order_motor_and_seal_intro
-  - when: selection == 'No, the area is dry and clean'
+
+  - id: s6_order_timer
+    type: photo
+    prompt:
+      en: >
+        The Spin Timer is faulty. Order a new **Spin Timer**.
+        Capture a photo of the faulty timer before finalizing.
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Photo of the spin timer to be replaced."
+    recommends_part: "Spin Timer"
+    recommends_parts:
+      - "Spin Timer"
+    next: end_flow_parts_order
+
+  - id: s7_leak_check
+    type: quiz
+    prompt:
+      en: >
+        Step 7: Motor Health Check - Leak Test.
+        Is there any water leakage from the spin tub area onto the spin motor?
+    ui:
+      control: radio
+      options:
+        - "Yes, water is leaking onto the motor"
+        - "No visible leakage near the motor"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo showing the spin motor and nearby area."
+    require_pass: true
+    branches:
+      - when: "selection == 'Yes, water is leaking onto the motor'"
+        next: s7_jam_check
+      - when: "selection == 'No visible leakage near the motor'"
+        next: s7_jam_check
     next: s7_jam_check
-- id: s7_jam_check
-  type: quiz
-  prompt:
-    en: 'Jamming Check: With the brake released (lid closed), try to rotate the Spin
-      Drum coupling by hand. Does it rotate freely?'
-  ui:
-    control: radio
-    options:
-    - No, it is jammed (very tight/hard to rotate)
-    - Yes, it rotates freely
-  require_pass: true
-  branches:
-  - when: selection == 'No, it is jammed (very tight/hard to rotate)'
-    next: s7_order_motor_and_seal_intro
-  - when: selection == 'Yes, it rotates freely'
+
+  - id: s7_jam_check
+    type: quiz
+    prompt:
+      en: >
+        Rotate the spin tub by hand. Does it move freely without heavy resistance?
+    ui:
+      control: radio
+      options:
+        - "Tub is jammed / very hard to rotate"
+        - "Tub rotates freely"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo of the spin tub and motor pulley area."
+    require_pass: true
+    branches:
+      - when: "selection == 'Tub is jammed / very hard to rotate'"
+        next: s7_grounding_check
+      - when: "selection == 'Tub rotates freely'"
+        next: s7_grounding_check
     next: s7_grounding_check
-- id: s7_grounding_check
-  type: quiz
-  prompt:
-    en: 'Motor Grounding Check: Use a multimeter to check if the motor body is grounded.'
-  ui:
-    control: radio
-    options:
-    - Yes, the motor is grounded
-    - No, the motor is not grounded
-  evidence:
-    required: true
-    capture: photo
-    instructions:
-      en: Photo of the multimeter check showing the reading.
-  require_pass: true
-  branches:
-  - when: selection == 'Yes, the motor is grounded'
-    next: s7_order_motor_and_seal_intro
-  - when: selection == 'No, the motor is not grounded'
+
+  - id: s7_grounding_check
+    type: quiz
+    prompt:
+      en: >
+        Using a multimeter, check for grounding between the spin motor body and earth.
+        Is there any leakage (grounding) in the motor?
+    ui:
+      control: radio
+      options:
+        - "Yes, motor is grounded (leakage found)"
+        - "No, motor is not grounded"
+        - "Multimeter not available / test not performed"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Capture a photo of the multimeter reading (if tested) or motor wiring."
+    require_pass: true
+    branches:
+      - when: "selection == 'Yes, motor is grounded (leakage found)'"
+        next: s7_order_motor_and_seal_intro
+      - when: "selection == 'No, motor is not grounded'"
+        next: end_unresolved
+      - when: "selection == 'Multimeter not available / test not performed'"
+        next: end_unresolved
     next: end_unresolved
-- id: s7_order_motor_and_seal_intro
-  type: note
-  prompt:
-    en: A critical fault (leakage, jam, or grounding) is confirmed. You MUST order
-      both the Spin Motor and the Buffer Seal. You will be prompted to take a photo
-      of each part.
-  ui:
-    control: none
-  recommends_parts:
-  - Spin Motor
-  - Buffer Seal/Bellow
-  next: s7_photo_motor
-- id: s7_photo_motor
-  type: photo
-  prompt:
-    en: 'Part 1 of 2: Capture a photo of the **Spin Motor**.'
-  evidence:
-    required: true
-    capture: photo
-  next: s7_photo_bellow
-- id: s7_photo_bellow
-  type: photo
-  prompt:
-    en: 'Part 2 of 2: Capture a photo of the **Buffer Seal/Bellow**.'
-  evidence:
-    required: true
-    capture: photo
-  next: end_flow_parts_order
-- id: end_flow_parts_order
-  type: note
-  prompt:
-    en: All mandatory checks for this path are complete. Finalize the flow to generate
-      the Gate Token for the required part(s).
-  ui:
-    control: none
-  next: null
-- id: end_unresolved
-  type: note
-  prompt:
-    en: You have completed all checks in this flow, but the root cause was not identified.
-      Please consult with a technical expert for further assistance.
-  ui:
-    control: none
-  next: null
+
+  - id: s7_order_motor_and_seal_intro
+    type: note
+    prompt:
+      en: >
+        A critical fault (leakage, jam, or grounding) is confirmed.
+        You MUST order both the Spin Motor and the Buffer Seal.
+        You will be prompted to take a photo of each part.
+    ui:
+      control: none
+    recommends_parts:
+      - "Spin Motor"
+      - "Buffer Seal/Bellow"
+    next: s7_photo_motor
+
+  - id: s7_photo_motor
+    type: photo
+    prompt:
+      en: "Capture a clear photo of the Spin Motor to be replaced."
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Ensure the motor nameplate and connections are visible."
+    next: s7_photo_bellow
+
+  - id: s7_photo_bellow
+    type: photo
+    prompt:
+      en: "Capture a clear photo of the Buffer Seal/Bellow to be replaced."
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Ensure the seal/bellow and its seating area are visible."
+    next: end_flow_parts_order
+
+  - id: end_flow_parts_order
+    type: note
+    prompt:
+      en: >
+        All mandatory checks for this path are complete.
+        Finalize the flow to generate the Gate Token for the required part(s).
+    ui:
+      control: none
+    next: null
+
+  - id: end_unresolved
+    type: note
+    prompt:
+      en: >
+        You have completed all checks in this flow, but the root cause was not
+        identified. Please consult with a technical expert for further assistance.
+    ui:
+      control: none
+    next: null
