@@ -25,7 +25,7 @@ steps:
   - No, wobbling=step1_adjust_legs
   resolution_prompt: false
   require_pass: true
-  next: Yes, stable=step2_check_shocks
+  next: step2_check_shocks
 - id: step1_adjust_legs
   type: action
   prompt:
@@ -39,7 +39,7 @@ steps:
   recommends_parts:
   - Issue persists (Leg Broken)=step1_log_leg_fault
   require_pass: true
-  next: Fixed, no vibration=null
+  next: null
 - id: step1_log_leg_fault
   type: photo
   prompt:
@@ -70,7 +70,7 @@ steps:
   - Yes, leaking/broken=step2_log_shock_fault
   resolution_prompt: false
   require_pass: true
-  next: No, looks good=step3_check_springs
+  next: step3_check_springs
 - id: step2_log_shock_fault
   type: photo
   prompt:
@@ -101,7 +101,7 @@ steps:
   - Yes, stretched/broken=step3_log_spring_fault
   resolution_prompt: false
   require_pass: true
-  next: No, springs are good=end_unresolved
+  next: end_unresolved
 - id: step3_log_spring_fault
   type: photo
   prompt:

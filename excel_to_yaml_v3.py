@@ -8,17 +8,24 @@ import sys
 INPUT_FILE = 'troubleshooting_logic.xlsx' 
 OUTPUT_FILE = 'WM_generated_flow.yaml'
 
+def extract_target_step(logic_string):
+    """
+    Parses strings like 'Option=TargetStep' and returns 'TargetStep'.
+    If no '=', returns the string as is.
+    """
+    if isinstance(logic_string, str) and '=' in logic_string:
+        return logic_string.split('=', 1)[1].strip()
+    return str(logic_string).strip()
+
 def extract_trigger(logic_string):
-    """Extracts the 'Key' from logic strings like 'Key=Value'"""
+    """Parses strings like 'Option=TargetStep' and returns 'Option'."""
     if isinstance(logic_string, str) and '=' in logic_string:
         return logic_string.split('=', 1)[0].strip()
     return None
 
 def generate_yaml():
     try:
-        # 1. Load Data
         print(f"Reading {INPUT_FILE}...")
-        # Ensure we read 'Key' and 'Value' columns for Metadata correctly
         meta_df = pd.read_excel(INPUT_FILE, sheet_name='Metadata')
         if 'Key' in meta_df.columns:
             meta_df = meta_df.set_index('Key')
@@ -28,8 +35,7 @@ def generate_yaml():
         print(f"Error reading Excel file: {e}")
         return
 
-    # 2. Build Metadata Block
-    # Helper to safely get metadata values
+    # Helper to get metadata
     def get_meta(key, default=''):
         try:
             return str(meta_df.loc[key, 'Value'])
@@ -52,10 +58,9 @@ def generate_yaml():
         'steps': []
     }
 
-    # 3. Iterate Through Excel Rows to Build Steps
     for index, row in steps_df.iterrows():
         step_id = row['ID']
-        if not step_id: continue # Skip empty rows
+        if not step_id: continue 
 
         step_block = {
             'id': step_id,
@@ -63,58 +68,42 @@ def generate_yaml():
             'prompt': {'en': row['Prompt']}
         }
 
-        # --- SMART OPTION DETECTION ---
-        # 1. Start with explicit Options column
+        # --- OPTION DETECTION ---
         options_set = []
         options_raw = str(row['Options']).strip()
         if options_raw and options_raw.lower() != 'nan':
             options_set.extend([opt.strip() for opt in options_raw.split('|')])
 
-        # 2. Scrape options from Logic Columns (Parts, Branch Logic, Default Next)
-        #    If a column contains "Option=Target", "Option" must be a button.
+        # Infer options from Logic Columns
         logic_columns = ['Branch Logic', 'Default Next', 'Parts']
         for col in logic_columns:
             if col in row:
                 val = str(row[col]).strip()
                 if '=' in val:
-                    # Handle multiple logic entries split by |
                     sub_logics = val.split('|')
                     for logic in sub_logics:
                         trigger = extract_trigger(logic)
                         if trigger and trigger not in options_set:
                             options_set.append(trigger)
         
-        # 3. Deduplicate (preserving order)
+        # Deduplicate
         final_options = []
         for opt in options_set:
             if opt not in final_options:
                 final_options.append(opt)
 
         if final_options:
-            step_block['ui'] = {
-                'control': 'radio',
-                'options': final_options
-            }
+            step_block['ui'] = {'control': 'radio', 'options': final_options}
         else:
             step_block['ui'] = {'control': 'none'}
 
-        # --- Handle Branching Logic ---
-        # Look for explicit branching instructions
-        branches_raw = str(row.get('Branch Logic', '')).strip()
-        if branches_raw and branches_raw.lower() != 'nan':
-            branches_list = []
-            logic_parts = branches_raw.split('|')
-            for logic in logic_parts:
-                if '=' in logic:
-                    trigger, target = logic.split('=', 1)
-                    branches_list.append({
-                        'when': f"selection == '{trigger.strip()}'",
-                        'next': target.strip()
-                    })
-            if branches_list:
-                step_block['branches'] = branches_list
+        # --- Parts Logic ---
+        part_raw = str(row.get('Parts', '')).strip()
+        if part_raw and part_raw.lower() != 'nan':
+            step_block['recommends_part'] = part_raw
+            step_block['recommends_parts'] = [part_raw]
 
-        # --- Handle Evidence/Photo ---
+        # --- Evidence ---
         if str(row.get('Capture', '')).lower() == 'photo':
             step_block['evidence'] = {
                 'required': True,
@@ -122,32 +111,25 @@ def generate_yaml():
                 'instructions': {'en': f"Capture photo for {step_id}"}
             }
 
-        # --- Handle Parts ---
-        # The 'Parts' column often contains the routing logic in this file format
-        part_raw = str(row.get('Parts', '')).strip()
-        if part_raw and part_raw.lower() != 'nan':
-            step_block['recommends_part'] = part_raw
-            step_block['recommends_parts'] = [part_raw]
-
-        # --- Handle Resolution Prompt ---
-        res_prompt = str(row.get('Resolve Prompt', '')).upper()
-        if res_prompt == 'FALSE':
-            step_block['resolution_prompt'] = False
-        elif row['Type'] == 'quiz' and res_prompt != 'TRUE':
-             step_block['resolution_prompt'] = False
-
         step_block['require_pass'] = True
-
-        # --- Handle Next Step ---
-        default_next = str(row.get('Default Next', '')).strip()
-        if default_next and default_next.lower() != 'nan':
-            step_block['next'] = default_next
+        
+        # --- FIX: CLEAN NEXT STEP ---
+        # This is where the fix happens. We use extract_target_step to remove "Yes="
+        default_next_raw = str(row.get('Default Next', '')).strip()
+        
+        if default_next_raw and default_next_raw.lower() != 'nan':
+            # If there's a pipe |, take the first one (or handle logic if you prefer)
+            # For 'next', usually we just want the ID.
+            if '|' in default_next_raw:
+                 default_next_raw = default_next_raw.split('|')[0]
+            
+            clean_next_id = extract_target_step(default_next_raw)
+            step_block['next'] = clean_next_id
         else:
             step_block['next'] = None
 
         yaml_structure['steps'].append(step_block)
 
-    # 4. Write to File
     class NoAliasDumper(yaml.SafeDumper):
         def ignore_aliases(self, data): return True
 
