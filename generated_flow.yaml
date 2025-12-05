@@ -1,0 +1,132 @@
+# Auto-generated from troubleshooting_logic.xlsx
+meta:
+  id: WM_TEST_VIBRATION_V1
+  title: 'TEST DIAGNOSTIC: WM Heavy Vibration'
+  version: '1'
+  language:
+  - en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+start: step1_check_legs
+steps:
+- id: step1_check_legs
+  type: quiz
+  prompt:
+    en: 'Step 1: Check Leveling Legs. Is the machine stable on the floor?'
+  ui:
+    control: radio
+    options:
+    - Yes, stable
+  recommends_part: No, wobbling=step1_adjust_legs
+  recommends_parts:
+  - No, wobbling=step1_adjust_legs
+  resolution_prompt: false
+  require_pass: true
+  next: Yes, stable=step2_check_shocks
+- id: step1_adjust_legs
+  type: action
+  prompt:
+    en: Adjust the legs to level the machine. Does it vibrate now?
+  ui:
+    control: radio
+    options:
+    - Fixed, no vibration
+  recommends_part: Issue persists (Leg Broken)=step1_log_leg_fault
+  recommends_parts:
+  - Issue persists (Leg Broken)=step1_log_leg_fault
+  require_pass: true
+  next: Fixed, no vibration=null
+- id: step1_log_leg_fault
+  type: photo
+  prompt:
+    en: Leveling Leg is broken. Capture photo. (Checking Shocks next...)
+  ui:
+    control: none
+  evidence:
+    required: true
+    capture: photo
+    instructions:
+      en: Capture photo for step1_log_leg_fault
+  recommends_part: Leveling Leg
+  recommends_parts:
+  - Leveling Leg
+  require_pass: true
+  next: step2_check_shocks
+- id: step2_check_shocks
+  type: quiz
+  prompt:
+    en: 'Step 2: Check Shock Absorbers. Are they leaking oil or detached?'
+  ui:
+    control: radio
+    options:
+    - No, looks good
+  recommends_part: Yes, leaking/broken=step2_log_shock_fault
+  recommends_parts:
+  - Yes, leaking/broken=step2_log_shock_fault
+  resolution_prompt: false
+  require_pass: true
+  next: No, looks good=step3_check_springs
+- id: step2_log_shock_fault
+  type: photo
+  prompt:
+    en: Shock Absorber is faulty. Capture photo. (Checking Springs next...)
+  ui:
+    control: none
+  evidence:
+    required: true
+    capture: photo
+    instructions:
+      en: Capture photo for step2_log_shock_fault
+  recommends_part: Shock Absorber
+  recommends_parts:
+  - Shock Absorber
+  require_pass: true
+  next: step3_check_springs
+- id: step3_check_springs
+  type: quiz
+  prompt:
+    en: 'Step 3: Check Suspension Springs. Are they stretched or broken?'
+  ui:
+    control: radio
+    options:
+    - No, springs are good
+  recommends_part: Yes, stretched/broken=step3_log_spring_fault
+  recommends_parts:
+  - Yes, stretched/broken=step3_log_spring_fault
+  resolution_prompt: false
+  require_pass: true
+  next: No, springs are good=end_unresolved
+- id: step3_log_spring_fault
+  type: photo
+  prompt:
+    en: Spring is broken. Capture photo.
+  ui:
+    control: none
+  evidence:
+    required: true
+    capture: photo
+    instructions:
+      en: Capture photo for step3_log_spring_fault
+  recommends_part: Suspension Spring
+  recommends_parts:
+  - Suspension Spring
+  require_pass: true
+  next: end_parts_order
+- id: end_parts_order
+  type: note
+  prompt:
+    en: Faults identified. Please generate token for recommended parts.
+  ui:
+    control: none
+  require_pass: true
+  next: null
+- id: end_unresolved
+  type: note
+  prompt:
+    en: No specific faults found. Consult Supervisor.
+  ui:
+    control: none
+  require_pass: true
+  next: null
