@@ -114,12 +114,11 @@ def generate_yaml():
         step_block['require_pass'] = True
         
         # --- FIX: CLEAN NEXT STEP ---
-        # This is where the fix happens. We use extract_target_step to remove "Yes="
+        # This removes "Yes=" from the next field
         default_next_raw = str(row.get('Default Next', '')).strip()
         
         if default_next_raw and default_next_raw.lower() != 'nan':
-            # If there's a pipe |, take the first one (or handle logic if you prefer)
-            # For 'next', usually we just want the ID.
+            # If there's a pipe |, take the first one
             if '|' in default_next_raw:
                  default_next_raw = default_next_raw.split('|')[0]
             

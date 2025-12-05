@@ -23,7 +23,6 @@ steps:
   recommends_part: No, wobbling=step1_adjust_legs
   recommends_parts:
   - No, wobbling=step1_adjust_legs
-  resolution_prompt: false
   require_pass: true
   next: step2_check_shocks
 - id: step1_adjust_legs
@@ -39,21 +38,21 @@ steps:
   recommends_parts:
   - Issue persists (Leg Broken)=step1_log_leg_fault
   require_pass: true
-  next: null
+  next: 'null'
 - id: step1_log_leg_fault
   type: photo
   prompt:
     en: Leveling Leg is broken. Capture photo. (Checking Shocks next...)
   ui:
     control: none
+  recommends_part: Leveling Leg
+  recommends_parts:
+  - Leveling Leg
   evidence:
     required: true
     capture: photo
     instructions:
       en: Capture photo for step1_log_leg_fault
-  recommends_part: Leveling Leg
-  recommends_parts:
-  - Leveling Leg
   require_pass: true
   next: step2_check_shocks
 - id: step2_check_shocks
@@ -68,7 +67,6 @@ steps:
   recommends_part: Yes, leaking/broken=step2_log_shock_fault
   recommends_parts:
   - Yes, leaking/broken=step2_log_shock_fault
-  resolution_prompt: false
   require_pass: true
   next: step3_check_springs
 - id: step2_log_shock_fault
@@ -77,14 +75,14 @@ steps:
     en: Shock Absorber is faulty. Capture photo. (Checking Springs next...)
   ui:
     control: none
+  recommends_part: Shock Absorber
+  recommends_parts:
+  - Shock Absorber
   evidence:
     required: true
     capture: photo
     instructions:
       en: Capture photo for step2_log_shock_fault
-  recommends_part: Shock Absorber
-  recommends_parts:
-  - Shock Absorber
   require_pass: true
   next: step3_check_springs
 - id: step3_check_springs
@@ -99,7 +97,6 @@ steps:
   recommends_part: Yes, stretched/broken=step3_log_spring_fault
   recommends_parts:
   - Yes, stretched/broken=step3_log_spring_fault
-  resolution_prompt: false
   require_pass: true
   next: end_unresolved
 - id: step3_log_spring_fault
@@ -108,14 +105,14 @@ steps:
     en: Spring is broken. Capture photo.
   ui:
     control: none
+  recommends_part: Suspension Spring
+  recommends_parts:
+  - Suspension Spring
   evidence:
     required: true
     capture: photo
     instructions:
       en: Capture photo for step3_log_spring_fault
-  recommends_part: Suspension Spring
-  recommends_parts:
-  - Suspension Spring
   require_pass: true
   next: end_parts_order
 - id: end_parts_order
