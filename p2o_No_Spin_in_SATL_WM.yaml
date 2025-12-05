@@ -1,8 +1,8 @@
-# WM_SA_NO_SPIN_V1.3
+# WM_SA_NO_SPIN_V1.4
 meta:
   id: WM_SA_NO_SPIN_V1
   title: "DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working"
-  version: "1.3"
+  version: "1.4"
   language:
     - en
   gating:
@@ -74,6 +74,7 @@ steps:
       instructions:
         en: "Capture a photo showing the brake cable and brake band area."
     require_pass: true
+    resolution_prompt: false
     branches:
       - when: "selection == 'Yes, it works correctly (No issue found)'"
         next: s3_safety_switch_check
