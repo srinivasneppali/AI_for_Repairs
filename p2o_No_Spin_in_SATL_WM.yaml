@@ -282,11 +282,11 @@ steps:
   - id: "s5_recommend_capacitor"
     type: "note"
     recommends_part: "Capacitor"
+    recommends_parts: ["Capacitor"]
     prompt:
       en: "Capacitor fault confirmed based on the last observation. Replace the Capacitor with a matching rating."
     ui:
       control: "none"
-    resolution_prompt: false
     next: "s5_order_capacitor"
 
   - id: "s5_order_capacitor"
