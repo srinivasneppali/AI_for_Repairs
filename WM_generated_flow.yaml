@@ -1,8 +1,8 @@
 # Auto-generated from troubleshooting_logic.xlsx
 meta:
-  id: WM_TEST_VIBRATION_V1
-  title: 'TEST DIAGNOSTIC: WM Heavy Vibration'
-  version: '1'
+  id: WM_DIAG_VIB_FULL_V2
+  title: 'Full Diagnostic: WM Heavy Vibration & Noise'
+  version: '2'
   language:
   - en
   gating:
@@ -14,35 +14,35 @@ steps:
 - id: step1_check_legs
   type: quiz
   prompt:
-    en: 'Step 1: Check Leveling Legs. Is the machine stable on the floor?'
+    en: 'Step 1: Leveling Check. Is the machine stable on the floor?'
   ui:
     control: radio
     options:
     - Yes, stable
     - No, wobbling
-  recommends_part: No, wobbling=step1_adjust_legs
+  recommends_part: No, wobbling=step1_action_adjust
   recommends_parts:
-  - No, wobbling=step1_adjust_legs
+  - No, wobbling=step1_action_adjust
   require_pass: true
-  next: step2_check_shocks
-- id: step1_adjust_legs
+  next: step2_check_bolts
+- id: step1_action_adjust
   type: action
   prompt:
-    en: Adjust the legs to level the machine. Does it vibrate now?
+    en: Adjust the leveling legs. Does it vibrate now?
   ui:
     control: radio
     options:
     - Fixed, no vibration
-    - Issue persists (Leg Broken)
-  recommends_part: Issue persists (Leg Broken)=step1_log_leg_fault
+    - Issue persists
+  recommends_part: Issue persists=step1_log_leg_fault
   recommends_parts:
-  - Issue persists (Leg Broken)=step1_log_leg_fault
+  - Issue persists=step1_log_leg_fault
   require_pass: true
-  next: 'null'
+  next: null
 - id: step1_log_leg_fault
   type: photo
   prompt:
-    en: Leveling Leg is broken. Capture photo. (Checking Shocks next...)
+    en: Leveling Leg is broken/stripped. Capture photo.
   ui:
     control: none
   recommends_part: Leveling Leg
@@ -54,25 +54,97 @@ steps:
     instructions:
       en: Capture photo for step1_log_leg_fault
   require_pass: true
-  next: step2_check_shocks
-- id: step2_check_shocks
+  next: step2_check_bolts
+- id: step2_check_bolts
   type: quiz
   prompt:
-    en: 'Step 2: Check Shock Absorbers. Are they leaking oil or detached?'
+    en: 'Step 2: Transit Bolts. Have the shipping bolts been removed?'
+  ui:
+    control: radio
+    options:
+    - Yes, removed
+    - No, bolts present
+  recommends_part: No, bolts present=step2_action_remove
+  recommends_parts:
+  - No, bolts present=step2_action_remove
+  require_pass: true
+  next: step3_check_load
+- id: step2_action_remove
+  type: action
+  prompt:
+    en: Remove the transit bolts. Does it vibrate now?
+  ui:
+    control: radio
+    options:
+    - Fixed, smooth spin
+    - Issue persists
+  recommends_part: Issue persists=step2_log_bolt_issue
+  recommends_parts:
+  - Issue persists=step2_log_bolt_issue
+  require_pass: true
+  next: null
+- id: step2_log_bolt_issue
+  type: photo
+  prompt:
+    en: Bolts caused chassis damage. Capture photo.
+  ui:
+    control: none
+  recommends_part: Rear Chassis Panel
+  recommends_parts:
+  - Rear Chassis Panel
+  evidence:
+    required: true
+    capture: photo
+    instructions:
+      en: Capture photo for step2_log_bolt_issue
+  require_pass: true
+  next: step3_check_load
+- id: step3_check_load
+  type: quiz
+  prompt:
+    en: 'Step 3: Load Balance. Is the laundry distributed evenly?'
+  ui:
+    control: radio
+    options:
+    - Yes, balanced
+    - No, bunched up
+  recommends_part: No, bunched up=step3_action_balance
+  recommends_parts:
+  - No, bunched up=step3_action_balance
+  require_pass: true
+  next: step4_check_shocks
+- id: step3_action_balance
+  type: action
+  prompt:
+    en: Redistribute the laundry manually. Does it vibrate now?
+  ui:
+    control: radio
+    options:
+    - Fixed, smooth spin
+    - Issue persists
+  recommends_part: Issue persists=step4_check_shocks
+  recommends_parts:
+  - Issue persists=step4_check_shocks
+  require_pass: true
+  next: null
+- id: step4_check_shocks
+  type: quiz
+  prompt:
+    en: 'Step 4: Shock Absorbers. Are they leaking oil or detached?'
   ui:
     control: radio
     options:
     - No, looks good
     - Yes, leaking/broken
-  recommends_part: Yes, leaking/broken=step2_log_shock_fault
+  recommends_part: Yes, leaking/broken=step4_log_shock_fault
   recommends_parts:
-  - Yes, leaking/broken=step2_log_shock_fault
+  - Yes, leaking/broken=step4_log_shock_fault
   require_pass: true
-  next: step3_check_springs
-- id: step2_log_shock_fault
+  next: step5_check_springs
+- id: step4_log_shock_fault
   type: photo
   prompt:
-    en: Shock Absorber is faulty. Capture photo. (Checking Springs next...)
+    en: Shock Absorber is faulty. Capture photo.
   ui:
     control: none
   recommends_part: Shock Absorber
@@ -82,27 +154,27 @@ steps:
     required: true
     capture: photo
     instructions:
-      en: Capture photo for step2_log_shock_fault
+      en: Capture photo for step4_log_shock_fault
   require_pass: true
-  next: step3_check_springs
-- id: step3_check_springs
+  next: step5_check_springs
+- id: step5_check_springs
   type: quiz
   prompt:
-    en: 'Step 3: Check Suspension Springs. Are they stretched or broken?'
+    en: 'Step 5: Suspension Springs. Are they stretched or unhooked?'
   ui:
     control: radio
     options:
-    - No, springs are good
-    - Yes, stretched/broken
-  recommends_part: Yes, stretched/broken=step3_log_spring_fault
+    - No, springs good
+    - Yes, broken/stretched
+  recommends_part: Yes, broken/stretched=step5_log_spring_fault
   recommends_parts:
-  - Yes, stretched/broken=step3_log_spring_fault
+  - Yes, broken/stretched=step5_log_spring_fault
   require_pass: true
-  next: end_unresolved
-- id: step3_log_spring_fault
+  next: step6_check_weights
+- id: step5_log_spring_fault
   type: photo
   prompt:
-    en: Spring is broken. Capture photo.
+    en: Suspension Spring is broken. Capture photo.
   ui:
     control: none
   recommends_part: Suspension Spring
@@ -112,7 +184,67 @@ steps:
     required: true
     capture: photo
     instructions:
-      en: Capture photo for step3_log_spring_fault
+      en: Capture photo for step5_log_spring_fault
+  require_pass: true
+  next: step6_check_weights
+- id: step6_check_weights
+  type: quiz
+  prompt:
+    en: 'Step 6: Counterweights. Are the concrete weights loose or cracked?'
+  ui:
+    control: radio
+    options:
+    - No, tight & intact
+    - Yes, cracked/loose
+  recommends_part: Yes, cracked/loose=step6_log_weight_fault
+  recommends_parts:
+  - Yes, cracked/loose=step6_log_weight_fault
+  require_pass: true
+  next: step7_check_bearings
+- id: step6_log_weight_fault
+  type: photo
+  prompt:
+    en: Counterweight is damaged. Capture photo.
+  ui:
+    control: none
+  recommends_part: Counterweight Block
+  recommends_parts:
+  - Counterweight Block
+  evidence:
+    required: true
+    capture: photo
+    instructions:
+      en: Capture photo for step6_log_weight_fault
+  require_pass: true
+  next: step7_check_bearings
+- id: step7_check_bearings
+  type: quiz
+  prompt:
+    en: 'Step 7: Drum Bearings. Spin drum by hand. Is there grinding noise?'
+  ui:
+    control: radio
+    options:
+    - No, smooth
+    - Yes, noisy/rough
+  recommends_part: Yes, noisy/rough=step7_log_bearing_fault
+  recommends_parts:
+  - Yes, noisy/rough=step7_log_bearing_fault
+  require_pass: true
+  next: end_unresolved
+- id: step7_log_bearing_fault
+  type: photo
+  prompt:
+    en: Bearings failed. Capture photo of rear tub.
+  ui:
+    control: none
+  recommends_part: Tub & Bearing Assembly
+  recommends_parts:
+  - Tub & Bearing Assembly
+  evidence:
+    required: true
+    capture: photo
+    instructions:
+      en: Capture photo for step7_log_bearing_fault
   require_pass: true
   next: end_parts_order
 - id: end_parts_order
@@ -126,7 +258,7 @@ steps:
 - id: end_unresolved
   type: note
   prompt:
-    en: No specific faults found. Consult Supervisor.
+    en: No mechanical faults found. Consult Supervisor.
   ui:
     control: none
   require_pass: true
