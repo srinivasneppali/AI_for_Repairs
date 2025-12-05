@@ -1,8 +1,8 @@
-# WM_SA_NO_SPIN_V1.yaml
+# WM_SA_NO_SPIN_V1.1
 meta:
   id: "WM_SA_NO_SPIN_V1"
   title: "WM Semi-Automatic: Spin Not Working"
-  version: "1.0"
+  version: "1.1"
   language: ["en"]
   gating:
     require_all_steps: true
@@ -30,14 +30,19 @@ steps:
     require_pass: true
     validation:
       confirm_required: true
-    next: "s2_brake_wire_intro"
+    branches:
+      - when: "selection == 'No issue found with load balance or jamming'"
+        next: "s2_brake_wire_intro"
+    next: null # Ends flow for resolution if a fix was applied
 
   - id: "s2_brake_wire_intro"
-    type: "note"
+    type: "action"
+    ask_if_resolved: false
     prompt:
       en: "Step 2: Door Switch & Brake Cable Check (Most Common Issue). Open the back panel of the machine to proceed."
     ui:
-      control: "none"
+      control: "confirm"
+      options: ["Done, back panel is open"]
     next: "s2_check_brake_wire_action"
 
   - id: "s2_check_brake_wire_action"
@@ -92,7 +97,6 @@ steps:
     branches:
       - when: "selection == 'No, issue persists'"
         next: "s3_safety_switch_check"
-    # If "Yes", flow concludes and prompts for resolution.
     next: null
 
   - id: "s2_order_brake_wire"
@@ -146,6 +150,7 @@ steps:
 
   - id: "s3_verify_after_clean"
     type: "verify"
+    ask_if_resolved: false
     prompt:
       en: "After cleaning the contacts, test the spin cycle. Does it work now?"
     ui:
@@ -155,9 +160,18 @@ steps:
       requires_selection: ["Yes, issue is resolved", "No, issue persists"]
     branches:
       - when: "selection == 'No, issue persists'"
-        next: "s4_rat_bite_check"
-    # If "Yes", flow concludes and prompts for resolution.
+        next: "s3_recommend_switch_after_clean"
     next: null
+
+  - id: "s3_recommend_switch_after_clean"
+    type: "note"
+    ask_if_resolved: false
+    recommends_part: "Safety Switch"
+    prompt:
+      en: "Since cleaning the contacts did not resolve the issue, the **Safety Switch** is likely faulty. A replacement is recommended. Proceeding to the next check."
+    ui:
+      control: "none"
+    next: "s4_rat_bite_check"
 
   - id: "s3_order_safety_switch"
     type: "photo"
@@ -175,6 +189,7 @@ steps:
 
   - id: "s4_rat_bite_check"
     type: "quiz"
+    ask_if_resolved: false
     prompt:
       en: "Step 4: Rat Bite & Wiring Check. Look carefully at the wiring harness inside the back panel. Are any wires cut by rats?"
     ui:
@@ -220,7 +235,6 @@ steps:
     branches:
       - when: "selection == 'No, issue persists'"
         next: "s5_capacitor_check"
-    # If "Yes", flow concludes and prompts for resolution.
     next: null
 
   - id: "s4_order_harness"
@@ -239,6 +253,7 @@ steps:
 
   - id: "s5_capacitor_check"
     type: "quiz"
+    ask_if_resolved: false
     prompt:
       en: "Step 5: Capacitor Check. Is the capacitor swollen/leaked/burst? OR Does the motor make a 'humming' sound but won't rotate (with brake free)?"
     ui:
