@@ -1,8 +1,8 @@
-# WM_SA_NO_SPIN_V1.1
+# WM_SA_NO_SPIN_V1.2
 meta:
   id: "WM_SA_NO_SPIN_V1"
   title: "WM Semi-Automatic: Spin Not Working"
-  version: "1.1"
+  version: "1.2"
   language: ["en"]
   gating:
     require_all_steps: true
@@ -33,7 +33,7 @@ steps:
     branches:
       - when: "selection == 'No issue found with load balance or jamming'"
         next: "s2_brake_wire_intro"
-    next: null # Ends flow for resolution if a fix was applied
+    next: "s2_brake_wire_intro" # Continues flow if resolution fails
 
   - id: "s2_brake_wire_intro"
     type: "action"
@@ -292,6 +292,7 @@ steps:
 
   - id: "s6_timer_check"
     type: "quiz"
+    ask_if_resolved: false
     prompt:
       en: "Step 6: Spin Timer Check. Turn the spin knob. What do you observe?"
     ui:
@@ -311,6 +312,7 @@ steps:
 
   - id: "s6_bypass_test"
     type: "quiz"
+    ask_if_resolved: false
     prompt:
       en: "Perform a bypass test: connect the two main wires of the timer directly. Does the motor start running now?"
     ui:
@@ -346,6 +348,7 @@ steps:
 
   - id: "s7_leak_check"
     type: "quiz"
+    ask_if_resolved: false
     prompt:
       en: "Step 7: Motor & Seal Check. Look at the spin motor shaft and the rubber seal (Buffer/Bellow) above it. Is there water leaking onto the motor, or is the motor heavily rusted?"
     ui:
@@ -367,6 +370,7 @@ steps:
 
   - id: "s7_jam_check"
     type: "quiz"
+    ask_if_resolved: false
     prompt:
       en: "Jamming Check: With the brake released (lid closed), try to rotate the Spin Drum coupling by hand. Does it rotate freely?"
     ui:
@@ -383,6 +387,7 @@ steps:
 
   - id: "s7_grounding_check"
     type: "quiz"
+    ask_if_resolved: false
     prompt:
       en: "Motor Grounding Check: Use a multimeter to check if the motor body is grounded."
     ui:
