@@ -36,13 +36,17 @@ steps:
     next: "s2_brake_wire_intro" # Continues flow if resolution fails
 
   - id: "s2_brake_wire_intro"
-    type: "note"
+    type: "quiz"
     prompt:
       en: "Step 2: Door Switch & Brake Cable Check (Most Common Issue). Open the back panel of the machine to proceed."
     ui:
-      control: "confirm"
-      options: ["Proceed"]
-    next: "s2_check_brake_wire_action"
+      control: "radio"
+      options:
+        - "Done, back panel is open. Proceed to next check."
+    require_pass: true
+    branches:
+      - when: "selection == 'Done, back panel is open. Proceed to next check.'"
+        next: "s2_check_brake_wire_action"
 
   - id: "s2_check_brake_wire_action"
     type: "quiz"
