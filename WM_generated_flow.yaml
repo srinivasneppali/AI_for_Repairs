@@ -19,6 +19,7 @@ steps:
     control: radio
     options:
     - Yes, stable
+    - No, wobbling
   recommends_part: No, wobbling=step1_adjust_legs
   recommends_parts:
   - No, wobbling=step1_adjust_legs
@@ -33,6 +34,7 @@ steps:
     control: radio
     options:
     - Fixed, no vibration
+    - Issue persists (Leg Broken)
   recommends_part: Issue persists (Leg Broken)=step1_log_leg_fault
   recommends_parts:
   - Issue persists (Leg Broken)=step1_log_leg_fault
@@ -62,6 +64,7 @@ steps:
     control: radio
     options:
     - No, looks good
+    - Yes, leaking/broken
   recommends_part: Yes, leaking/broken=step2_log_shock_fault
   recommends_parts:
   - Yes, leaking/broken=step2_log_shock_fault
@@ -92,6 +95,7 @@ steps:
     control: radio
     options:
     - No, springs are good
+    - Yes, stretched/broken
   recommends_part: Yes, stretched/broken=step3_log_spring_fault
   recommends_parts:
   - Yes, stretched/broken=step3_log_spring_fault
