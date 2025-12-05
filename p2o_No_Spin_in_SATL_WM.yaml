@@ -1,7 +1,7 @@
 # WM_SA_NO_SPIN_V1.3
 meta:
   id: "WM_SA_NO_SPIN_V1"
-  title: "WM Semi-Automatic: Spin Not Working"
+  title: "DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working"
   version: "1.3"
   language: ["en"]
   gating:
