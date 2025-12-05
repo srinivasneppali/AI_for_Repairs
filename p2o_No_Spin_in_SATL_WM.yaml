@@ -1,8 +1,8 @@
-# WM_SA_NO_SPIN_V2_MODULAR
+# WM_SA_NO_SPIN_V3_FULL_DAISY_CHAIN
 meta:
-  id: WM_SA_NO_SPIN_V2
-  title: "DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working (Modular)"
-  version: "2.0"
+  id: WM_SA_NO_SPIN_V3
+  title: "DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working (Full Daisy Chain)"
+  version: "3.0"
   language:
     - en
   gating:
@@ -33,6 +33,8 @@ steps:
     evidence:
       required: true
       capture: photo
+      instructions:
+        en: "Photo of the tub interior."
     require_pass: true
     validation:
       confirm_required: true
@@ -71,6 +73,8 @@ steps:
     evidence:
       required: true
       capture: photo
+      instructions:
+        en: "Photo of the brake cable mechanism."
     require_pass: true
     resolution_prompt: false
     branches:
@@ -92,7 +96,7 @@ steps:
     require_pass: true
     branches:
       - when: "selection == 'Tightened and fixed (Spin works now)'"
-        next: null # Resolved
+        next: null # Success - flow ends here as Resolved
       - when: "selection == 'Cable is broken (Needs replacement)'"
         next: s2_log_brake_fault
     next: null
@@ -100,7 +104,7 @@ steps:
   - id: s2_log_brake_fault
     type: photo
     prompt:
-      en: "Capture photo of broken Brake Wire. (Flow will continue to check other parts)."
+      en: "Capture photo of broken Brake Wire. (Proceeding to check Safety Switch...)"
     ui:
       control: none
     evidence:
@@ -109,7 +113,7 @@ steps:
     recommends_part: "Brake Wire"
     recommends_parts:
       - "Brake Wire"
-    # LOGIC UPDATE: Even if brake is broken, we check Switch/Capacitor visually
+    # DAISY CHAIN: Continue to Step 3
     next: s3_safety_switch_check
 
   # ==========================================
@@ -130,6 +134,8 @@ steps:
     evidence:
       required: true
       capture: photo
+      instructions:
+        en: "Close-up photo of the switch contacts."
     require_pass: true
     resolution_prompt: false
     branches:
@@ -153,7 +159,7 @@ steps:
     require_pass: true
     branches:
       - when: "selection == 'Yes, spin working'"
-        next: null
+        next: null # Success - Resolved
       - when: "selection == 'No, issue persists (Replace Switch)'"
         next: s3_log_switch_fault
     next: null
@@ -161,7 +167,7 @@ steps:
   - id: s3_log_switch_fault
     type: photo
     prompt:
-      en: "Capture photo of faulty Safety Switch. (Flow will continue to check Capacitor)."
+      en: "Capture photo of faulty Safety Switch. (Proceeding to check Wiring Harness...)"
     ui:
       control: none
     evidence:
@@ -170,338 +176,12 @@ steps:
     recommends_part: "Safety Switch"
     recommends_parts:
       - "Safety Switch"
-    # LOGIC UPDATE: Daisy chain to next inspection
-    next: s5_capacitor_check
-
-  # ==========================================
-  # ### MODULE 4: WIRING HARNESS ###
-  # ==========================================
-  # Note: Skipped if Switch was bad to save time, or we can force check.
-  # Linked from s3 "Good" path.
-  - id: s4_rat_bite_check
-    type: quiz
-    prompt:
-      en: "Step 4: Rat Bite Check. Are wires cut?"
-    ui:
-      control: radio
-      options:
-        - "No, wires intact"
-        - "Yes, damaged"
-    evidence:
-      required: true
-      capture: photo
-    require_pass: true
-    resolution_prompt: false
-    branches:
-      - when: "selection == 'No, wires intact'"
-        next: s5_capacitor_check
-      - when: "selection == 'Yes, damaged'"
-        next: s4_repair_wires
-    next: s5_capacitor_check
-
-  - id: s4_repair_wires
-    type: action
-    prompt:
-      en: "Repair/Tape wires. Does spin work?"
-    ui:
-      control: radio
-      options:
-        - "Yes, spin working"
-        - "No, damage too heavy (Replace Harness)"
-    require_pass: true
-    branches:
-      - when: "selection == 'Yes, spin working'"
-        next: null
-      - when: "selection == 'No, damage too heavy (Replace Harness)'"
-        next: s4_log_harness_fault
-    next: null
-
-  - id: s4_log_harness_fault
-    type: photo
-    prompt:
-      en: "Capture photo of damaged Harness."
-    ui:
-      control: none
-    evidence:
-      required: true
-      capture: photo
-    recommends_part: "Main Wiring Harness"
-    recommends_parts:
-      - "Main Wiring Harness"
-    next: s5_capacitor_check
-
-  # ==========================================
-  # ### MODULE 5: CAPACITOR ###
-  # ==========================================
-  - id: s5_capacitor_check
-    type: quiz
-    prompt:
-      en: >
-        Step 5: Capacitor Check. Is it swollen/burst OR is motor humming?
-    ui:
-      control: radio
-      options:
-        - "No, looks fine / No humming"
-        - "Yes, Swollen/Burst/Humming"
-    evidence:
-      required: true
-      capture: photo
-    require_pass: true
-    resolution_prompt: false
-    branches:
-      - when: "selection == 'No, looks fine / No humming'"
-        next: s6_timer_check
-      - when: "selection == 'Yes, Swollen/Burst/Humming'"
-        next: s5_log_capacitor_fault
-    next: s6_timer_check
-
-  - id: s5_log_capacitor_fault
-    type: photo
-    prompt:
-      en: "Capture photo of Capacitor Rating (e.g., 5MFD)."
-    ui:
-      control: none
-    evidence:
-      required: true
-      capture: photo
-    recommends_part: "Capacitor"
-    recommends_parts:
-      - "Capacitor"
-    # LOGIC UPDATE: Daisy chain to End Order
-    next: end_flow_parts_order
-
-  # ==========================================
-  # ### MODULE 6: TIMER & MOTOR (Brief) ###
-  # ==========================================
-  - id: s6_timer_check
-    type: quiz
-    prompt:
-      en: "Step 6: Timer Check. Does it tick and move?"
-    ui:
-      control: radio
-      options:
-        - "Yes, working"
-        - "No, stuck/silent"
-    require_pass: true
-    resolution_prompt: false
-    branches:
-      - when: "selection == 'Yes, working'"
-        next: end_unresolved
-      - when: "selection == 'No, stuck/silent'"
-        next: s6_log_timer_fault
-    next: end_unresolved
-
-  - id: s6_log_timer_fault
-    type: photo
-    prompt:
-      en: "Capture photo of Timer."
-    ui:
-      control: none
-    recommends_part: "Spin Timer"
-    recommends_parts:
-      - "Spin Timer"
-    next: end_flow_parts_order
-
-  # ==========================================
-  # ### MODULE 7: FINALIZE ###
-  # ==========================================
-  - id: end_flow_parts_order
-    type: note
-    prompt:
-      en: >
-        Faults identified. Please proceed to generate the Gate Token for the
-        recommended parts (e.g., Switch, Capacitor).
-    ui:
-      control: none
-    next: null
-
-  - id: end_unresolved
-    type: note
-    prompt:
-      en: >
-        Flow completed. No specific parts identified. Consult Expert.
-    ui:
-      control: none
-    next: null# WM_SA_NO_SPIN_V2_MODULAR
-meta:
-  id: WM_SA_NO_SPIN_V2
-  title: "DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working (Modular)"
-  version: "2.0"
-  language:
-    - en
-  gating:
-    require_all_steps: true
-    generate_token: true
-    token_pattern: "{FAULT}-{SKU}-{RAND5}"
-
-start: s1_load_balance_check
-
-steps:
-
-  # ==========================================
-  # ### MODULE 1: PRELIMINARY CHECKS ###
-  # ==========================================
-  - id: s1_load_balance_check
-    type: action
-    prompt:
-      en: >
-        Step 1: Load Balance Check. Open the spin lid. Check for unevenly dumped
-        clothes OR a small cloth (sock/handkerchief) fallen between the tub and
-        outer body.
-    ui:
-      control: radio
-      options:
-        - "Clothes were uneven -> Spread evenly"
-        - "Small cloth was jamming the drum -> Removed"
-        - "No issue found with load balance"
-    evidence:
-      required: true
-      capture: photo
-    require_pass: true
-    validation:
-      confirm_required: true
-    branches:
-      - when: "selection == 'No issue found with load balance'"
-        next: s2_brake_wire_intro
-    next: s2_brake_wire_intro
-
-  # ==========================================
-  # ### MODULE 2: BRAKE SYSTEM ###
-  # ==========================================
-  - id: s2_brake_wire_intro
-    type: quiz
-    prompt:
-      en: "Step 2: Brake Cable Check. Open the back panel to proceed."
-    ui:
-      control: radio
-      options:
-        - "Panel Open. Proceed."
-    require_pass: true
-    resolution_prompt: false
-    branches:
-      - when: "selection == 'Panel Open. Proceed.'"
-        next: s2_check_brake_wire_action
-
-  - id: s2_check_brake_wire_action
-    type: quiz
-    prompt:
-      en: >
-        Does the brake wire correctly pull and release the brake band when the lid is closed?
-    ui:
-      control: radio
-      options:
-        - "Yes, works correctly"
-        - "No, cable is loose/broken"
-    evidence:
-      required: true
-      capture: photo
-    require_pass: true
-    resolution_prompt: false
-    branches:
-      - when: "selection == 'Yes, works correctly'"
-        next: s3_safety_switch_check
-      - when: "selection == 'No, cable is loose/broken'"
-        next: s2_fix_or_replace_brake
-    next: s3_safety_switch_check
-
-  - id: s2_fix_or_replace_brake
-    type: action
-    prompt:
-      en: "Tighten the cable. If broken, mark for replacement."
-    ui:
-      control: radio
-      options:
-        - "Tightened and fixed (Spin works now)"
-        - "Cable is broken (Needs replacement)"
-    require_pass: true
-    branches:
-      - when: "selection == 'Tightened and fixed (Spin works now)'"
-        next: null # Resolved
-      - when: "selection == 'Cable is broken (Needs replacement)'"
-        next: s2_log_brake_fault
-    next: null
-
-  - id: s2_log_brake_fault
-    type: photo
-    prompt:
-      en: "Capture photo of broken Brake Wire. (Flow will continue to check other parts)."
-    ui:
-      control: none
-    evidence:
-      required: true
-      capture: photo
-    recommends_part: "Brake Wire"
-    recommends_parts:
-      - "Brake Wire"
-    # LOGIC UPDATE: Even if brake is broken, we check Switch/Capacitor visually
-    next: s3_safety_switch_check
-
-  # ==========================================
-  # ### MODULE 3: SAFETY SWITCH ###
-  # ==========================================
-  - id: s3_safety_switch_check
-    type: quiz
-    prompt:
-      en: >
-        Step 3: Safety Switch Check. Inspect contacts near the hinge.
-        Are they carbonized, broken, or clean?
-    ui:
-      control: radio
-      options:
-        - "Contacts Clean & Touching (Good)"
-        - "Carbon/Rust present (Needs Cleaning)"
-        - "Contacts Bent/Broken (Needs Replacement)"
-    evidence:
-      required: true
-      capture: photo
-    require_pass: true
-    resolution_prompt: false
-    branches:
-      - when: "selection == 'Contacts Clean & Touching (Good)'"
-        next: s4_rat_bite_check
-      - when: "selection == 'Carbon/Rust present (Needs Cleaning)'"
-        next: s3_clean_switch
-      - when: "selection == 'Contacts Bent/Broken (Needs Replacement)'"
-        next: s3_log_switch_fault
+    # DAISY CHAIN: Continue to Step 4
     next: s4_rat_bite_check
 
-  - id: s3_clean_switch
-    type: action
-    prompt:
-      en: "Clean contacts with sandpaper. Does spin work now?"
-    ui:
-      control: radio
-      options:
-        - "Yes, spin working"
-        - "No, issue persists (Replace Switch)"
-    require_pass: true
-    branches:
-      - when: "selection == 'Yes, spin working'"
-        next: null
-      - when: "selection == 'No, issue persists (Replace Switch)'"
-        next: s3_log_switch_fault
-    next: null
-
-  - id: s3_log_switch_fault
-    type: photo
-    prompt:
-      en: "Capture photo of faulty Safety Switch. (Flow will continue to check Capacitor)."
-    ui:
-      control: none
-    evidence:
-      required: true
-      capture: photo
-    recommends_part: "Safety Switch"
-    recommends_parts:
-      - "Safety Switch"
-    # LOGIC UPDATE: Daisy chain to next inspection
-    next: s5_capacitor_check
-
   # ==========================================
   # ### MODULE 4: WIRING HARNESS ###
   # ==========================================
-  # Note: Skipped if Switch was bad to save time, or we can force check.
-  # Linked from s3 "Good" path.
   - id: s4_rat_bite_check
     type: quiz
     prompt:
@@ -514,6 +194,8 @@ steps:
     evidence:
       required: true
       capture: photo
+      instructions:
+        en: "Photo of the wiring harness."
     require_pass: true
     resolution_prompt: false
     branches:
@@ -535,7 +217,7 @@ steps:
     require_pass: true
     branches:
       - when: "selection == 'Yes, spin working'"
-        next: null
+        next: null # Success - Resolved
       - when: "selection == 'No, damage too heavy (Replace Harness)'"
         next: s4_log_harness_fault
     next: null
@@ -543,7 +225,7 @@ steps:
   - id: s4_log_harness_fault
     type: photo
     prompt:
-      en: "Capture photo of damaged Harness."
+      en: "Capture photo of heavily damaged Harness. (Proceeding to check Capacitor...)"
     ui:
       control: none
     evidence:
@@ -552,6 +234,7 @@ steps:
     recommends_part: "Main Wiring Harness"
     recommends_parts:
       - "Main Wiring Harness"
+    # DAISY CHAIN: Continue to Step 5
     next: s5_capacitor_check
 
   # ==========================================
@@ -570,6 +253,8 @@ steps:
     evidence:
       required: true
       capture: photo
+      instructions:
+        en: "Photo of the capacitor."
     require_pass: true
     resolution_prompt: false
     branches:
@@ -582,20 +267,22 @@ steps:
   - id: s5_log_capacitor_fault
     type: photo
     prompt:
-      en: "Capture photo of Capacitor Rating (e.g., 5MFD)."
+      en: "Capture photo of Capacitor Rating. (Proceeding to check Timer...)"
     ui:
       control: none
     evidence:
       required: true
       capture: photo
+      instructions:
+        en: "Make sure the MFD rating is visible in the photo."
     recommends_part: "Capacitor"
     recommends_parts:
       - "Capacitor"
-    # LOGIC UPDATE: Daisy chain to End Order
-    next: end_flow_parts_order
+    # DAISY CHAIN: Continue to Step 6
+    next: s6_timer_check
 
   # ==========================================
-  # ### MODULE 6: TIMER & MOTOR (Brief) ###
+  # ### MODULE 6: TIMER CHECK ###
   # ==========================================
   - id: s6_timer_check
     type: quiz
@@ -610,40 +297,169 @@ steps:
     resolution_prompt: false
     branches:
       - when: "selection == 'Yes, working'"
-        next: end_unresolved
+        next: s7_leak_check
       - when: "selection == 'No, stuck/silent'"
         next: s6_log_timer_fault
-    next: end_unresolved
+    next: s7_leak_check
 
   - id: s6_log_timer_fault
     type: photo
     prompt:
-      en: "Capture photo of Timer."
+      en: "Capture photo of faulty Timer. (Proceeding to check Motor/Leaks...)"
     ui:
       control: none
+    evidence:
+      required: true
+      capture: photo
     recommends_part: "Spin Timer"
     recommends_parts:
       - "Spin Timer"
+    # DAISY CHAIN: Continue to Step 7
+    next: s7_leak_check
+
+  # ==========================================
+  # ### MODULE 7: MOTOR, LEAK & GROUNDING ###
+  # ==========================================
+  - id: s7_leak_check
+    type: quiz
+    prompt:
+      en: >
+        Step 7: Motor Health - Leak Check.
+        Is water leaking from the spin tub onto the motor?
+    ui:
+      control: radio
+      options:
+        - "Yes, water leaking"
+        - "No visible leakage"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Photo of the motor area checking for water marks."
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: "selection == 'Yes, water leaking'"
+        next: s7_flag_leak_found
+      - when: "selection == 'No visible leakage'"
+        next: s7_jam_check
+    next: s7_jam_check
+
+  - id: s7_flag_leak_found
+    type: note
+    prompt:
+      en: "Leakage detected. This likely damaged the motor. Proceeding to verify jam/grounding."
+    ui:
+      control: none
+    # We don't order yet; we check Jam/Grounding to confirm motor death,
+    # but strictly speaking, if there is a leak, we usually need a Bellow + Motor.
+    next: s7_jam_check
+
+  - id: s7_jam_check
+    type: quiz
+    prompt:
+      en: >
+        Rotate the spin tub by hand. Does it move freely?
+    ui:
+      control: radio
+      options:
+        - "Tub is jammed / hard to rotate"
+        - "Tub rotates freely"
+    evidence:
+      required: true
+      capture: photo
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: "selection == 'Tub is jammed / hard to rotate'"
+        next: s7_grounding_check
+      - when: "selection == 'Tub rotates freely'"
+        next: s7_grounding_check
+    next: s7_grounding_check
+
+  - id: s7_grounding_check
+    type: quiz
+    prompt:
+      en: >
+        Using a multimeter, check for grounding (Motor Body to Earth).
+        Is there leakage?
+    ui:
+      control: radio
+      options:
+        - "Yes, motor is grounded (Dead)"
+        - "No, motor is not grounded"
+        - "Multimeter not available"
+    evidence:
+      required: true
+      capture: photo
+      instructions:
+        en: "Photo of multimeter reading or motor connections."
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: "selection == 'Yes, motor is grounded (Dead)'"
+        next: s7_order_motor_and_seal
+      - when: "selection == 'No, motor is not grounded'"
+        next: s7_final_decision_router
+      - when: "selection == 'Multimeter not available'"
+        next: s7_final_decision_router
+    next: s7_final_decision_router
+
+  # Logic to order Motor + Bellow if ANY severe fault (Leak OR Grounding) was found.
+  # For simplicity in this linear flow, we route explicit Grounding fails here.
+  # If earlier Leak was yes, we should rely on the Technician to select "Yes" here or we force it.
+  # In this script, we assume if it's Grounded, we replace.
+  - id: s7_order_motor_and_seal
+    type: photo
+    prompt:
+      en: >
+        Motor is dead (Grounded/Water Damaged).
+        Order **Spin Motor** AND **Buffer Seal**.
+        Capture photo of Motor Nameplate.
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
+    recommends_parts:
+      - "Spin Motor"
+      - "Buffer Seal/Bellow"
+    next: s7_photo_bellow
+
+  - id: s7_photo_bellow
+    type: photo
+    prompt:
+      en: "Capture photo of the Buffer Seal/Bellow to be replaced."
+    ui:
+      control: none
+    evidence:
+      required: true
+      capture: photo
     next: end_flow_parts_order
 
   # ==========================================
-  # ### MODULE 7: FINALIZE ###
+  # ### MODULE 8: FINAL ROUTING ###
   # ==========================================
+  - id: s7_final_decision_router
+    type: note
+    prompt:
+      en: "All physical checks completed."
+    ui:
+      control: none
+    # If we reached here, the Motor is technically "electrically OK" (not grounded).
+    # But we might have queued other parts (Timer, Capacitor, Switch) in previous steps.
+    # The system will automatically generate tokens for whatever is in the cart.
+    # We proceed to end_flow_parts_order to finalize.
+    next: end_flow_parts_order
+
   - id: end_flow_parts_order
     type: note
     prompt:
       en: >
-        Faults identified. Please proceed to generate the Gate Token for the
-        recommended parts (e.g., Switch, Capacitor).
-    ui:
-      control: none
-    next: null
-
-  - id: end_unresolved
-    type: note
-    prompt:
-      en: >
-        Flow completed. No specific parts identified. Consult Expert.
+        Diagnostic Complete.
+        If faults were identified, the Gate Token will cover all recommended parts
+        (Switch, Capacitor, Timer, Motor, etc.).
+        If no faults were found, please consult a Senior Technician.
     ui:
       control: none
     next: null
