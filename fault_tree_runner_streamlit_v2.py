@@ -1429,16 +1429,36 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     # Prepare progress bar for visual feedback
                     step_buffer = st.session_state.get("p2o_step_buffer", [])
                     total_to_log = (len(step_buffer) or 0) + 1  # +1 for final Gate Token payload
+
                     progress = st.progress(0.0)
+                    progress_text = st.empty()
                     completed = 0
+
+                    # Initial 0% label
+                    progress_text.markdown(
+                        "<div style='text-align:center; font-size:0.9rem; margin-top:4px;'>"
+                        "Progress: <b>0%</b>"
+                        "</div>",
+                        unsafe_allow_html=True,
+                    )
 
                     # 1) Flush all buffered non-final steps (if any)
                     if P2O_ENDPOINT and step_buffer:
                         for step_payload in step_buffer:
                             step_resp = post_step_log(P2O_ENDPOINT, step_payload)
                             completed += 1
-                            # Update progress after each logged step
-                            progress.progress(min(completed / total_to_log, 1.0))
+
+                            # Update progress bar and percentage
+                            frac = min(completed / total_to_log, 1.0)
+                            pct = int(frac * 100)
+
+                            progress.progress(frac)
+                            progress_text.markdown(
+                                f"<div style='text-align:center; font-size:0.9rem; margin-top:4px;'>"
+                                f"Progress: <b>{pct}%</b>"
+                                "</div>",
+                                unsafe_allow_html=True,
+                            )
 
                             if not step_resp.get("ok", True):
                                 # Non-fatal: warn but continue flushing
@@ -1452,9 +1472,17 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     # 2) Now send the final payload to generate Gate Token
                     final_resp = post_step_log(P2O_ENDPOINT, payload)
                     completed += 1
-                    progress.progress(1.0)
 
-                    resp = final_resp
+                    # Force 100% when final payload is done
+                    progress.progress(1.0)
+                    progress_text.markdown(
+                        "<div style='text-align:center; font-size:0.9rem; margin-top:4px;'>"
+                        "Progress: <b>100%</b>"
+                        "</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                    resp = final_resp                     
 
                 if resp.get("ok", True):
                     token = resp.get("token", "(no token — endpoint not set)")
