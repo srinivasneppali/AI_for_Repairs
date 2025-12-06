@@ -1295,49 +1295,50 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
         parts_text = ", ".join(recommended_parts)
         st.markdown(f'''
         <style>
-        @keyframes flash-warning {{
+        @keyframes pulse-glow-animation {{
             0%, 100% {{
                 transform: scale(1);
-                box-shadow: 0 4px 20px rgba(255, 100, 0, 0.4);
-                border-color: #ff8c00;
+                box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 0 25px rgba(147, 51, 234, 0.4), inset 0 0 8px rgba(59, 130, 246, 0.3);
             }}
             50% {{
                 transform: scale(1.02);
-                box-shadow: 0 8px 35px rgba(255, 69, 0, 0.7);
-                border-color: #ff4500;
+                box-shadow: 0 0 25px rgba(59, 130, 246, 0.9), 0 0 45px rgba(147, 51, 234, 0.8), inset 0 0 12px rgba(147, 51, 234, 0.5);
             }}
         }}
 
-        .flashing-warning-box {{
-            background: linear-gradient(135deg, #ffaf4b, #ff7e5f);
-            color: #ffffff;
-            border: 3px solid #ff8c00;
-            border-radius: 16px;
+        .pulsing-glow-box {{
+            background: linear-gradient(145deg, #1e1b4b, #1e293b);
+            color: #e0e7ff;
+            border: 2px solid;
+            border-image-slice: 1;
+            border-image-source: linear-gradient(to right bottom, #3b82f6, #a855f7, #ec4899);
+            border-radius: 18px;
             padding: 1.2rem;
             margin: 1.2rem 0;
-            animation: flash-warning 1.2s ease-in-out infinite;
+            animation: pulse-glow-animation 2s ease-in-out infinite;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }}
-        .flashing-warning-title {{
-            font-size: 1.1rem;
+        .pulsing-glow-title {{
+            font-size: 1.15rem;
             font-weight: 800;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.6rem;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 0.1em;
+            color: #ffffff;
+            text-shadow: 0 0 6px #ec4899, 0 0 12px #a855f7, 0 0 18px #3b82f6;
         }}
-        .flashing-warning-parts {{
-            font-size: 1.3rem;
-            font-weight: 900;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        .pulsing-glow-parts {{
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #f0f9ff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             word-wrap: break-word;
         }}
         </style>
-        <div class="flashing-warning-box">
-            <div class="flashing-warning-title">🚨 Recommended Parts to Order 🚨</div>
-            <div class="flashing-warning-parts">{parts_text}</div>
+        <div class="pulsing-glow-box">
+            <div class="pulsing-glow-title">✨ Recommended Parts to Order ✨</div>
+            <div class="pulsing-glow-parts">{parts_text}</div>
         </div>
         ''', unsafe_allow_html=True)
         st.info("Capture clear photos of each part you plan to order.")
