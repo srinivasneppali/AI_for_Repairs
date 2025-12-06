@@ -1426,21 +1426,35 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                         unsafe_allow_html=True,
                     )
 
-                    # 1) Flush all buffered non-final steps (if any)
+                    # Prepare progress bar for visual feedback
                     step_buffer = st.session_state.get("p2o_step_buffer", [])
+                    total_to_log = (len(step_buffer) or 0) + 1  # +1 for final Gate Token payload
+                    progress = st.progress(0.0)
+                    completed = 0
+
+                    # 1) Flush all buffered non-final steps (if any)
                     if P2O_ENDPOINT and step_buffer:
                         for step_payload in step_buffer:
                             step_resp = post_step_log(P2O_ENDPOINT, step_payload)
+                            completed += 1
+                            # Update progress after each logged step
+                            progress.progress(min(completed / total_to_log, 1.0))
+
                             if not step_resp.get("ok", True):
-                                # Non-fatal: warn but continue
+                                # Non-fatal: warn but continue flushing
                                 st.warning(
                                     f"Step log failed: {step_resp.get('error', 'Unknown error')}"
                                 )
+
                         # Clear buffer after flushing
                         st.session_state.p2o_step_buffer = []
 
                     # 2) Now send the final payload to generate Gate Token
-                    resp = post_step_log(P2O_ENDPOINT, payload)
+                    final_resp = post_step_log(P2O_ENDPOINT, payload)
+                    completed += 1
+                    progress.progress(1.0)
+
+                    resp = final_resp
 
                 if resp.get("ok", True):
                     token = resp.get("token", "(no token — endpoint not set)")
