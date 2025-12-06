@@ -2101,10 +2101,27 @@ if available_flows:
         label_to_path[label] = path
         if selected_flow_path and str(path) == selected_flow_path:
             default_index = idx
+    # Conditionally add a flashing class if no default is selected (i.e., placeholder will be shown)
+    header_class = ""
+    if default_index is None:
+        header_class = "flashing-issue-header"
+        st.markdown('''
+        <style>
+        @keyframes header-pulse {
+            0% { box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+            50% { box-shadow: 0 3px 25px rgba(236, 72, 153, 0.7); }
+            100% { box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+        }
+        .flashing-issue-header {
+            animation: header-pulse 2s ease-in-out infinite;
+        }
+        </style>
+        ''', unsafe_allow_html=True)
+
     issue_label_color = ISSUE_LABEL_COLOR or "#ef476f"
     issue_label_text_color = "#ffffff"
     st.markdown(
-        f"<div style='font-size:1.2rem;font-weight:800;color:{issue_label_text_color};background:{issue_label_color};padding:0.5rem 0.9rem;border-radius:10px;margin-top:1.2rem;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.15);'>Select troubleshooting issue</div>",
+        f"<div class='{header_class}' style='font-size:1.2rem;font-weight:800;color:{issue_label_text_color};background:{issue_label_color};padding:0.5rem 0.9rem;border-radius:10px;margin-top:1.2rem;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.15);'>Select troubleshooting issue</div>",
         unsafe_allow_html=True,
     )
     selected_label = None
@@ -2115,70 +2132,14 @@ if available_flows:
             index=default_index,
             label_visibility="collapsed",
         )
-    else:
-        selected_label = st.selectbox(
-            "",
-            options=labels,
-            index=None,
-            placeholder="Choose an issue to begin",
-            label_visibility="collapsed",
-        )
-
-        # Add flashing effect to the placeholder text if it is visible
-        if not selected_label:
-            # Use a combination of CSS for the animation and JS to apply/remove the class.
-            components.html('''
-            <style>
-                @keyframes rainbow-flasher {
-                    0%   { color: #3b82f6 !important; }
-                    25%  { color: #22c55e !important; }
-                    50%  { color: #facc15 !important; }
-                    75%  { color: #ec4899 !important; }
-                    100% { color: #3b82f6 !important; }
-                }
-                .flashing-placeholder-text {
-                    font-weight: 700 !important;
-                    animation: rainbow-flasher 4s linear infinite;
-                }
-            </style>
-            <script>
-            (function() {
-                setTimeout(function() {
-                    const placeholderText = "Choose an issue to begin";
-                    const allDivs = window.parent.document.getElementsByTagName('div');
-                    let placeholderDiv = null;
-
-                    for (let i = 0; i < allDivs.length; i++) {
-                        if (allDivs[i].textContent.trim() === placeholderText) {
-                            if (allDivs[i].closest('div[data-baseweb="select"]')) {
-                                placeholderDiv = allDivs[i];
-                                break;
-                            }
-                        }
-                    }
-
-                    if (placeholderDiv) {
-                        // Apply the class to start the animation
-                        placeholderDiv.classList.add("flashing-placeholder-text");
-
-                        // Set up a checker to remove the animation once a selection is made
-                        const checkInterval = setInterval(function() {
-                            // Check if the placeholder text is still there
-                            const currentText = placeholderDiv.textContent.trim();
-                            if (currentText !== "" && currentText !== placeholderText) {
-                                placeholderDiv.classList.remove("flashing-placeholder-text");
-                                // Also clear any lingering inline style from other attempts
-                                placeholderDiv.style.color = "";
-                                placeholderDiv.style.fontWeight = "";
-                                clearInterval(checkInterval);
-                            }
-                        }, 200);
-                    }
-                }, 500);
-            })();
-            </script>
-            ''', height=0)
-    if selected_label:
+                else:
+                    selected_label = st.selectbox(
+                        "",
+                        options=labels,
+                        index=None,
+                        placeholder="Choose an issue to begin",
+                        label_visibility="collapsed",
+                    )    if selected_label:
         chosen_path = label_to_path[selected_label]
         if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
             load_flow_from_path(chosen_path)
