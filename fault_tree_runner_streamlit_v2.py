@@ -1429,36 +1429,74 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     # Prepare progress bar for visual feedback
                     step_buffer = st.session_state.get("p2o_step_buffer", [])
                     total_to_log = (len(step_buffer) or 0) + 1  # +1 for final Gate Token payload
-
-                    progress = st.progress(0.0)
-                    progress_text = st.empty()
+                    
+                    progress_placeholder = st.empty()
                     completed = 0
 
-                    # Initial 0% label
-                    progress_text.markdown(
-                        "<div style='text-align:center; font-size:0.9rem; margin-top:4px;'>"
-                        "Progress: <b>0%</b>"
-                        "</div>",
-                        unsafe_allow_html=True,
-                    )
+                    def render_custom_progress(pct: int):
+                        # Ensure percentage is between 0 and 100
+                        pct = max(0, min(100, pct))
+                        progress_html = f"""
+                        <style>
+                        .custom-progress-container {{
+                            width: 100%;
+                            background-color: #4A5568; /* gray-700 */
+                            border-radius: 12px;
+                            overflow: hidden;
+                            border: 2px solid #2D3748; /* gray-800 */
+                            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+                            margin: 8px 0;
+                        }}
+
+                        .custom-progress-bar {{
+                            height: 28px;
+                            border-radius: 10px;
+                            background: linear-gradient(120deg, #22c55e, #84cc16, #fde047);
+                            background-size: 200% 100%;
+                            box-shadow: 0 0 12px rgba(132, 204, 22, 0.8);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 800;
+                            font-size: 0.9rem;
+                            color: #1a202c; /* gray-900 */
+                            text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+                            transition: width 0.4s ease-in-out;
+                            animation: gradient-flow 2.5s linear infinite;
+                        }}
+
+                        @keyframes gradient-flow {{
+                            0% {{ background-position: 200% 0; }}
+                            100% {{ background-position: -200% 0; }}
+                        }}
+                        </style>
+                        <div class="custom-progress-container">
+                            <div class="custom-progress-bar" style="width: {pct}%;">
+                                {pct}%
+                            </div>
+                        </div>
+                        <div style='text-align:center; font-size:0.9rem; margin-top:4px; font-weight: 700; color: #E2E8F0;'>
+                            Generating Gate Token...
+                        </div>
+                        """
+                        progress_placeholder.markdown(progress_html, unsafe_allow_html=True)
+
+                    # Initial 0% render
+                    render_custom_progress(0)
 
                     # 1) Flush all buffered non-final steps (if any)
                     if P2O_ENDPOINT and step_buffer:
                         for step_payload in step_buffer:
                             step_resp = post_step_log(P2O_ENDPOINT, step_payload)
                             completed += 1
-
-                            # Update progress bar and percentage
+                            
+                            # Update progress bar
                             frac = min(completed / total_to_log, 1.0)
                             pct = int(frac * 100)
-
-                            progress.progress(frac)
-                            progress_text.markdown(
-                                f"<div style='text-align:center; font-size:0.9rem; margin-top:4px;'>"
-                                f"Progress: <b>{pct}%</b>"
-                                "</div>",
-                                unsafe_allow_html=True,
-                            )
+                            render_custom_progress(pct)
+                            
+                            # Small delay to make the animation visible between steps
+                            time.sleep(0.1) 
 
                             if not step_resp.get("ok", True):
                                 # Non-fatal: warn but continue flushing
@@ -1474,13 +1512,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     completed += 1
 
                     # Force 100% when final payload is done
-                    progress.progress(1.0)
-                    progress_text.markdown(
-                        "<div style='text-align:center; font-size:0.9rem; margin-top:4px;'>"
-                        "Progress: <b>100%</b>"
-                        "</div>",
-                        unsafe_allow_html=True,
-                    )
+                    render_custom_progress(100)
 
                     resp = final_resp                     
 
