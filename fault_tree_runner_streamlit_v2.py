@@ -1292,9 +1292,54 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
     all_photos_ready = True
 
     if photos_required:
-        st.warning(
-            "Recommended parts to order if symptoms persist: " + ", ".join(recommended_parts)
-        )
+        parts_text = ", ".join(recommended_parts)
+        st.markdown(f'''
+        <style>
+        @keyframes flash-warning {{
+            0%, 100% {{
+                transform: scale(1);
+                box-shadow: 0 4px 20px rgba(255, 100, 0, 0.4);
+                border-color: #ff8c00;
+            }}
+            50% {{
+                transform: scale(1.02);
+                box-shadow: 0 8px 35px rgba(255, 69, 0, 0.7);
+                border-color: #ff4500;
+            }}
+        }}
+
+        .flashing-warning-box {{
+            background: linear-gradient(135deg, #ffaf4b, #ff7e5f);
+            color: #ffffff;
+            border: 3px solid #ff8c00;
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin: 1.2rem 0;
+            animation: flash-warning 1.2s ease-in-out infinite;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }}
+        .flashing-warning-title {{
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }}
+        .flashing-warning-parts {{
+            font-size: 1.3rem;
+            font-weight: 900;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            word-wrap: break-word;
+        }}
+        </style>
+        <div class="flashing-warning-box">
+            <div class="flashing-warning-title">🚨 Recommended Parts to Order 🚨</div>
+            <div class="flashing-warning-parts">{parts_text}</div>
+        </div>
+        ''', unsafe_allow_html=True)
         st.info("Capture clear photos of each part you plan to order.")
         for part in photos_required:
             slug = key_from_part(part)
