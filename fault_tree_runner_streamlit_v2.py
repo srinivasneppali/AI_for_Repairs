@@ -2126,44 +2126,48 @@ if available_flows:
 
         # Add flashing effect to the placeholder text if it is visible
         if not selected_label:
-            st.markdown('''
+            # Use st.components.v1.html for better script execution reliability
+            components.html('''
             <script>
             (function() {
-                // Use a delay to ensure the element has been rendered by Streamlit
+                console.log("P2O SCRIPT: Attempting to apply color animation to placeholder...");
                 setTimeout(function() {
                     const placeholderText = "Choose an issue to begin";
                     const allDivs = window.parent.document.getElementsByTagName('div');
                     let placeholderDiv = null;
+                    console.log("P2O SCRIPT: Searching for placeholder div...");
 
                     for (let i = 0; i < allDivs.length; i++) {
-                        if (allDivs[i].textContent.trim() === placeholderText && allDivs[i].childNodes.length === 1) {
+                        // Loosen the check: just find a div with matching text inside a select component
+                        if (allDivs[i].textContent.trim() === placeholderText) {
                             if (allDivs[i].closest('div[data-baseweb="select"]')) {
                                 placeholderDiv = allDivs[i];
+                                console.log("P2O SCRIPT: Found candidate placeholder div:", placeholderDiv);
                                 break;
                             }
                         }
                     }
 
                     if (placeholderDiv) {
-                        const colors = ["#60a5fa", "#34d399", "#fde047", "#f472b6"];
+                        console.log("P2O SCRIPT: Applying styles and starting animation interval.");
+                        const colors = ["#3b82f6", "#22c55e", "#facc15", "#ec4899"];
                         let colorIndex = 0;
 
                         placeholderDiv.style.fontWeight = "700";
-                        placeholderDiv.style.transition = "color 0.5s ease-in-out";
-
-                        // Set initial color
-                        placeholderDiv.style.color = colors[colorIndex];
-                        colorIndex++;
+                        placeholderDiv.style.transition = "color 0.7s ease-in-out";
+                        placeholderDiv.style.willChange = "color";
 
                         setInterval(function() {
                             placeholderDiv.style.color = colors[colorIndex];
                             colorIndex = (colorIndex + 1) % colors.length;
-                        }, 1200); // Change color every 1.2 seconds
+                        }, 1500);
+                    } else {
+                        console.log("P2O SCRIPT: Could not find the placeholder div after 500ms timeout.");
                     }
-                }, 300); // Increased delay slightly to 300ms
+                }, 500); // Increase timeout to 500ms
             })();
             </script>
-            ''', unsafe_allow_html=True)
+            ''', height=0)
     if selected_label:
         chosen_path = label_to_path[selected_label]
         if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
