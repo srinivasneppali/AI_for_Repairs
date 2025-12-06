@@ -1412,6 +1412,8 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                 "parts_used": parts_used_list or None,
                 "resolution": status,
                 "part_photos": part_photos if photos_required else {},
+                "visit_selfie_b64": st.session_state.get("visit_selfie"),
+                "visit_selfie_mime": st.session_state.get("visit_selfie_mime"),
             }
 
             resp = None
