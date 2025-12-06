@@ -2123,6 +2123,36 @@ if available_flows:
             placeholder="Choose an issue to begin",
             label_visibility="collapsed",
         )
+
+        # Add flashing effect to the placeholder text if it is visible
+        if not selected_label:
+            st.markdown('''
+            <style>
+                @keyframes rainbow-text-animation {
+                    0%, 100% { color: #60a5fa; } /* blue-400 */
+                    25%      { color: #34d399; } /* green-400 */
+                    50%      { color: #facc15; } /* yellow-400 */
+                    75%      { color: #f472b6; } /* pink-400 */
+                }
+                .flashing-issue-placeholder {
+                    animation: rainbow-text-animation 4s ease-in-out infinite;
+                    font-weight: 600 !important;
+                }
+            </style>
+            <script>
+            (function() {
+                const placeholderText = "Choose an issue to begin";
+                const selectDivs = window.parent.document.querySelectorAll('div[data-baseweb="select"]');
+                for (let i = 0; i < selectDivs.length; i++) {
+                    const innerDiv = selectDivs[i].querySelector('div');
+                    if (innerDiv && innerDiv.textContent.trim() === placeholderText) {
+                        innerDiv.classList.add('flashing-issue-placeholder');
+                        break;
+                    }
+                }
+            })();
+            </script>
+            ''', unsafe_allow_html=True)
     if selected_label:
         chosen_path = label_to_path[selected_label]
         if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
