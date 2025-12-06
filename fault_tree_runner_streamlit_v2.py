@@ -1307,7 +1307,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
         }}
 
         .pulsing-glow-box {{
-            background: linear-gradient(145deg, #1e1b4b, #1e293b);
+            background: linear-gradient(145deg, #101018, #181820);
             color: #e0e7ff;
             border: 2px solid;
             border-image-slice: 1;
