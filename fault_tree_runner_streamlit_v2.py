@@ -2132,14 +2132,15 @@ if available_flows:
             index=default_index,
             label_visibility="collapsed",
         )
-                else:
-                    selected_label = st.selectbox(
-                        "",
-                        options=labels,
-                        index=None,
-                        placeholder="Choose an issue to begin",
-                        label_visibility="collapsed",
-                    )    if selected_label:
+    else:
+        selected_label = st.selectbox(
+            "",
+            options=labels,
+            index=None,
+            placeholder="Choose an issue to begin",
+            label_visibility="collapsed",
+        )
+    if selected_label:
         chosen_path = label_to_path[selected_label]
         if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
             load_flow_from_path(chosen_path)
