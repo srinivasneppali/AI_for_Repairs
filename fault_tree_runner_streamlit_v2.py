@@ -2409,9 +2409,16 @@ if go_next:
             if not resp.get("ok", True):
                 st.warning(f"Log post failed: {resp.get('error')}")
 
-            part_tag = node.get("part_tag")
-            if part_tag:
-                st.session_state.parts_used.add(part_tag)
+            # Capture any recommended parts from this node into parts_used
+            single_part = node.get("recommends_part")
+            if isinstance(single_part, str) and single_part:
+                st.session_state.parts_used.add(single_part)
+
+            multiple_parts = node.get("recommends_parts")
+            if isinstance(multiple_parts, list):
+                for part in multiple_parts:
+                    if isinstance(part, str) and part:
+                        st.session_state.parts_used.add(part)
 
             prompt_allowed = wants_resolution_prompt(node)
             if node_id == tree.get("start") and isinstance(val, str):
