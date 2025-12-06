@@ -1305,44 +1305,41 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                     st.success("Photo captured.")
                     if st.button(f"Retake photo - {part}", key=f"retake_{slug}"):
                         part_photos.pop(part, None)
-                        # reset cam preference so camera opens again by default
-                        st.session_state.pop(f"cam_pref_{slug}", None)
+                        # Clean up camera visibility state on retake
+                        st.session_state.pop(f"show_camera_{slug}", None)
                         st.rerun()
                 else:
+                    show_camera_key = f"show_camera_{slug}"
                     upload = None
                     cam = None
-                    cam_pref_key = f"cam_pref_{slug}"
-                    # ✅ default to camera ON the first time (if enabled)
-                    default_cam_on = CAMERA_CAPTURE_ENABLED
-                    if cam_pref_key not in st.session_state:
-                        st.session_state[cam_pref_key] = default_cam_on
 
-                    use_camera = st.session_state.get(cam_pref_key, default_cam_on)
-
-                    if CAMERA_CAPTURE_ENABLED and use_camera:
-                        # NOTE: Streamlit cannot force rear camera; the OS/browser picker decides.
-                        # On mobile, switch to rear camera using the native UI toggle.
+                    # Check if we should be showing the camera for this part
+                    if st.session_state.get(show_camera_key):
                         st.caption("Tip: switch to the rear camera in the picker for part photos.")
-                        cam = st.camera_input(f"Capture {part}", key=f"cam_{slug}")
-                        if st.button(f"Use gallery/upload for {part}", key=f"closecam_{slug}"):
-                            st.session_state[cam_pref_key] = False
+                        cam = st.camera_input(f"Capture photo of {part}", key=f"cam_{slug}")
+                        if st.button(f"Cancel Capture", key=f"cancelcam_{slug}"):
+                            st.session_state[show_camera_key] = False
                             st.rerun()
                     else:
+                        # Default state: Show a button to open the camera, or an uploader
                         if CAMERA_CAPTURE_ENABLED:
-                            if st.button(f"Use camera for {part}", key=f"opencam_{slug}"):
-                                st.session_state[cam_pref_key] = True
+                            if st.button(f"📸 Capture photo of {part}", key=f"opencam_{slug}"):
+                                st.session_state[show_camera_key] = True
                                 st.rerun()
+
                         upload = st.file_uploader(
-                            f"Upload photo for {part}",
+                            f"Or upload a photo of {part}",
                             type=["jpg", "jpeg", "png"],
                             key=f"upload_{slug}",
                         )
 
+                    # Process whichever input has data
                     upload = cam or upload
                     if upload:
                         encoded, mime = b64_of_uploaded(upload)
                         if encoded:
                             part_photos[part] = {"photo_b64": encoded, "photo_mime": mime}
+                            st.session_state.pop(show_camera_key, None)  # Clean up state
                             st.rerun()
                     else:
                         all_photos_ready = False
