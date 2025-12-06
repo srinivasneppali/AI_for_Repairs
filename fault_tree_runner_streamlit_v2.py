@@ -135,6 +135,7 @@ def init_session_state() -> None:
     st.session_state.setdefault("final_token", None)
     st.session_state.setdefault("visited_stack", [])
     st.session_state.setdefault("second_visit_mode", False)
+    st.session_state.setdefault("p2o_step_buffer", [])
     st.session_state.setdefault("pending_resolution", None)
     st.session_state.setdefault("selected_flow_path", None)
     st.session_state.setdefault("selected_product", None)
@@ -1424,6 +1425,21 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
                         "<div class='spinner-tip'>✨ Uploading evidence, updating logs, and loading the next action...</div>",
                         unsafe_allow_html=True,
                     )
+
+                    # 1) Flush all buffered non-final steps (if any)
+                    step_buffer = st.session_state.get("p2o_step_buffer", [])
+                    if P2O_ENDPOINT and step_buffer:
+                        for step_payload in step_buffer:
+                            step_resp = post_step_log(P2O_ENDPOINT, step_payload)
+                            if not step_resp.get("ok", True):
+                                # Non-fatal: warn but continue
+                                st.warning(
+                                    f"Step log failed: {step_resp.get('error', 'Unknown error')}"
+                                )
+                        # Clear buffer after flushing
+                        st.session_state.p2o_step_buffer = []
+
+                    # 2) Now send the final payload to generate Gate Token
                     resp = post_step_log(P2O_ENDPOINT, payload)
 
                 if resp.get("ok", True):
@@ -2410,14 +2426,10 @@ if go_next:
                 ),
                 "fault_code": fault_code_from_meta(meta.get("id", "")),
             }
-            # Log this step to P2O only if enabled; skip for speed/demo mode
-            if LOG_EVERY_STEP and P2O_ENDPOINT:
-                resp = post_step_log(P2O_ENDPOINT, payload)
-                if not resp.get("ok", True):
-                    st.warning(f"Log post failed: {resp.get('error')}")
-            else:
-                # No logging for this step; pretend it succeeded
-                resp = {"ok": True, "skipped": True}
+            # Buffer this step payload to be logged later at finalization
+            buffer = st.session_state.get("p2o_step_buffer", [])
+            buffer.append(payload)
+            st.session_state.p2o_step_buffer = buffer
 
             # Capture any recommended parts from this node into parts_used
             single_part = node.get("recommends_part")
