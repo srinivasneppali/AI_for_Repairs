@@ -2127,35 +2127,40 @@ if available_flows:
         # Add flashing effect to the placeholder text if it is visible
         if not selected_label:
             st.markdown('''
-            <style>
-                @keyframes rainbow-text-animation {
-                    0%, 100% { color: #60a5fa !important; } /* blue-400 */
-                    25%      { color: #34d399 !important; } /* green-400 */
-                    50%      { color: #fde047 !important; } /* yellow-300 */
-                    75%      { color: #f472b6 !important; } /* pink-400 */
-                }
-                .flashing-issue-placeholder {
-                    animation: rainbow-text-animation 3.5s ease-in-out infinite;
-                    font-weight: 700 !important;
-                }
-            </style>
             <script>
             (function() {
-                // Use a short delay to ensure the element has been rendered by Streamlit
+                // Use a delay to ensure the element has been rendered by Streamlit
                 setTimeout(function() {
                     const placeholderText = "Choose an issue to begin";
                     const allDivs = window.parent.document.getElementsByTagName('div');
+                    let placeholderDiv = null;
+
                     for (let i = 0; i < allDivs.length; i++) {
-                        // Find a div that ONLY contains the placeholder text
                         if (allDivs[i].textContent.trim() === placeholderText && allDivs[i].childNodes.length === 1) {
-                            // Check if its parent is part of a select component to be safe
                             if (allDivs[i].closest('div[data-baseweb="select"]')) {
-                                allDivs[i].classList.add('flashing-issue-placeholder');
+                                placeholderDiv = allDivs[i];
                                 break;
                             }
                         }
                     }
-                }, 200); // 200ms delay
+
+                    if (placeholderDiv) {
+                        const colors = ["#60a5fa", "#34d399", "#fde047", "#f472b6"];
+                        let colorIndex = 0;
+
+                        placeholderDiv.style.fontWeight = "700";
+                        placeholderDiv.style.transition = "color 0.5s ease-in-out";
+
+                        // Set initial color
+                        placeholderDiv.style.color = colors[colorIndex];
+                        colorIndex++;
+
+                        setInterval(function() {
+                            placeholderDiv.style.color = colors[colorIndex];
+                            colorIndex = (colorIndex + 1) % colors.length;
+                        }, 1200); // Change color every 1.2 seconds
+                    }
+                }, 300); // Increased delay slightly to 300ms
             })();
             </script>
             ''', unsafe_allow_html=True)
