@@ -2118,38 +2118,56 @@ if available_flows:
     else:
         selected_label = st.selectbox(
             "",
+            options=labels,
             index=None,
             placeholder="Choose an issue to begin",
             label_visibility="collapsed",
         )
 
-        # Show a flashing helper text below the dropdown when nothing is selected
+        # Add flashing effect to the placeholder text if it is visible
         if not selected_label:
-            st.markdown(
-                """
-                <style>
-                @keyframes flash-choose-issue {
-                    0%   { color: #ffffff; }
-                    25%  { color: #3b82f6; }
-                    50%  { color: #22c55e; }
-                    75%  { color: #facc15; }
-                    100% { color: #ec4899; }
-                }
-                .flash-choose-issue-text {
-                  font-size: 0.95rem;
-                  font-weight: 700;
-                  text-align: center;
-                  margin-top: 0.35rem;
-                  animation: flash-choose-issue 1.4s infinite alternate;
-                }
-               </style>
-               <div class="flash-choose-issue-text">
-                 Choose an issue to begin
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            # Use st.components.v1.html for better script execution reliability
+            components.html('''
+            <script>
+            (function() {
+                console.log("P2O SCRIPT: Attempting to apply color animation to placeholder...");
+                setTimeout(function() {
+                    const placeholderText = "Choose an issue to begin";
+                    const allDivs = window.parent.document.getElementsByTagName('div');
+                    let placeholderDiv = null;
+                    console.log("P2O SCRIPT: Searching for placeholder div...");
 
+                    for (let i = 0; i < allDivs.length; i++) {
+                        // Loosen the check: just find a div with matching text inside a select component
+                        if (allDivs[i].textContent.trim() === placeholderText) {
+                            if (allDivs[i].closest('div[data-baseweb="select"]')) {
+                                placeholderDiv = allDivs[i];
+                                console.log("P2O SCRIPT: Found candidate placeholder div:", placeholderDiv);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (placeholderDiv) {
+                        console.log("P2O SCRIPT: Applying styles and starting animation interval.");
+                        const colors = ["#3b82f6", "#22c55e", "#facc15", "#ec4899"];
+                        let colorIndex = 0;
+
+                        placeholderDiv.style.fontWeight = "700";
+                        placeholderDiv.style.transition = "color 0.7s ease-in-out";
+                        placeholderDiv.style.willChange = "color";
+
+                        setInterval(function() {
+                            placeholderDiv.style.color = colors[colorIndex];
+                            colorIndex = (colorIndex + 1) % colors.length;
+                        }, 1500);
+                    } else {
+                        console.log("P2O SCRIPT: Could not find the placeholder div after 500ms timeout.");
+                    }
+                }, 500); // Increase timeout to 500ms
+            })();
+            </script>
+            ''', height=0)
     if selected_label:
         chosen_path = label_to_path[selected_label]
         if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
