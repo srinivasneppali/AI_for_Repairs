@@ -2129,27 +2129,33 @@ if available_flows:
             st.markdown('''
             <style>
                 @keyframes rainbow-text-animation {
-                    0%, 100% { color: #60a5fa; } /* blue-400 */
-                    25%      { color: #34d399; } /* green-400 */
-                    50%      { color: #facc15; } /* yellow-400 */
-                    75%      { color: #f472b6; } /* pink-400 */
+                    0%, 100% { color: #60a5fa !important; } /* blue-400 */
+                    25%      { color: #34d399 !important; } /* green-400 */
+                    50%      { color: #fde047 !important; } /* yellow-300 */
+                    75%      { color: #f472b6 !important; } /* pink-400 */
                 }
                 .flashing-issue-placeholder {
-                    animation: rainbow-text-animation 4s ease-in-out infinite;
-                    font-weight: 600 !important;
+                    animation: rainbow-text-animation 3.5s ease-in-out infinite;
+                    font-weight: 700 !important;
                 }
             </style>
             <script>
             (function() {
-                const placeholderText = "Choose an issue to begin";
-                const selectDivs = window.parent.document.querySelectorAll('div[data-baseweb="select"]');
-                for (let i = 0; i < selectDivs.length; i++) {
-                    const innerDiv = selectDivs[i].querySelector('div');
-                    if (innerDiv && innerDiv.textContent.trim() === placeholderText) {
-                        innerDiv.classList.add('flashing-issue-placeholder');
-                        break;
+                // Use a short delay to ensure the element has been rendered by Streamlit
+                setTimeout(function() {
+                    const placeholderText = "Choose an issue to begin";
+                    const allDivs = window.parent.document.getElementsByTagName('div');
+                    for (let i = 0; i < allDivs.length; i++) {
+                        // Find a div that ONLY contains the placeholder text
+                        if (allDivs[i].textContent.trim() === placeholderText && allDivs[i].childNodes.length === 1) {
+                            // Check if its parent is part of a select component to be safe
+                            if (allDivs[i].closest('div[data-baseweb="select"]')) {
+                                allDivs[i].classList.add('flashing-issue-placeholder');
+                                break;
+                            }
+                        }
                     }
-                }
+                }, 200); // 200ms delay
             })();
             </script>
             ''', unsafe_allow_html=True)
