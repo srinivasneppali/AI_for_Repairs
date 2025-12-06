@@ -320,6 +320,6 @@ steps:
     prompt:
       en: Diagnostic Complete. If faults were identified, the Gate Token will cover
         all recommended parts (Switch, Capacitor, Timer, Motor, etc.). If no faults
-        were found, please consult a Senior Technician.
+        were found, please contact your Regional Trainer for further guidance.
     ui:
       control: none

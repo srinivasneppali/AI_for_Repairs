@@ -32,6 +32,11 @@ st.set_page_config(
 
 ACCESS_PIN = os.getenv("ACCESS_PIN")
 P2O_ENDPOINT = os.getenv("P2O_ENDPOINT")
+
+# If True → log every step to Google Sheet
+# If False → only log on finalization (Gate Token step) → much faster UI
+LOG_EVERY_STEP = False
+
 DEFAULT_LANG = "en"
 SESSION_HISTORY_KEY = "fault_history"
 SESSION_TIMER_PREFIX = "timer_start_"
@@ -2405,9 +2410,14 @@ if go_next:
                 ),
                 "fault_code": fault_code_from_meta(meta.get("id", "")),
             }
-            resp = post_step_log(P2O_ENDPOINT, payload)
-            if not resp.get("ok", True):
-                st.warning(f"Log post failed: {resp.get('error')}")
+            # Log this step to P2O only if enabled; skip for speed/demo mode
+            if LOG_EVERY_STEP and P2O_ENDPOINT:
+                resp = post_step_log(P2O_ENDPOINT, payload)
+                if not resp.get("ok", True):
+                    st.warning(f"Log post failed: {resp.get('error')}")
+            else:
+                # No logging for this step; pretend it succeeded
+                resp = {"ok": True, "skipped": True}
 
             # Capture any recommended parts from this node into parts_used
             single_part = node.get("recommends_part")
