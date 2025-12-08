@@ -815,15 +815,36 @@ def apply_button_style_by_label(label: str, css_class: str) -> None:
         <script>
         (function() {{
             const tryApplyClass = () => {{
-                const doc = window.parent.document;
+                let doc;
+                try {{
+                    doc = window.parent.document;
+                }} catch (err) {{
+                    doc = document;
+                }}
                 if (!doc) return false;
 
-                const target = Array.from(doc.querySelectorAll('button')).find(
+                const nodes = Array.from(
+                    doc.querySelectorAll('button, div[role="button"], [data-testid="stButton"] button')
+                );
+                const target = nodes.find(
                     (btn) => (btn.textContent || "").trim().includes({json.dumps(label)})
                 );
 
                 if (target) {{
                     target.classList.add({json.dumps(css_class)});
+                    Object.assign(target.style, {{
+                        background: 'linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5)',
+                        border: '1px solid rgba(142, 197, 252, 0.9)',
+                        color: '#ffffff',
+                        fontWeight: '800',
+                        letterSpacing: '0.03em',
+                        boxShadow: '0 18px 40px rgba(8, 36, 86, 0.65), 0 0 30px rgba(14, 165, 233, 0.55)',
+                        borderRadius: '18px'
+                    }});
+                    const host = target.closest('div[data-testid="stButton"]');
+                    if (host) {{
+                        host.classList.add({json.dumps(css_class + "-host")});
+                    }}
                     return true;
                 }}
                 return false;
@@ -847,9 +868,13 @@ def apply_button_style_by_label(label: str, css_class: str) -> None:
                 attempt();
             }};
 
-            // Use requestAnimationFrame to ensure Streamlit finished painting,
-            // then run the retry loop so slower mobile browsers still get styled.
-            window.parent.requestAnimationFrame(runWithRetries);
+            // Use requestAnimationFrame (or fallback) so Streamlit finishes painting first.
+            const rafSource =
+                (window.parent && window.parent.requestAnimationFrame)
+                    ? window.parent
+                    : window;
+            const raf = rafSource.requestAnimationFrame || ((cb) => setTimeout(cb, 16));
+            raf.call(rafSource, runWithRetries);
         }})();
         </script>
         """,
