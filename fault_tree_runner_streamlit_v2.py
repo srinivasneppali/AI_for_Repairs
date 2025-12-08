@@ -2133,7 +2133,7 @@ title_block = f"""
 """
 st.markdown(title_block, unsafe_allow_html=True)
 st.markdown(
-    "<div class='sub-caption' style='color:#ffffff;font-weight:700;text-align:center;'>Train decision-making, not just steps. Logs MPD/RR risk proxies for coaching.</div>",
+    "<div class='sub-caption' style='color:#ffffff;font-weight:700;text-align:center;'>Shape troubleshooting decisions at every step to reduce RR and MPD and deliver a more reliable repair experience for customers.</div>",
     unsafe_allow_html=True,
 )
 
