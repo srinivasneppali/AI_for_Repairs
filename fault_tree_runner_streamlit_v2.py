@@ -2066,6 +2066,12 @@ st.markdown(
         position: relative;
         overflow: hidden;
         animation: selfiePulse 2.6s ease-in-out infinite;
+        min-height: 52px;
+        text-transform: none;
+        -webkit-appearance: none;
+        appearance: none;
+        padding: 0.45rem 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
     .selfie-button::after,
     .selfie-button-wrapper button::after {
@@ -2083,6 +2089,14 @@ st.markdown(
         width: 100%;
         border-radius: 18px;
         position: relative;
+        font-size: 1rem;
+        backdrop-filter: blur(6px);
+    }
+    .selfie-button-wrapper button:active {
+        transform: translateY(1px);
+        box-shadow:
+            0 12px 24px rgba(8,36,86,0.65),
+            0 0 18px rgba(59,130,246,0.5);
     }
     .case-id-prompt-box {
         background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(249, 115, 22, 0.2));
