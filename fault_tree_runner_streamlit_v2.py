@@ -2762,9 +2762,14 @@ else:
         # CSS-first styling so it works the same on desktop & mobile (no JS timing/race)
         st.markdown("""
         <style>
-        /* Ensure we catch Streamlit's internal button element on all viewports */
-        .selfie-button-wrapper [data-testid="stButton"] button,
-        .selfie-button-wrapper button {
+        /* Target the wrapper to ensure full width */
+        .selfie-button-wrapper {
+            width: 100%;
+            display: block;
+        }
+        
+        /* Advanced targeting for the button to force styles on Mobile & Desktop */
+        .selfie-button-wrapper [data-testid="stButton"] button {
           background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
           border: 1px solid rgba(142,197,252,0.9) !important;
           color: #ffffff !important;
@@ -2772,11 +2777,27 @@ else:
           letter-spacing: 0.03em !important;
           border-radius: 18px !important;
           box-shadow: 0 18px 40px rgba(8,36,86,0.65), 0 0 30px rgba(14,165,233,0.55) !important;
-          width: 100% !important;                /* full-width on all devices */
+          
+          /* KEY FIXES FOR MOBILE RESPONSIVENESS */
+          width: 100% !important;
+          white-space: normal !important;  /* Allows text to wrap on mobile */
+          word-wrap: break-word !important; /* Prevents overflow */
+          height: auto !important;          /* Allows button to grow taller */
+          min-height: 60px !important;      /* Ensures it's never too small */
+          padding: 12px 16px !important;    /* Adds breathing room for text */
+          line-height: 1.4 !important;      /* Better spacing for multi-line text */
+          
           position: relative;
           isolation: isolate;
-          -webkit-tap-highlight-color: transparent;  /* nicer mobile tap */
+          -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
+          transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        }
+        
+        /* Force text color inside the button (sometimes Streamlit uses <p> tags) */
+        .selfie-button-wrapper [data-testid="stButton"] button p {
+            color: #ffffff !important;
+            font-weight: 800 !important;
         }
                     
         /* Subtle glassy inner sheen */
@@ -2790,29 +2811,19 @@ else:
                     
         /* Press feedback */
         .selfie-button-wrapper [data-testid="stButton"] button:active {
-          transform: translateY(1px);
-          box-shadow: 0 12px 24px rgba(8,36,86,0.65), 0 0 18px rgba(59,130,246,0.5) !important;
+          transform: translateY(2px) scale(0.98) !important;
+          box-shadow: 0 8px 20px rgba(8,36,86,0.65), 0 0 15px rgba(59,130,246,0.5) !important;
         }
-                    
-        /* Tighter typography on small screens so the long label looks identical */
+        
+        /* Mobile Specific Adjustments */
         @media (max-width: 768px) {
           .selfie-button-wrapper [data-testid="stButton"] button {
             font-size: 0.95rem !important;
-            padding: 0.85rem 1rem !important;
-            line-height: 1.25 !important;
+            padding: 14px 14px !important; /* Slightly larger touch area padding */
           }
         }
         </style>
         """, unsafe_allow_html=True)
-
-        st.markdown("<div class='selfie-button-wrapper'>", unsafe_allow_html=True)
-        open_cam = st.button(
-            button_label,
-            key="enable_selfie_camera",
-            help="Turns on your device camera so you can take a selfie with the customer.",
-            use_container_width=True,   # Streamlit full-width helper
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
         if open_cam:
             st.session_state.show_selfie_camera = True
             st.rerun()
