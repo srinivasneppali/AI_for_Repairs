@@ -2060,11 +2060,13 @@ st.markdown(
         font-weight: 800 !important;
         letter-spacing: 0.03em;
         box-shadow:
-            0 18px 40px rgba(8, 36, 86, 0.65),
-            0 0 30px rgba(14, 165, 233, 0.55);
+            0 30px 80px rgba(7, 16, 45, 0.85),
+            0 0 45px rgba(14, 165, 233, 0.68),
+            0 0 65px rgba(59, 130, 246, 0.55);
         border-radius: 18px !important;
         position: relative;
         overflow: hidden;
+        z-index: 0;
         animation: selfiePulse 2.6s ease-in-out infinite;
         min-height: 52px;
         text-transform: none;
@@ -2081,8 +2083,22 @@ st.markdown(
         border-radius: 15px;
         background: rgba(255,255,255,0.08);
         box-shadow:
-            inset 0 0 18px rgba(59,130,246,0.55),
-            0 0 20px rgba(59,130,246,0.35);
+            inset 0 0 24px rgba(59,130,246,0.65),
+            0 0 25px rgba(59,130,246,0.35);
+        pointer-events: none;
+    }
+    .selfie-button::before,
+    .selfie-button-wrapper button::before {
+        content: "";
+        position: absolute;
+        inset: -20%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(59,130,246,0.65), transparent 70%);
+        filter: blur(24px);
+        opacity: 0.65;
+        z-index: -1;
+        mix-blend-mode: screen;
+        animation: selfieAura 4s ease-in-out infinite;
         pointer-events: none;
     }
     .selfie-button-wrapper button {
@@ -2150,6 +2166,10 @@ st.markdown(
     @keyframes selfiePulse {
         0%, 100% { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.75), 0 0 18px rgba(59,130,246,0.45); transform: translateY(0); }
         50% { box-shadow: 0 18px 45px rgba(15, 23, 42, 0.85), 0 0 26px rgba(236,72,153,0.5); transform: translateY(-2px); }
+    }
+    @keyframes selfieAura {
+        0%, 100% { opacity: 0.55; transform: scale(0.95); }
+        50% { opacity: 0.9; transform: scale(1.08); }
     }
     .product-grid {
         display: grid;
