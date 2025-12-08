@@ -1715,29 +1715,25 @@ st.markdown(
         font-size: clamp(1.2rem, 2.1vw, 2rem);
         font-weight: 800;
         letter-spacing: 0.04em;
-        color: #fafdff;
+        color: #fdfdfd;
         width: min(940px, 96%);
         margin: 1.4rem auto 1.6rem auto;
-        padding: 1.6rem 2.4rem;
+        padding: 1.5rem 2.2rem;
         position: relative;
         overflow: hidden;
-        border-radius: 28px;
-        border: 1px solid rgba(96, 165, 250, 0.6);
-        background:
-            radial-gradient(circle at 15% 35%, rgba(56, 189, 248, 0.28), transparent 60%),
-            radial-gradient(circle at 80% 20%, rgba(244, 114, 182, 0.25), transparent 50%),
-            linear-gradient(135deg, #0a0f1f, #0f1a32 45%, #122448 100%);
+        border-radius: 26px;
+        border: 1px solid rgba(99, 102, 241, 0.6);
+        background: linear-gradient(145deg, #101018, #181820);
         box-shadow:
-            0 24px 65px rgba(5, 9, 31, 0.95),
-            inset 0 0 40px rgba(59, 130, 246, 0.35),
-            inset 0 0 70px rgba(14, 165, 233, 0.22);
+            0 20px 60px rgba(4, 6, 23, 0.85),
+            inset 0 0 45px rgba(59, 130, 246, 0.35),
+            inset 0 0 65px rgba(236, 72, 153, 0.25);
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 0.85rem;
+        gap: 0.8rem;
         isolation: isolate;
         transform-style: preserve-3d;
-        backdrop-filter: blur(2px);
         animation: titleFloat 10s ease-in-out infinite;
     }
     .main-title::before {
@@ -1880,17 +1876,17 @@ st.markdown(
     }
     .title-core span {
         position: relative;
-        background: linear-gradient(115deg, #fef3c7, #fde68a, #f9a8d4, #7dd3fc);
+        background: linear-gradient(120deg, #ffffff, #dbeafe, #f9a8d4);
         -webkit-background-clip: text;
         color: transparent;
         display: inline-block;
-        background-size: 280% 280%;
-        -webkit-text-stroke: 0.2px rgba(255, 255, 255, 0.45);
+        background-size: 220% 220%;
+        -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.65);
         text-shadow:
-            0 0 10px rgba(15, 118, 110, 0.4),
-            0 0 18px rgba(236, 72, 153, 0.25);
-        animation: textAurora 8s ease-in-out infinite,
-                   neonBlink 3.2s steps(2) infinite;
+            0 0 12px rgba(30, 64, 175, 0.45),
+            0 0 20px rgba(79, 70, 229, 0.35);
+        animation: textAurora 7s ease-in-out infinite,
+                   neonBlink 3s steps(2) infinite;
     }
     .title-core::before,
     .title-core::after {
@@ -1943,30 +1939,28 @@ st.markdown(
     }
     .sub-caption {
         font-size: 1rem;
-        font-weight: 600;
+        font-weight: 700;
         text-align: center;
         margin: 0.4rem auto 1.2rem;
-        letter-spacing: 0.03em;
-        background: linear-gradient(120deg, #bae6fd, #fbcfe8, #fde68a, #a7f3d0);
-        -webkit-background-clip: text;
-        color: transparent;
+        letter-spacing: 0.02em;
+        color: #f9fafb;
         display: inline-block;
         padding: 0.4rem 1rem;
         border-radius: 999px;
         position: relative;
-        filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.25));
-        background-size: 220% 220%;
-        animation: taglineGradient 12s linear infinite;
+        background: linear-gradient(120deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.7));
+        -webkit-background-clip: text;
+        color: transparent;
+        animation: taglineGradient 11s linear infinite;
     }
     .sub-caption::after {
         content: "";
         position: absolute;
         inset: -2px;
         border-radius: inherit;
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        opacity: 0.35;
-        filter: blur(5px);
-        animation: taglinePulse 7s ease-in-out infinite;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        opacity: 0.3;
+        filter: blur(4px);
     }
     .section-title {
         font-size: 1.2rem;
@@ -2353,8 +2347,8 @@ if ACCESS_PIN and not st.session_state.get("access_granted"):
         st.session_state.access_granted = True
         ensure_session_access_token()
         persist_access_token_query_param()
-        st.session_state["_scroll_target"] = "top"
         st.session_state["_scroll_anchor"] = "product-selector"
+        st.session_state["_scroll_target"] = "node"
     else:
         st.error("Incorrect PIN. Please try again.")
         st.stop()
