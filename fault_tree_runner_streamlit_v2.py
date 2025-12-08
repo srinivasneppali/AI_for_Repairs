@@ -12,7 +12,7 @@ import binascii
 from functools import lru_cache
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 from contextlib import contextmanager
 from urllib.parse import urlencode
 
@@ -64,10 +64,40 @@ PRODUCT_CATEGORIES = [
     {"id": "CHIMNEY", "label": "Chimney", "image": "Chimney.png", "available": False},
 ]
 PRODUCT_CATEGORY_LABELS = {entry["id"]: entry["label"] for entry in PRODUCT_CATEGORIES}
-AVAILABLE_FLOW_CATEGORIES = {entry["id"] for entry in PRODUCT_CATEGORIES if entry["available"]}
+STATIC_AVAILABLE_FLOW_CATEGORIES = {
+    entry["id"] for entry in PRODUCT_CATEGORIES if entry.get("available")
+}
 CATEGORY_FLOW_PATTERNS = {
     "WM": ("wm", "washingmachine", "washing_machine"),
+    "TV": ("tv", "television", "display"),
+    "AC": ("ac", "aircon", "air_conditioner"),
+    "REF": ("ref", "refrigerator", "fridge"),
+    "MWO": ("mwo", "microwave"),
+    "CHIMNEY": ("chimney", "hood"),
 }
+
+
+def _patterns_for_category(category_id: str) -> Tuple[str, ...]:
+    patterns = CATEGORY_FLOW_PATTERNS.get(category_id)
+    if patterns:
+        return patterns
+    return (category_id.lower(),)
+
+
+def compute_live_categories(files: List[Path]) -> Set[str]:
+    """Determine which categories currently have YAML flows."""
+    live: Set[str] = set(STATIC_AVAILABLE_FLOW_CATEGORIES)
+    stem_names = [path.stem.lower() for path in files]
+    for entry in PRODUCT_CATEGORIES:
+        cid = entry["id"]
+        if cid in live:
+            continue
+        patterns = _patterns_for_category(cid)
+        for name in stem_names:
+            if any(pattern in name for pattern in patterns):
+                live.add(cid)
+                break
+    return live
 YAML_FALLBACK_ENCODINGS = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
 ACCESS_TOKEN_PARAM = "access_token"
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
@@ -1041,7 +1071,7 @@ def inject_product_selector_styles() -> None:
     )
 
 
-def render_product_selector() -> None:
+def render_product_selector(live_categories: Optional[Set[str]] = None) -> None:
     inject_product_selector_styles()
     st.markdown(
         "<div class='product-grid-headline'>Choose the product you are troubleshooting</div>",
@@ -1067,7 +1097,11 @@ def render_product_selector() -> None:
             if idx >= len(PRODUCT_CATEGORIES):
                 break
             category = PRODUCT_CATEGORIES[idx]
-            available_flag = category["available"]
+            available_flag = (
+                category["id"] in live_categories
+                if live_categories is not None
+                else bool(category.get("available"))
+            )
             desc_text = (
                 "Beam into full AI troubleshooting with holo-guided steps."
                 if available_flag
@@ -1168,9 +1202,7 @@ def set_selected_product(product_id: Optional[str]) -> None:
 def filter_flows_for_category(files: List[Path], category_id: Optional[str]) -> List[Path]:
     if not category_id:
         return []
-    if category_id not in CATEGORY_FLOW_PATTERNS:
-        return files if category_id in AVAILABLE_FLOW_CATEGORIES else []
-    patterns = CATEGORY_FLOW_PATTERNS[category_id]
+    patterns = _patterns_for_category(category_id)
     filtered: List[Path] = []
     for path in files:
         name = path.stem.lower()
@@ -1179,7 +1211,7 @@ def filter_flows_for_category(files: List[Path], category_id: Optional[str]) -> 
     return filtered
 
 
-def handle_product_query_param() -> None:
+def handle_product_query_param(live_categories: Set[str]) -> None:
     params = st.query_params
     product_vals = params.get("product")
     if not product_vals:
@@ -1187,7 +1219,7 @@ def handle_product_query_param() -> None:
     product_choice = product_vals if isinstance(product_vals, str) else product_vals[0]
     product_choice = (product_choice or "").strip().upper()
     clear_query_params_preserving_access_token()
-    if product_choice in AVAILABLE_FLOW_CATEGORIES:
+    if product_choice in live_categories:
         set_selected_product(product_choice)
         st.session_state["_scroll_target"] = "top"
         st.rerun()
@@ -1636,7 +1668,9 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 # -----------------------------
 init_session_state()
 restore_access_from_token_query()
-handle_product_query_param()
+all_flow_files = discover_flow_files()
+live_flow_categories = compute_live_categories(all_flow_files)
+handle_product_query_param(live_flow_categories)
 
 st.markdown(
     """
@@ -2273,7 +2307,7 @@ if ACCESS_PIN and not st.session_state.get("access_granted"):
 selected_product = st.session_state.get("selected_product")
 if not selected_product:
     st.markdown("<div id='product-selector'></div>", unsafe_allow_html=True)
-    render_product_selector()
+    render_product_selector(live_flow_categories)
     st.stop()
 else:
     pill_col, action_col = st.columns([3, 1])
@@ -2292,8 +2326,7 @@ else:
 # -----------------------------
 # Load YAML / Flow selection
 # -----------------------------
-all_flows = discover_flow_files()
-available_flows = filter_flows_for_category(all_flows, selected_product)
+available_flows = filter_flows_for_category(all_flow_files, selected_product)
 available_flow_paths = {str(path) for path in available_flows}
 selected_flow_path = st.session_state.get("selected_flow_path")
 if selected_flow_path and selected_flow_path not in available_flow_paths:
