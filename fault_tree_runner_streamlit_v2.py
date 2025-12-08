@@ -238,20 +238,6 @@ def init_session_state() -> None:
     st.session_state.setdefault("recommended_parts_dynamic", set())
 
 
-def handle_selfie_action_query_param():
-    if st.query_params.get("action") == "open_selfie_cam":
-        st.session_state.show_selfie_camera = True
-        try:
-            # Remove params that cause state resets, to avoid navigating away
-            if "action" in st.query_params:
-                del st.query_params["action"]
-            if "product" in st.query_params:
-                del st.query_params["product"]
-        except KeyError:
-            pass
-        st.rerun()
-
-
 def _access_token_secret() -> Optional[str]:
     secret = ACCESS_TOKEN_SECRET or ACCESS_PIN
     return secret
@@ -1730,7 +1716,6 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 # -----------------------------
 init_session_state()
 restore_access_from_token_query()
-handle_selfie_action_query_param()
 all_flow_files = discover_flow_files()
 PRODUCT_CATALOG, live_flow_categories, PRODUCT_CATEGORY_LABELS = build_product_catalog(
     all_flow_files
@@ -2064,6 +2049,31 @@ st.markdown(
       0% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
       50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.6); }
       100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
+    }
+    .selfie-checkbox-wrapper div[data-testid="stCheckbox"] > label {
+        background: linear-gradient(135deg, #f97316, #ec4899, #8b5cf6) !important;
+        border: 1px solid rgba(255,255,255,0.4) !important;
+        color: #fff9ff !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.02em;
+        box-shadow: 0 15px 35px rgba(236, 72, 153, 0.4);
+        border-radius: 18px !important;
+        position: relative;
+        overflow: hidden;
+        animation: selfiePulse 2.6s ease-in-out infinite;
+        padding: 0.8rem 0.5rem;
+        line-height: 1.4;
+        display: block;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .selfie-checkbox-wrapper div[data-testid="stCheckbox"] > label:hover {
+        transform: scale(1.02);
+    }
+    .selfie-checkbox-wrapper input[type="checkbox"] {
+        display: none;
     }
     @keyframes selfiePulse {
         0%, 100% { box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35); transform: translateY(0); }
@@ -2675,18 +2685,16 @@ if existing_selfie:
         st.rerun()
 else:
     if not st.session_state.show_selfie_camera:
-        query_bits = st.query_params.to_dict()
-        query_bits["action"] = "open_selfie_cam"
-
-        button_label = "Open camera for selfie – capture selfie with product and customer"
+        st.markdown('<div class="selfie-checkbox-wrapper">', unsafe_allow_html=True)
+        open_cam = st.checkbox(
+            "Open camera for selfie – capture selfie with product and customer",
+            key="selfie_checkbox"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown(f"""
-            <a href="?{urlencode(query_bits)}" target="_self" style="display: block; text-decoration: none;">
-                <div class="selfie-button" style="text-align: center; padding: 0.8rem 0.5rem; line-height: 1.4;">
-                    {button_label}
-                </div>
-            </a>
-        """, unsafe_allow_html=True)
+        if open_cam:
+            st.session_state.show_selfie_camera = True
+            st.rerun()
         st.stop()
     selfie_file = st.camera_input("Capture selfie with product and customer", key=selfie_key)
     if selfie_file:
