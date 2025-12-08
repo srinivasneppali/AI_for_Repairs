@@ -2692,13 +2692,13 @@ if existing_selfie:
         st.rerun()
 else:
     if not st.session_state.show_selfie_camera:
-        st.markdown('<div class="selfie-checkbox-wrapper">', unsafe_allow_html=True)
-        open_cam = st.checkbox(
-            "Open camera for selfie – capture selfie with product and customer",
-            key="selfie_checkbox"
+        button_label = "Open camera for selfie – capture selfie with product and customer"
+        open_cam = st.button(
+            button_label,
+            key="enable_selfie_camera",
+            help="Turns on your device camera so you can take a selfie with the customer.",
         )
-        st.markdown('</div>', unsafe_allow_html=True)
-        
+        apply_button_style_by_label(button_label, "selfie-button")
         if open_cam:
             st.session_state.show_selfie_camera = True
             st.rerun()
