@@ -2018,6 +2018,24 @@ st.markdown(
         background: rgba(255,255,255,0.08);
         pointer-events: none;
     }
+    .case-id-prompt-box {
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(249, 115, 22, 0.2));
+        border: 1px solid rgba(236, 72, 153, 0.6);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin: 1rem auto;
+        text-align: center;
+        font-weight: 700;
+        color: #fce7f3;
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+        animation: pulse-border 2s infinite;
+    }
+
+    @keyframes pulse-border {
+      0% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
+      50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.6); }
+      100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
+    }
     @keyframes selfiePulse {
         0%, 100% { box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35); transform: translateY(0); }
         50% { box-shadow: 0 18px 45px rgba(249, 115, 22, 0.45); transform: translateY(-2px); }
@@ -2408,6 +2426,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+if st.session_state.get("_scroll_target"):
+    run_pending_scroll()
+
 if ACCESS_PIN and not st.session_state.get("access_granted"):
     pin_in = st.text_input("Access PIN (after entering the password, press Enter)", type="password")
     if pin_in:
@@ -2604,7 +2625,10 @@ with st.expander("Technician / Case Info", expanded=True):
 required_case = bool(st.session_state.case.get("case_id"))
 required_st = bool(st.session_state.case.get("st_id"))
 if not required_case or not required_st:
-    st.warning("Click here after you entered both Case ID and ST ID to continue.")
+    st.markdown(
+        "<div class='case-id-prompt-box'>Click here after you entered both Case ID and ST ID to continue.</div>",
+        unsafe_allow_html=True
+    )
     st.stop()
 
 # Technician visit proof (selfie)
