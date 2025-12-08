@@ -2091,19 +2091,13 @@ st.markdown(
     .selfie-button-wrapper button::before {
         content: "";
         position: absolute;
-        inset: -6px;
-        border-radius: 24px;
-        background: conic-gradient(
-            rgba(59,130,246,0.0) 0deg,
-            rgba(59,130,246,0.75) 120deg,
-            rgba(14,165,233,0.75) 200deg,
-            rgba(236,72,153,0.7) 260deg,
-            rgba(59,130,246,0.0) 360deg
-        );
+        inset: -12px;
+        border-radius: inherit;
+        background: radial-gradient(circle, rgba(59,130,246,0.55), transparent 70%);
         z-index: -1;
-        filter: blur(6px);
+        filter: blur(14px);
         mix-blend-mode: screen;
-        animation: selfieOrbit 5.5s linear infinite;
+        animation: selfieAura 4.5s ease-in-out infinite;
         pointer-events: none;
     }
     .selfie-button-wrapper button {
@@ -2137,14 +2131,22 @@ st.markdown(
     .selfie-button-wrapper::after {
         content: "";
         position: absolute;
-        inset: 8px;
-        border-radius: 24px;
-        background: linear-gradient(120deg, rgba(59,130,246,0.2), rgba(14,165,233,0.1), rgba(59,130,246,0.2));
-        background-size: 180% 180%;
-        box-shadow: inset 0 0 22px rgba(15,23,42,0.6);
+        inset: -4px;
+        border-radius: inherit;
+        background: conic-gradient(
+            rgba(59,130,246,0.0) 0deg,
+            rgba(59,130,246,0.8) 120deg,
+            rgba(14,165,233,0.8) 200deg,
+            rgba(236,72,153,0.8) 280deg,
+            rgba(59,130,246,0.0) 360deg
+        );
+        filter: blur(4px);
+        opacity: 0.85;
         z-index: -1;
         pointer-events: none;
-        animation: selfieWave 8s ease-in-out infinite;
+        animation: selfieOrbit 5s linear infinite;
+        -webkit-mask: radial-gradient(circle, transparent 72%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0.0) 100%);
+        mask: radial-gradient(circle, transparent 72%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0.0) 100%);
     }
     .selfie-button-wrapper button:active {
         transform: translateY(1px);
