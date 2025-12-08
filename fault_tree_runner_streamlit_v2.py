@@ -2111,18 +2111,18 @@ st.markdown(
     .selfie-button-wrapper {
         position: relative;
         display: block;
-        border-radius: 26px;
-        padding: 0.35rem;
+        border-radius: 32px;
+        padding: 0.55rem;
         isolation: isolate;
     }
     .selfie-button-wrapper::before {
         content: "";
         position: absolute;
-        inset: 0;
+        inset: -8px;
         border-radius: inherit;
-        background: radial-gradient(circle, rgba(59,130,246,0.45), transparent 70%);
-        filter: blur(12px);
-        opacity: 0.65;
+        background: radial-gradient(circle, rgba(59,130,246,0.55), transparent 75%);
+        filter: blur(18px);
+        opacity: 0.8;
         animation: selfieAura 4s ease-in-out infinite;
         z-index: -2;
         pointer-events: none;
