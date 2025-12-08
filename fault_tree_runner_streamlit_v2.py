@@ -142,7 +142,7 @@ ACCESS_TOKEN_TTL_SECONDS = max(int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "3600")
 BACK_BUTTON_LABEL = "⬅️ Back to Previous Step"
 BACK_BUTTON_CLASS = "back-step-button"
 DARK_THEME_STYLE = """
-<style id="dark-theme-override">
+    <style id="dark-theme-override">
 body,
 [data-testid="stAppViewContainer"] {
     background: radial-gradient(circle at 10% 20%, rgba(15,23,42,0.75), rgba(2,6,23,0.98) 55%) !important;
@@ -1254,7 +1254,8 @@ def handle_product_query_param(valid_categories: Set[str], live_categories: Set[
     clear_query_params_preserving_access_token()
     if product_choice in live_categories:
         set_selected_product(product_choice)
-        st.session_state["_scroll_target"] = "top"
+        st.session_state["_scroll_anchor"] = "issue-selector"
+        st.session_state["_scroll_target"] = "node"
         st.rerun()
     elif product_choice and product_choice in valid_categories:
         st.session_state.product_notice = product_label(product_choice)
@@ -1715,29 +1716,25 @@ st.markdown(
         font-size: clamp(1.2rem, 2.1vw, 2rem);
         font-weight: 800;
         letter-spacing: 0.04em;
-        color: #fafdff;
+        color: #fefefe;
         width: min(940px, 96%);
         margin: 1.4rem auto 1.6rem auto;
-        padding: 1.6rem 2.4rem;
+        padding: 1.6rem 2.5rem;
         position: relative;
         overflow: hidden;
-        border-radius: 28px;
-        border: 1px solid rgba(96, 165, 250, 0.6);
-        background:
-            radial-gradient(circle at 15% 35%, rgba(56, 189, 248, 0.28), transparent 60%),
-            radial-gradient(circle at 80% 20%, rgba(244, 114, 182, 0.25), transparent 50%),
-            linear-gradient(135deg, #0a0f1f, #0f1a32 45%, #122448 100%);
+        border-radius: 30px;
+        border: 1px solid rgba(147, 51, 234, 0.4);
+        background: linear-gradient(145deg, #101018, #1a1b2b);
         box-shadow:
-            0 24px 65px rgba(5, 9, 31, 0.95),
-            inset 0 0 40px rgba(59, 130, 246, 0.35),
-            inset 0 0 70px rgba(14, 165, 233, 0.22);
+            0 28px 70px rgba(3, 5, 20, 0.9),
+            inset 0 0 45px rgba(59, 130, 246, 0.35),
+            inset 0 0 60px rgba(236, 72, 153, 0.3);
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 0.85rem;
+        gap: 0.8rem;
         isolation: isolate;
         transform-style: preserve-3d;
-        backdrop-filter: blur(2px);
         animation: titleFloat 10s ease-in-out infinite;
     }
     .main-title::before {
@@ -1880,17 +1877,17 @@ st.markdown(
     }
     .title-core span {
         position: relative;
-        background: linear-gradient(115deg, #fef3c7, #fde68a, #f9a8d4, #7dd3fc);
+        background: linear-gradient(120deg, #fef9c3, #fcd34d, #f472b6, #7dd3fc);
         -webkit-background-clip: text;
         color: transparent;
         display: inline-block;
-        background-size: 280% 280%;
-        -webkit-text-stroke: 0.2px rgba(255, 255, 255, 0.45);
+        background-size: 260% 260%;
+        -webkit-text-stroke: 0.25px rgba(255, 255, 255, 0.55);
         text-shadow:
-            0 0 10px rgba(15, 118, 110, 0.4),
-            0 0 18px rgba(236, 72, 153, 0.25);
-        animation: textAurora 8s ease-in-out infinite,
-                   neonBlink 3.2s steps(2) infinite;
+            0 0 12px rgba(59, 130, 246, 0.4),
+            0 0 20px rgba(236, 72, 153, 0.3);
+        animation: textAurora 7s ease-in-out infinite,
+                   neonBlink 3s steps(2) infinite;
     }
     .title-core::before,
     .title-core::after {
@@ -1944,20 +1941,19 @@ st.markdown(
     }
     .sub-caption {
         font-size: 1rem;
-        font-weight: 600;
+        font-weight: 700;
         text-align: center;
         margin: 0.4rem auto 1.2rem;
-        letter-spacing: 0.03em;
-        background: linear-gradient(120deg, #bae6fd, #fbcfe8, #fde68a, #a7f3d0);
-        -webkit-background-clip: text;
-        color: transparent;
+        letter-spacing: 0.02em;
+        color: #ffffff;
         display: inline-block;
-        padding: 0.4rem 1rem;
+        padding: 0.35rem 1.1rem;
         border-radius: 999px;
         position: relative;
-        filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.25));
-        background-size: 220% 220%;
-        animation: taglineGradient 12s linear infinite;
+        background: linear-gradient(120deg, rgba(255,255,255,0.95), rgba(255,255,255,0.6));
+        -webkit-background-clip: text;
+        color: transparent;
+        animation: taglineGradient 11s linear infinite;
     }
     .sub-caption::after {
         content: "";
@@ -2417,7 +2413,6 @@ selected_product = st.session_state.get("selected_product")
 if not selected_product:
     st.markdown("<div id='product-selector'></div>", unsafe_allow_html=True)
     render_product_selector(PRODUCT_CATALOG)
-    run_pending_scroll("top")
     st.stop()
 else:
     pill_col, action_col = st.columns([3, 1])
@@ -2488,6 +2483,9 @@ if available_flows:
 
     issue_label_color = ISSUE_LABEL_COLOR or "#ef476f"
     issue_label_text_color = "#ffffff"
+    st.markdown("<div id='issue-selector'></div>", unsafe_allow_html=True)
+    if st.session_state.get("_scroll_anchor") == "issue-selector":
+        run_pending_scroll("top")
     st.markdown(
         f"<div class='{header_class}' style='font-size:1.2rem;font-weight:800;color:{issue_label_text_color};background:{issue_label_color};padding:0.5rem 0.9rem;border-radius:10px;margin-top:1.2rem;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.15);'>Select troubleshooting issue</div>",
         unsafe_allow_html=True,
