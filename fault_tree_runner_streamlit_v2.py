@@ -1715,25 +1715,29 @@ st.markdown(
         font-size: clamp(1.2rem, 2.1vw, 2rem);
         font-weight: 800;
         letter-spacing: 0.04em;
-        color: #fdfdfd;
+        color: #fafdff;
         width: min(940px, 96%);
         margin: 1.4rem auto 1.6rem auto;
-        padding: 1.5rem 2.2rem;
+        padding: 1.6rem 2.4rem;
         position: relative;
         overflow: hidden;
-        border-radius: 26px;
-        border: 1px solid rgba(99, 102, 241, 0.6);
-        background: linear-gradient(145deg, #101018, #181820);
+        border-radius: 28px;
+        border: 1px solid rgba(96, 165, 250, 0.6);
+        background:
+            radial-gradient(circle at 15% 35%, rgba(56, 189, 248, 0.28), transparent 60%),
+            radial-gradient(circle at 80% 20%, rgba(244, 114, 182, 0.25), transparent 50%),
+            linear-gradient(135deg, #0a0f1f, #0f1a32 45%, #122448 100%);
         box-shadow:
-            0 20px 60px rgba(4, 6, 23, 0.85),
-            inset 0 0 45px rgba(59, 130, 246, 0.35),
-            inset 0 0 65px rgba(236, 72, 153, 0.25);
+            0 24px 65px rgba(5, 9, 31, 0.95),
+            inset 0 0 40px rgba(59, 130, 246, 0.35),
+            inset 0 0 70px rgba(14, 165, 233, 0.22);
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 0.8rem;
+        gap: 0.85rem;
         isolation: isolate;
         transform-style: preserve-3d;
+        backdrop-filter: blur(2px);
         animation: titleFloat 10s ease-in-out infinite;
     }
     .main-title::before {
@@ -1876,17 +1880,17 @@ st.markdown(
     }
     .title-core span {
         position: relative;
-        background: linear-gradient(120deg, #ffffff, #dbeafe, #f9a8d4);
+        background: linear-gradient(115deg, #fef3c7, #fde68a, #f9a8d4, #7dd3fc);
         -webkit-background-clip: text;
         color: transparent;
         display: inline-block;
-        background-size: 220% 220%;
-        -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.65);
+        background-size: 280% 280%;
+        -webkit-text-stroke: 0.2px rgba(255, 255, 255, 0.45);
         text-shadow:
-            0 0 12px rgba(30, 64, 175, 0.45),
-            0 0 20px rgba(79, 70, 229, 0.35);
-        animation: textAurora 7s ease-in-out infinite,
-                   neonBlink 3s steps(2) infinite;
+            0 0 10px rgba(15, 118, 110, 0.4),
+            0 0 18px rgba(236, 72, 153, 0.25);
+        animation: textAurora 8s ease-in-out infinite,
+                   neonBlink 3.2s steps(2) infinite;
     }
     .title-core::before,
     .title-core::after {
@@ -1903,9 +1907,10 @@ st.markdown(
     }
     .title-core::before {
         color: transparent;
-        -webkit-text-stroke: 1px rgba(94, 234, 212, 0.65);
-        filter: drop-shadow(0 0 12px rgba(45, 212, 191, 0.45));
-        animation: outlinePulse 6s ease-in-out infinite;
+        -webkit-text-stroke: 1.4px rgba(94, 234, 212, 0.75);
+        filter: drop-shadow(0 0 16px rgba(45, 212, 191, 0.65));
+        animation: outlinePulse 6s ease-in-out infinite,
+                   hueShift 9s linear infinite;
     }
     .title-core::after {
         background: linear-gradient(100deg, transparent 15%, rgba(255,255,255,0.55), transparent 85%);
@@ -1939,28 +1944,30 @@ st.markdown(
     }
     .sub-caption {
         font-size: 1rem;
-        font-weight: 700;
+        font-weight: 600;
         text-align: center;
         margin: 0.4rem auto 1.2rem;
-        letter-spacing: 0.02em;
-        color: #f9fafb;
+        letter-spacing: 0.03em;
+        background: linear-gradient(120deg, #bae6fd, #fbcfe8, #fde68a, #a7f3d0);
+        -webkit-background-clip: text;
+        color: transparent;
         display: inline-block;
         padding: 0.4rem 1rem;
         border-radius: 999px;
         position: relative;
-        background: linear-gradient(120deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.7));
-        -webkit-background-clip: text;
-        color: transparent;
-        animation: taglineGradient 11s linear infinite;
+        filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.25));
+        background-size: 220% 220%;
+        animation: taglineGradient 12s linear infinite;
     }
     .sub-caption::after {
         content: "";
         position: absolute;
         inset: -2px;
         border-radius: inherit;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        opacity: 0.3;
-        filter: blur(4px);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        opacity: 0.35;
+        filter: blur(5px);
+        animation: taglinePulse 7s ease-in-out infinite;
     }
     .section-title {
         font-size: 1.2rem;
@@ -2201,7 +2208,7 @@ st.markdown(
     }
     @keyframes taglinePulse {
         0%, 100% { opacity: 0.25; filter: blur(4px); }
-        50% { opacity: 0.55; filter: blur(5px); }
+        50% { opacity: 0.6; filter: blur(6px); }
     }
     @keyframes neonBlink {
         0%, 75%, 100% { text-shadow: 0 0 12px rgba(59, 130, 246, 0.45), 0 0 25px rgba(236, 72, 153, 0.38); }
@@ -2211,6 +2218,12 @@ st.markdown(
     @keyframes outlinePulse {
         0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.35)); }
         50% { opacity: 0.8; filter: drop-shadow(0 0 22px rgba(94, 234, 212, 0.65)); }
+    }
+    @keyframes hueShift {
+        0% { -webkit-text-stroke-color: rgba(94, 234, 212, 0.75); }
+        33% { -webkit-text-stroke-color: rgba(14, 165, 233, 0.75); }
+        66% { -webkit-text-stroke-color: rgba(236, 72, 153, 0.75); }
+        100% { -webkit-text-stroke-color: rgba(94, 234, 212, 0.75); }
     }
     @keyframes highlightSweep {
         0% { background-position: -120% 0; opacity: 0; }
@@ -2292,9 +2305,56 @@ def render_dark_mode_guidelines() -> None:
                 </ul>
             </div>
             """,
-            unsafe_allow_html=True,
-        )
+        unsafe_allow_html=True,
+    )
 
+def run_pending_scroll(default_target: str = "node") -> None:
+    scroll_target = st.session_state.pop("_scroll_target", default_target)
+    scroll_anchor = st.session_state.pop("_scroll_anchor", None)
+    selector_map = {
+        "node": "section.main",
+        "completion": "section.main div[data-testid='stVerticalBlock']:last-child",
+        "top": "body",
+    }
+    target_selector = selector_map.get(scroll_target, selector_map["node"])
+    components.html(
+        f"""
+        <script>
+        const anchorId = {json.dumps(scroll_anchor)};
+        const selector = "{target_selector}";
+        const scrollToAnchor = () => {{
+            if (!anchorId) return false;
+            const el = window.parent.document.getElementById(anchorId);
+            if (!el) return false;
+            el.scrollIntoView({{ block: 'start', behavior: 'instant' }});
+            window.parent.scrollBy(0, -10);
+            return true;
+        }};
+        const scrollFallback = () => {{
+            if (selector === "body" || selector === "html") {{
+                window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
+                return;
+            }}
+            const el = window.parent.document.querySelector(selector) || window.parent.document.querySelector("section.main");
+            if (el) {{
+                const rect = el.getBoundingClientRect();
+                const top = Math.max(window.parent.scrollY + rect.top - 10, 0);
+                window.parent.scrollTo({{ top, behavior: 'smooth' }});
+            }} else {{
+                window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
+            }}
+        }};
+        const doScroll = () => {{
+            if (!scrollToAnchor()) {{
+                scrollFallback();
+            }}
+        }};
+        window.parent.requestAnimationFrame(doScroll);
+        setTimeout(doScroll, 250);
+        </script>
+        """,
+        height=0,
+    )
 
 render_dark_mode_guidelines()
 
@@ -2357,6 +2417,7 @@ selected_product = st.session_state.get("selected_product")
 if not selected_product:
     st.markdown("<div id='product-selector'></div>", unsafe_allow_html=True)
     render_product_selector(PRODUCT_CATALOG)
+    run_pending_scroll("top")
     st.stop()
 else:
     pill_col, action_col = st.columns([3, 1])
@@ -2588,61 +2649,7 @@ if not node:
 
 # Anchor for this node so we can scroll to it reliably on mobile
 st.markdown(f'<div id="node-{node_id}"></div>', unsafe_allow_html=True)
-
-scroll_target = st.session_state.pop("_scroll_target", "node")
-scroll_anchor = st.session_state.pop("_scroll_anchor", None)
-
-selector_map = {
-    "node": "section.main",
-    "completion": "section.main div[data-testid='stVerticalBlock']:last-child",
-    "top": "body",
-}
-target_selector = selector_map.get(scroll_target, selector_map["node"])
-
-components.html(
-    f"""
-    <script>
-    const anchorId = {json.dumps(scroll_anchor)};
-    const selector = "{target_selector}";
-
-    const scrollToAnchor = () => {{
-        if (!anchorId) return false;
-        const el = window.parent.document.getElementById(anchorId);
-        if (!el) return false;
-        // Scroll the anchor near the top (mobile friendly)
-        el.scrollIntoView({{ block: 'start', behavior: 'instant' }});
-        // Nudge a tiny bit to avoid being hidden under any fixed headers
-        window.parent.scrollBy(0, -10);
-        return true;
-    }};
-
-    const scrollFallback = () => {{
-        if (selector === "body" || selector === "html") {{
-            window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
-            return;
-        }}
-        const el = window.parent.document.querySelector(selector) || window.parent.document.querySelector("section.main");
-        if (el) {{
-            const rect = el.getBoundingClientRect();
-            const top = Math.max(window.parent.scrollY + rect.top - 10, 0);
-            window.parent.scrollTo({{ top, behavior: 'smooth' }});
-        }} else {{
-            window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
-        }}
-    }};
-
-    const doScroll = () => {{
-        if (!scrollToAnchor()) {{
-            scrollFallback();
-        }}
-    }};
-
-    window.parent.requestAnimationFrame(doScroll);
-    setTimeout(doScroll, 250);
-    </script>
-    """,
-    height=0,
-)
+run_pending_scroll("node")
 
 path_total_steps = count_progress_steps(nodes, st.session_state.second_visit_mode)
 st.session_state.path_total_steps = path_total_steps
