@@ -829,12 +829,27 @@ def apply_button_style_by_label(label: str, css_class: str) -> None:
                 return false;
             }};
 
-            // Use requestAnimationFrame and setTimeout to handle elements that might render with a delay.
-            window.parent.requestAnimationFrame(() => {{
-                if (!tryApplyClass()) {{
-                    setTimeout(tryApplyClass, 250);
-                }}
-            }});
+            const runWithRetries = () => {{
+                const MAX_ATTEMPTS = 8;
+                const RETRY_DELAY = 260;
+                let attempts = 0;
+
+                const attempt = () => {{
+                    attempts += 1;
+                    if (tryApplyClass()) {{
+                        return;
+                    }}
+                    if (attempts < MAX_ATTEMPTS) {{
+                        setTimeout(attempt, RETRY_DELAY);
+                    }}
+                }};
+
+                attempt();
+            }};
+
+            // Use requestAnimationFrame to ensure Streamlit finished painting,
+            // then run the retry loop so slower mobile browsers still get styled.
+            window.parent.requestAnimationFrame(runWithRetries);
         }})();
         </script>
         """,
@@ -2692,7 +2707,7 @@ if existing_selfie:
         st.rerun()
 else:
     if not st.session_state.show_selfie_camera:
-        button_label = "Click here to take your selfie with product and customer"
+        button_label = "Open camera for selfie - capture selfie with product and customer"
         open_cam = st.button(
             button_label,
             key="enable_selfie_camera",
