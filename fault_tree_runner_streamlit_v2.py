@@ -2179,29 +2179,30 @@ st.markdown(
 
 def render_dark_mode_guidelines() -> None:
     st.markdown(DARK_THEME_STYLE, unsafe_allow_html=True)
-    st.markdown(
-        """
-        <div class='dark-mode-card'>
-            <strong>Dark mode recommended</strong><br/>
-            Change your browser or device theme to dark for the best neon/glow effect and longer battery life on OLED devices.<br/><br/>
-            <strong>How to change your device/system theme</strong>
-            <ul style="margin:0.3rem 0 0.1rem 1rem;">
-                <li>Windows: Settings &gt; Personalization &gt; Colors &gt; Choose your mode → Dark</li>
-                <li>macOS: System Settings &gt; Appearance &gt; Dark</li>
-                <li>Android: Quick Settings tray (Dark theme) or Settings &gt; Display &gt; Dark theme</li>
-                <li>iOS/iPadOS: Settings &gt; Display & Brightness &gt; Appearance → Dark</li>
-            </ul>
-            <strong>How to change your browser theme</strong>
-            <ul style="margin:0.3rem 0 0.1rem 1rem;">
-                <li>Chrome: chrome://settings/appearance → “Mode” dropdown → Dark</li>
-                <li>Edge: edge://settings/appearance → “Theme” dropdown → Dark</li>
-                <li>Firefox: about:addons → Themes → Dark</li>
-                <li>Safari: inherits the macOS appearance set above</li>
-            </ul>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    with st.expander("Click here for dark-mode guidelines", expanded=False):
+        st.markdown(
+            """
+            <div class='dark-mode-card'>
+                <strong>Dark mode recommended</strong><br/>
+                Change your browser or device theme to dark for the best neon/glow effect and longer battery life on OLED devices.<br/><br/>
+                <strong>How to change your device/system theme</strong>
+                <ul style="margin:0.3rem 0 0.1rem 1rem;">
+                    <li>Windows: Settings &gt; Personalization &gt; Colors &gt; Choose your mode → Dark</li>
+                    <li>macOS: System Settings &gt; Appearance &gt; Dark</li>
+                    <li>Android: Quick Settings tray (Dark theme) or Settings &gt; Display &gt; Dark theme</li>
+                    <li>iOS/iPadOS: Settings &gt; Display & Brightness &gt; Appearance → Dark</li>
+                </ul>
+                <strong>How to change your browser theme</strong>
+                <ul style="margin:0.3rem 0 0.1rem 1rem;">
+                    <li>Chrome: chrome://settings/appearance → “Mode” dropdown → Dark</li>
+                    <li>Edge: edge://settings/appearance → “Theme” dropdown → Dark</li>
+                    <li>Firefox: about:addons → Themes → Dark</li>
+                    <li>Safari: inherits the macOS appearance set above</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 render_dark_mode_guidelines()
@@ -2236,7 +2237,7 @@ st.markdown(
 )
 
 if ACCESS_PIN and not st.session_state.get("access_granted"):
-    pin_in = st.text_input("Access PIN", type="password")
+    pin_in = st.text_input("Access PIN (after entering the password, press Enter)", type="password")
     if pin_in:
         components.html(
             """
@@ -2255,12 +2256,15 @@ if ACCESS_PIN and not st.session_state.get("access_granted"):
         st.session_state.access_granted = True
         ensure_session_access_token()
         persist_access_token_query_param()
+        st.session_state["_scroll_target"] = "top"
+        st.session_state["_scroll_anchor"] = "product-selector"
     else:
         st.error("Incorrect PIN. Please try again.")
         st.stop()
 
 selected_product = st.session_state.get("selected_product")
 if not selected_product:
+    st.markdown("<div id='product-selector'></div>", unsafe_allow_html=True)
     render_product_selector()
     st.stop()
 else:
