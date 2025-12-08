@@ -2114,18 +2114,32 @@ st.markdown(
         border-radius: 32px;
         padding: 0.55rem;
         isolation: isolate;
+        overflow: visible;
     }
     .selfie-button-wrapper::before {
         content: "";
         position: absolute;
-        inset: -8px;
+        inset: -6px;
         border-radius: inherit;
-        background: radial-gradient(circle, rgba(59,130,246,0.55), transparent 75%);
-        filter: blur(18px);
-        opacity: 0.8;
+        background: radial-gradient(circle at 50% 60%, rgba(59,130,246,0.7), transparent 78%);
+        filter: blur(22px);
+        opacity: 0.85;
         animation: selfieAura 4s ease-in-out infinite;
         z-index: -2;
         pointer-events: none;
+        mix-blend-mode: screen;
+    }
+    .selfie-button-wrapper::after {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 24px;
+        background: linear-gradient(120deg, rgba(59,130,246,0.2), rgba(14,165,233,0.1), rgba(59,130,246,0.2));
+        background-size: 180% 180%;
+        box-shadow: inset 0 0 22px rgba(15,23,42,0.6);
+        z-index: -1;
+        pointer-events: none;
+        animation: selfieWave 8s ease-in-out infinite;
     }
     .selfie-button-wrapper button:active {
         transform: translateY(1px);
@@ -2189,6 +2203,11 @@ st.markdown(
     @keyframes selfieAura {
         0%, 100% { opacity: 0.55; transform: scale(0.95); }
         50% { opacity: 0.9; transform: scale(1.08); }
+    }
+    @keyframes selfieWave {
+        0% { background-position: 0% 40%; opacity: 0.45; }
+        50% { background-position: 100% 60%; opacity: 0.8; }
+        100% { background-position: 0% 40%; opacity: 0.45; }
     }
     .product-grid {
         display: grid;
