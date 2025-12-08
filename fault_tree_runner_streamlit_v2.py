@@ -950,13 +950,15 @@ def inject_product_selector_styles() -> None:
             box-shadow: 0 15px 40px rgba(255, 0, 128, 0.35);
             border: 1px solid rgba(255,255,255,0.18);
         }
-        .magic-product-card .card-cta.available {
-            background: linear-gradient(120deg, #ff8b5f, #f72585);
-            color: #fff8f9;
-        }
-        .magic-product-card.magic-clickable:hover .card-cta.available {
-            box-shadow: 0 25px 60px rgba(255, 142, 95, 0.45);
-        }
+    .magic-product-card .card-cta.available {
+        background: linear-gradient(120deg, #ff8b5f, #f72585);
+        color: #fff8f9;
+        animation: launchPulse 3.5s ease-in-out infinite;
+    }
+    .magic-product-card.magic-clickable:hover .card-cta.available {
+        box-shadow: 0 25px 60px rgba(255, 142, 95, 0.45);
+        animation-duration: 2.5s;
+    }
         .magic-product-card .card-cta.soon {
             background: linear-gradient(120deg, #3f3d56, #1d1b2f);
             color: #b0b7de;
@@ -971,13 +973,18 @@ def inject_product_selector_styles() -> None:
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        @keyframes imagePulseZoom {
-            0% { transform: scale(1.0); }
-            40% { transform: scale(1.08); }
-            60% { transform: scale(1.05); }
-            80% { transform: scale(1.10); }
-            100% { transform: scale(1.0); }
-        }
+    @keyframes imagePulseZoom {
+        0% { transform: scale(1.0); }
+        40% { transform: scale(1.08); }
+        60% { transform: scale(1.05); }
+        80% { transform: scale(1.10); }
+        100% { transform: scale(1.0); }
+    }
+    @keyframes launchPulse {
+        0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 15px 40px rgba(255, 0, 128, 0.35); }
+        30% { transform: translateY(-4px) scale(1.04); box-shadow: 0 18px 50px rgba(255, 142, 95, 0.45); }
+        60% { transform: translateY(0) scale(1); box-shadow: 0 15px 40px rgba(255, 0, 128, 0.35); }
+    }
         @keyframes smokeScreen {
             0% { background-position: 0 100%, 0 -100%; opacity: 0; }
             20% { opacity: 0.1; }
