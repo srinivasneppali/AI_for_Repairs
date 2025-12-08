@@ -2591,12 +2591,21 @@ with st.expander("Technician / Case Info", expanded=True):
     c1, c2 = st.columns(2)
     with c1:
         st.session_state.case["case_id"] = st.text_input(
-            "Case ID", value=st.session_state.case.get("case_id", "")
+            "Case ID (required)",
+            value=st.session_state.case.get("case_id", ""),
+            placeholder="e.g., WM-123456",
         )
     with c2:
         st.session_state.case["st_id"] = st.text_input(
-            "ST ID", value=st.session_state.case.get("st_id", "")
+            "ST ID (required)",
+            value=st.session_state.case.get("st_id", ""),
+            placeholder="Enter your technician ID",
         )
+required_case = bool(st.session_state.case.get("case_id"))
+required_st = bool(st.session_state.case.get("st_id"))
+if not required_case or not required_st:
+    st.warning("Enter both Case ID and ST ID to continue.")
+    st.stop()
 
 # Technician visit proof (selfie)
 st.markdown(
