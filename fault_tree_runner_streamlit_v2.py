@@ -1611,77 +1611,175 @@ st.markdown(
     <style>
     .main-title {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 1.5rem; /* Adjusted for a sleeker look */
-        font-weight: 800; /* Bolder font */
-        color: #ffffff;
-        margin: 1rem auto 1.5rem auto;
+        font-size: clamp(1.2rem, 2.4vw, 2rem);
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: #ecfeff;
+        width: min(960px, 96%);
+        margin: 1.4rem auto 1.8rem auto;
+        padding: 1.8rem 3rem;
         position: relative;
         overflow: hidden;
-        border-radius: 28px; /* Slightly more rounded */
-        padding: 1.5rem 2.5rem;
+        border-radius: 32px;
+        border: 1px solid rgba(59, 130, 246, 0.45);
+        background:
+            radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.35), transparent 55%),
+            radial-gradient(circle at 80% 15%, rgba(236, 72, 153, 0.25), transparent 45%),
+            rgba(2, 6, 23, 0.95);
+        box-shadow:
+            0 28px 60px rgba(2, 6, 23, 0.9),
+            inset 0 0 40px rgba(56, 189, 248, 0.25),
+            inset 0 0 80px rgba(147, 51, 234, 0.18);
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 0.8rem;
-        min-height: 110px;
-        border: 2px solid rgba(139, 92, 246, 0.4);
-        background: #020617; /* Very dark blue, almost black */
-        box-shadow: 0 0 15px rgba(139, 92, 246, 0.2),
-                    0 0 30px rgba(59, 130, 246, 0.2),
-                    inset 0 0 10px rgba(139, 92, 246, 0.2);
-        perspective: 800px;
+        gap: 1rem;
+        isolation: isolate;
         transform-style: preserve-3d;
-        transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-                    box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        animation: holographic-float 6s ease-in-out infinite;
+        animation: titleFloat 10s ease-in-out infinite;
     }
-    .main-title:hover {
-        transform: rotateY(10deg) rotateX(5deg) scale(1.05);
-        box-shadow: 0 0 30px rgba(139, 92, 246, 0.5),
-                    0 0 60px rgba(59, 130, 246, 0.4),
-                    inset 0 0 15px rgba(139, 92, 246, 0.3);
-    }
-
-    /* Holographic Grid Overlay */
     .main-title::before {
         content: "";
         position: absolute;
-        inset: 0;
-        background:
-            linear-gradient(45deg, rgba(59, 130, 246, 0.5) 0%, rgba(139, 92, 246, 0.5) 100%),
-            linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-        background-size: 100% 100%, 30px 30px, 30px 30px;
-        mask-image: radial-gradient(ellipse 80% 100% at 50% 110%, black, transparent);
-        mix-blend-mode: color-dodge;
-        opacity: 0.5;
-        animation: grid-pan 20s linear infinite;
-        z-index: 1;
+        inset: -40%;
+        background: conic-gradient(
+            from 0deg,
+            rgba(59, 130, 246, 0.35),
+            rgba(236, 72, 153, 0.25),
+            rgba(14, 165, 233, 0.35),
+            rgba(59, 130, 246, 0.35)
+        );
+        filter: blur(42px);
+        opacity: 0.85;
+        animation: auroraBreathe 18s linear infinite;
+        z-index: 0;
     }
-
-    /* Glare Effect */
     .main-title::after {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.15) 50%, transparent 60%);
-        transform: translateX(-100%);
-        animation: glare 5s ease-in-out infinite;
-        z-index: 3;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 25%, rgba(255,255,255,0.25), transparent 75%);
+        transform: translateX(-140%) rotate(5deg);
+        animation: scanlineSweep 8s ease-in-out infinite;
+        z-index: 2;
+        opacity: 0.6;
+    }
+
+    .title-neon-ring {
+        position: absolute;
+        width: 140%;
+        height: 260%;
+        border-radius: 50%;
+        border: 1px solid rgba(125, 211, 252, 0.22);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(12deg);
+        filter: blur(0.5px);
+        animation: ringPulse 14s linear infinite;
+        opacity: 0.65;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .title-neon-ring::before,
+    .title-neon-ring::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        transform-origin: center;
+    }
+    .title-neon-ring::after {
+        transform: scale(0.82) rotate(35deg);
+        border-color: rgba(125, 211, 252, 0.4);
+    }
+
+    .title-particles {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .title-particles span {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.95), transparent 70%);
+        filter: blur(0.8px);
+        opacity: 0.8;
+        animation: particleDrift linear infinite;
+    }
+    .title-particles span:nth-child(1) {
+        top: 15%;
+        left: 10%;
+        animation-duration: 12s;
+        animation-delay: -2s;
+    }
+    .title-particles span:nth-child(2) {
+        top: 65%;
+        left: 20%;
+        animation-duration: 9s;
+        animation-delay: -4s;
+    }
+    .title-particles span:nth-child(3) {
+        top: 30%;
+        right: 12%;
+        animation-duration: 11s;
+    }
+    .title-particles span:nth-child(4) {
+        top: 70%;
+        right: 25%;
+        animation-duration: 13s;
+        animation-delay: -6s;
+    }
+    .title-particles span:nth-child(5) {
+        top: 50%;
+        left: 45%;
+        animation-duration: 10s;
+        animation-delay: -1s;
+    }
+
+    .title-comet {
+        position: absolute;
+        top: 25%;
+        left: -25%;
+        width: 180px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(248, 250, 252, 0.8), transparent);
+        filter: drop-shadow(0 0 10px rgba(248, 250, 252, 0.6));
+        animation: cometTrail 9s ease-in-out infinite;
+        z-index: 1;
+        opacity: 0.75;
+    }
+    .title-comet::after {
+        content: "";
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        top: -18px;
+        right: -10px;
+        background: radial-gradient(circle, rgba(248,250,252,0.6), transparent 62%);
+        filter: blur(1px);
     }
 
     .title-core {
         position: relative;
-        z-index: 2;
+        z-index: 3;
         font-weight: 800;
-        letter-spacing: 0.02em;
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5),
-                     0 0 15px rgba(59, 130, 246, 0.5),
-                     0 0 30px rgba(139, 92, 246, 0.4);
-        animation: text-flicker 4s infinite;
+        text-transform: uppercase;
+        text-align: center;
+        line-height: 1.35;
+        animation: textGlow 8s ease-in-out infinite;
+    }
+    .title-core span {
+        background: linear-gradient(120deg, #fdf2f8, #c4b5fd, #5eead4);
+        -webkit-background-clip: text;
+        color: transparent;
+        display: inline-block;
+        background-size: 200% 200%;
+        animation: textShimmer 10s linear infinite;
     }
     .title-core::before,
     .title-core::after {
@@ -1691,33 +1789,30 @@ st.markdown(
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: -1;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        opacity: 0.4;
     }
     .title-core::before {
-        color: #4f46e5; /* Indigo */
-        text-shadow: -1px 0 #4f46e5;
-        animation: glitch-skew 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+        color: #22d3ee;
+        transform: translate(3px, 2px);
+        animation: textGlitch 6s steps(3) infinite;
     }
     .title-core::after {
-        color: #00ffff; /* Cyan */
-        text-shadow: 1px 0 #00ffff;
-        animation: glitch-skew 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+        color: #c084fc;
+        transform: translate(-2px, -2px);
+        animation: textGlitch 6s steps(2) reverse infinite;
     }
 
     .title-symbol {
-        font-size: 2.2rem;
+        font-size: clamp(2rem, 4vw, 2.6rem);
         line-height: 1;
-        z-index: 2;
-        text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(139, 92, 246, 0.7);
-        animation: symbol-bob 4s ease-in-out infinite;
-    }
-    
-    /* Remove old decorative elements as they are replaced by new effects */
-    .title-aurora,
-    .title-grid,
-    .title-orb,
-    .title-sparkles {
-        display: none;
+        z-index: 3;
+        text-shadow:
+            0 0 14px rgba(251, 207, 232, 0.8),
+            0 0 28px rgba(14, 165, 233, 0.7),
+            0 0 45px rgba(147, 51, 234, 0.6);
+        animation: symbolPulse 5s ease-in-out infinite;
     }
     .selected-product-pill {
         display: inline-flex;
@@ -1916,49 +2011,56 @@ st.markdown(
         border-bottom-color: #f59e0b !important;
         border-left-color: rgba(249, 115, 22, 0.4) !important;
     }
-    @keyframes holographic-float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+    @keyframes titleFloat {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-10px) scale(1.01); }
     }
-    @keyframes grid-pan {
-        0% { background-position: 0% 0%, 0% 0%, 0% 0%; }
-        100% { background-position: 0% 0%, -60px 60px, -60px 60px; }
+    @keyframes auroraBreathe {
+        0% { transform: rotate(0deg); opacity: 0.7; }
+        50% { opacity: 0.95; }
+        100% { transform: rotate(360deg); opacity: 0.7; }
     }
-    @keyframes glare {
-        0% { transform: translateX(-100%); }
-        20% { transform: translateX(100%); }
-        100% { transform: translateX(100%); }
+    @keyframes scanlineSweep {
+        0% { transform: translateX(-140%) rotate(5deg); opacity: 0; }
+        30% { opacity: 0.8; }
+        70% { opacity: 0.8; }
+        100% { transform: translateX(160%) rotate(5deg); opacity: 0; }
     }
-    @keyframes text-flicker {
-        0%, 19.9%, 22%, 62.9%, 64%, 100% { opacity: 1; }
-        20%, 21.9%, 63%, 63.9% { opacity: 0.4; }
+    @keyframes ringPulse {
+        0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); opacity: 0.5; }
+        50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.05); opacity: 0.8; }
+        100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); opacity: 0.5; }
     }
-    @keyframes glitch-skew {
-        0% { transform: skew(-1deg); }
-        10% { transform: skew(1deg); }
-        20% { transform: skew(-2deg); }
-        30% { transform: skew(2deg); }
-        40% { transform: skew(0deg); }
-        100% { transform: skew(0deg); }
+    @keyframes particleDrift {
+        0% { transform: translateY(0) scale(0.8); opacity: 0; }
+        15% { opacity: 1; }
+        100% { transform: translateY(-120px) scale(1.3); opacity: 0; }
     }
-    @keyframes symbol-bob {
-        0%, 100% { transform: translateY(0) rotate(0); }
-        50% { transform: translateY(-5px) rotate(5deg); }
-    }
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    @keyframes circuitDrift {
-        0% { background-position: 0% 0%; }
-        100% { background-position: 200% 200%; }
-    }
-    @keyframes titleSheen {
-        0% { transform: translateX(-120%) rotate(20deg); opacity: 0; }
-        30% { opacity: 0.7; }
+    @keyframes cometTrail {
+        0% { transform: translateX(0); opacity: 0; }
+        20% { opacity: 0.9; }
         60% { opacity: 0.7; }
-        100% { transform: translateX(260%) rotate(20deg); opacity: 0; }
+        100% { transform: translateX(220%); opacity: 0; }
+    }
+    @keyframes textGlow {
+        0%, 100% { text-shadow: 0 0 12px rgba(248, 250, 252, 0.5), 0 0 30px rgba(59, 130, 246, 0.6); }
+        50% { text-shadow: 0 0 22px rgba(248, 250, 252, 0.9), 0 0 40px rgba(236, 72, 153, 0.8); }
+    }
+    @keyframes textShimmer {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+    }
+    @keyframes textGlitch {
+        0% { clip-path: inset(0 0 0 0); }
+        20% { clip-path: inset(4% 0 15% 0); }
+        40% { clip-path: inset(15% 0 4% 0); }
+        60% { clip-path: inset(0 0 0 0); }
+        80% { clip-path: inset(8% 0 12% 0); }
+        100% { clip-path: inset(0 0 0 0); }
+    }
+    @keyframes symbolPulse {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.08) rotate(-6deg); }
     }
     </style>
     """,
@@ -1975,8 +2077,17 @@ title_color = "linear-gradient(135deg, #00c9ff, #92fe9d)"
 title_text = "✨ AI driven Interactive Troubleshooting - Automated Flow"
 title_block = f"""
 <div class='main-title'>
-  <div class='title-symbol'>💡</div>
-  <div class='title-core' data-text="{title_text}">{title_text}</div>
+  <div class='title-neon-ring'></div>
+  <div class='title-particles'>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  <div class='title-comet'></div>
+  <div class='title-symbol'>⚡</div>
+  <div class='title-core' data-text="{title_text}"><span>{title_text}</span></div>
 </div>
 """
 st.markdown(title_block, unsafe_allow_html=True)
