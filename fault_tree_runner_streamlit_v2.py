@@ -76,7 +76,7 @@ CATEGORY_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "patterns": ("aircon", "air_conditioner"),
     },
     "REF": {
-        "label": "REF",
+        "label": "REFRIGERATOR",
         "image": "REF.png",
         "default_available": False,
         "patterns": ("refrigerator", "fridge"),
