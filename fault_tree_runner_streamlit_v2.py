@@ -2601,7 +2601,7 @@ st.markdown(
     "<div class='section-title' style='color:#ffffff;font-weight:700;'>Take your Selfie with product and customer</div>",
     unsafe_allow_html=True,
 )
-st.caption("Allow camera access on your browser/device when prompted so the selfie can be attached to the report.")
+st.caption("Allow camera access on your browser/device when prompted so the selfie can be captured.")
 selfie_key = "visit_selfie_capture"
 existing_selfie = st.session_state.get("visit_selfie")
 st.session_state.setdefault("show_selfie_camera", False)
@@ -2617,7 +2617,6 @@ else:
         st.markdown(
             """
             <div class="selfie-cta">
-                Camera is OFF right now.<br/>
                 Tap once to enable it, then grant permission when your browser prompts you.
             </div>
             """,
