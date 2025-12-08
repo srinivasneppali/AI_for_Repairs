@@ -2052,7 +2052,8 @@ st.markdown(
         border-color: rgba(94,234,212,0.55);
         box-shadow: 0 20px 40px rgba(15,118,110,0.4);
     }
-    .selfie-button {
+    .selfie-button,
+    .selfie-button-wrapper button {
         background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
         border: 1px solid rgba(142, 197, 252, 0.9) !important;
         color: #ffffff !important;
@@ -2066,7 +2067,8 @@ st.markdown(
         overflow: hidden;
         animation: selfiePulse 2.6s ease-in-out infinite;
     }
-    .selfie-button::after {
+    .selfie-button::after,
+    .selfie-button-wrapper button::after {
         content: "";
         position: absolute;
         inset: 3px;
@@ -2076,6 +2078,11 @@ st.markdown(
             inset 0 0 18px rgba(59,130,246,0.55),
             0 0 20px rgba(59,130,246,0.35);
         pointer-events: none;
+    }
+    .selfie-button-wrapper button {
+        width: 100%;
+        border-radius: 18px;
+        position: relative;
     }
     .case-id-prompt-box {
         background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(249, 115, 22, 0.2));
@@ -2737,11 +2744,13 @@ if existing_selfie:
 else:
     if not st.session_state.show_selfie_camera:
         button_label = "Open camera for selfie - capture selfie with product and customer"
+        st.markdown("<div class='selfie-button-wrapper'>", unsafe_allow_html=True)
         open_cam = st.button(
             button_label,
             key="enable_selfie_camera",
             help="Turns on your device camera so you can take a selfie with the customer.",
         )
+        st.markdown("</div>", unsafe_allow_html=True)
         apply_button_style_by_label(button_label, "selfie-button")
         if open_cam:
             st.session_state.show_selfie_camera = True
