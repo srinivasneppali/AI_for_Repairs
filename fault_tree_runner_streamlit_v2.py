@@ -1999,22 +1999,28 @@ st.markdown(
         box-shadow: 0 20px 40px rgba(15,118,110,0.4);
     }
     .selfie-button {
-        background: linear-gradient(135deg, #3b82f6, #a855f7, #ec4899) !important;
-        border: 1px solid rgba(255,255,255,0.35) !important;
-        color: #fefaff !important;
-        font-weight: 700 !important;
-        box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35);
-        border-radius: 14px !important;
+        background: linear-gradient(135deg, #f97316, #ec4899, #8b5cf6) !important;
+        border: 1px solid rgba(255,255,255,0.4) !important;
+        color: #fff9ff !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.02em;
+        box-shadow: 0 15px 35px rgba(236, 72, 153, 0.4);
+        border-radius: 18px !important;
         position: relative;
         overflow: hidden;
+        animation: selfiePulse 2.6s ease-in-out infinite;
     }
     .selfie-button::after {
         content: "";
         position: absolute;
         inset: 3px;
-        border-radius: 11px;
+        border-radius: 15px;
         background: rgba(255,255,255,0.08);
         pointer-events: none;
+    }
+    @keyframes selfiePulse {
+        0%, 100% { box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35); transform: translateY(0); }
+        50% { box-shadow: 0 18px 45px rgba(249, 115, 22, 0.45); transform: translateY(-2px); }
     }
     .product-grid {
         display: grid;
