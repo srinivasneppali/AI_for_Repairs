@@ -2013,12 +2013,12 @@ st.markdown(
         box-shadow: 0 20px 40px rgba(15,118,110,0.4);
     }
     .selfie-button {
-        background: linear-gradient(135deg, #f97316, #ec4899, #8b5cf6) !important;
-        border: 1px solid rgba(255,255,255,0.4) !important;
-        color: #fff9ff !important;
+        background: linear-gradient(135deg, #1f2937, #111827) !important;
+        border: 1px solid rgba(148, 163, 184, 0.7) !important;
+        color: #f8fafc !important;
         font-weight: 800 !important;
-        letter-spacing: 0.02em;
-        box-shadow: 0 15px 35px rgba(236, 72, 153, 0.4);
+        letter-spacing: 0.03em;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.75), 0 0 18px rgba(59, 130, 246, 0.45);
         border-radius: 18px !important;
         position: relative;
         overflow: hidden;
@@ -2029,7 +2029,8 @@ st.markdown(
         position: absolute;
         inset: 3px;
         border-radius: 15px;
-        background: rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.06);
+        box-shadow: inset 0 0 12px rgba(59,130,246,0.4);
         pointer-events: none;
     }
     .case-id-prompt-box {
@@ -2082,8 +2083,8 @@ st.markdown(
         height: 0 !important;
     }
     @keyframes selfiePulse {
-        0%, 100% { box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35); transform: translateY(0); }
-        50% { box-shadow: 0 18px 45px rgba(249, 115, 22, 0.45); transform: translateY(-2px); }
+        0%, 100% { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.75), 0 0 18px rgba(59,130,246,0.45); transform: translateY(0); }
+        50% { box-shadow: 0 18px 45px rgba(15, 23, 42, 0.85), 0 0 26px rgba(236,72,153,0.5); transform: translateY(-2px); }
     }
     .product-grid {
         display: grid;
