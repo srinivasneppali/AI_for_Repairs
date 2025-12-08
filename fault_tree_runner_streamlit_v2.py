@@ -101,43 +101,6 @@ body,
 """
 
 
-def bootstrap_theme_preference_script() -> None:
-    components.html(
-        """
-        <script>
-        (function () {
-            const prefKey = 'fault_tree_dark_theme';
-            const syncKey = 'fault_tree_dark_theme_synced';
-            try {
-                const stored = window.localStorage.getItem(prefKey);
-                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const params = new URLSearchParams(window.parent.location.search);
-                const existing = params.get('theme');
-                let desired = stored;
-                if (!desired && prefersDark) {
-                    desired = 'dark';
-                }
-                if (desired && existing !== desired && !window.sessionStorage.getItem(syncKey)) {
-                    params.set('theme', desired);
-                    const base = window.parent.location.origin + window.parent.location.pathname;
-                    const hash = window.parent.location.hash || '';
-                    const query = params.toString();
-                    const url = query ? `${base}?${query}${hash}` : `${base}${hash}`;
-                    window.sessionStorage.setItem(syncKey, '1');
-                    window.parent.location.replace(url);
-                    return;
-                }
-                window.sessionStorage.removeItem(syncKey);
-            } catch (err) {
-                console.warn('Dark theme bootstrap failed', err);
-            }
-        })();
-        </script>
-        """,
-        height=0,
-    )
-
-
 @contextmanager
 def jeeves_spinner(
     text: str = "🚀 Syncing your step with Jeeves Cloud...",
@@ -2214,138 +2177,34 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-def _persist_dark_theme_preference(enabled: bool) -> None:
-    if enabled:
-        st.query_params["theme"] = "dark"
-    elif "theme" in st.query_params:
-        st.query_params.pop("theme")
-
-
-def _activate_dark_theme_override() -> None:
-    st.session_state._dark_theme_enabled = True
-    st.session_state._dark_theme_prompt_dismissed = True
-    st.session_state["_dark_theme_notice_pending"] = True
-    st.session_state["_dark_theme_localstorage_pending"] = "dark"
-    _persist_dark_theme_preference(True)
-
-
-def render_dark_theme_prompt() -> None:
-    st.session_state.setdefault("_dark_theme_enabled", False)
-    st.session_state.setdefault("_dark_theme_prompt_dismissed", False)
-    st.session_state.setdefault("_dark_theme_notice_pending", False)
-    st.session_state.setdefault("_dark_theme_pref_loaded", False)
-    st.session_state.setdefault("_dark_theme_localstorage_pending", None)
-
-    # Restore preference from query parameter exactly once per session
-    if not st.session_state._dark_theme_pref_loaded:
-        theme_qs = st.query_params.get("theme")
-        if isinstance(theme_qs, str):
-            theme_pref = theme_qs.lower()
-        elif theme_qs:
-            theme_pref = theme_qs[0].lower()
-        else:
-            theme_pref = None
-        if theme_pref == "dark":
-            st.session_state._dark_theme_enabled = True
-            st.session_state._dark_theme_prompt_dismissed = True
-        st.session_state._dark_theme_pref_loaded = True
-
-    style_holder = st.empty()
-    if st.session_state._dark_theme_enabled:
-        style_holder.markdown(DARK_THEME_STYLE, unsafe_allow_html=True)
-    else:
-        style_holder.empty()
-
-    prompt_needed = (
-        not st.session_state._dark_theme_enabled
-        and not st.session_state._dark_theme_prompt_dismissed
-    )
-
-    if prompt_needed:
-        st.markdown(
-            """
-            <div class='dark-mode-card'>
-                <strong>Dark mode recommended</strong><br/>
-                Switch Streamlit's theme to dark so the neon gradients and glow layers render as intended.
-                <div style='font-size:0.82rem;margin-top:0.35rem;opacity:0.8;'>
-                    Tip: To change your browser/Chrome appearance globally, open chrome://settings/appearance.
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        c1, c2, c3 = st.columns([3, 1, 1])
-        if c1.button("Enable dark theme 🌙", key="enable_dark_theme_prompt"):
-            _activate_dark_theme_override()
-            st.rerun()
-        if c2.button("Maybe later", key="skip_dark_theme_prompt"):
-            st.session_state._dark_theme_prompt_dismissed = True
-            st.session_state["_dark_theme_notice_pending"] = False
-            st.session_state["_dark_theme_localstorage_pending"] = "light"
-            _persist_dark_theme_preference(False)
-            st.rerun()
-        if c3.button("Browser theme…", key="open_browser_theme_settings"):
-            components.html(
-                """
-                <script>
-                (function(){
-                    const ua = navigator.userAgent || '';
-                    let target = 'https://support.google.com/chrome/answer/9275525';
-                    if (ua.includes('Edg/')) {
-                        target = 'edge://settings/appearance';
-                    } else if (ua.includes('Firefox/')) {
-                        target = 'about:preferences#general';
-                    } else if (ua.includes('Chrome/')) {
-                        target = 'chrome://settings/appearance';
-                    }
-                    try {
-                        window.open(target, '_blank');
-                    } catch (err) {
-                        window.open('https://support.google.com/chrome/answer/9275525', '_blank');
-                    }
-                })();
-                </script>
-                """,
-                height=0,
-            )
-    elif st.session_state._dark_theme_notice_pending:
-        st.markdown(
-            "<div class='dark-mode-card active'>Dark theme override applied. Enjoy the optimized visuals!</div>",
-            unsafe_allow_html=True,
-        )
-        st.session_state["_dark_theme_notice_pending"] = False
-    elif not st.session_state._dark_theme_enabled:
-        if st.button("Enable dark theme 🌙", key="enable_dark_theme_secondary"):
-            _activate_dark_theme_override()
-            st.rerun()
-
-
-def sync_dark_theme_localstorage_pending() -> None:
-    desired = st.session_state.get("_dark_theme_localstorage_pending")
-    if not desired:
-        return
-    script_value = json.dumps(desired)
-    components.html(
-        f"""
-        <script>
-        (function () {{
-            const prefKey = 'fault_tree_dark_theme';
-            try {{
-                localStorage.setItem(prefKey, {script_value});
-            }} catch (err) {{
-                console.warn('Failed to persist theme locally', err);
-            }}
-        }})();
-        </script>
+def render_dark_mode_guidelines() -> None:
+    st.markdown(DARK_THEME_STYLE, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class='dark-mode-card'>
+            <strong>Dark mode recommended</strong><br/>
+            Change your browser or device theme to dark for the best neon/glow effect and longer battery life on OLED devices.<br/><br/>
+            <strong>How to change your device/system theme</strong>
+            <ul style="margin:0.3rem 0 0.1rem 1rem;">
+                <li>Windows: Settings &gt; Personalization &gt; Colors &gt; Choose your mode → Dark</li>
+                <li>macOS: System Settings &gt; Appearance &gt; Dark</li>
+                <li>Android: Quick Settings tray (Dark theme) or Settings &gt; Display &gt; Dark theme</li>
+                <li>iOS/iPadOS: Settings &gt; Display & Brightness &gt; Appearance → Dark</li>
+            </ul>
+            <strong>How to change your browser theme</strong>
+            <ul style="margin:0.3rem 0 0.1rem 1rem;">
+                <li>Chrome: chrome://settings/appearance → “Mode” dropdown → Dark</li>
+                <li>Edge: edge://settings/appearance → “Theme” dropdown → Dark</li>
+                <li>Firefox: about:addons → Themes → Dark</li>
+                <li>Safari: inherits the macOS appearance set above</li>
+            </ul>
+        </div>
         """,
-        height=0,
+        unsafe_allow_html=True,
     )
-    st.session_state["_dark_theme_localstorage_pending"] = None
 
 
-bootstrap_theme_preference_script()
-render_dark_theme_prompt()
-sync_dark_theme_localstorage_pending()
+render_dark_mode_guidelines()
 
 title_colors = {
     "yellow": "#ffd166",
