@@ -2055,7 +2055,7 @@ st.markdown(
         50% { box-shadow: 0 3px 6px rgba(38, 50, 56, 0.4), 0 0 7px rgba(144, 164, 174, 0.6), 0 0 11px rgba(144, 164, 174, 0.6); }
         100% { box-shadow: 0 2px 3px rgba(38, 50, 56, 0.3), 0 0 3px rgba(120, 144, 156, 0.4), 0 0 5px rgba(120, 144, 156, 0.4); }
     }
-    .selfie-checkbox-wrapper div[data-testid="stCheckbox"] > label {
+    .selfie-checkbox-wrapper label {
         background-color: #546E7A !important; /* Blue-Grey */
         color: #FFFFFF !important;
         font-weight: 700 !important;
@@ -2072,7 +2072,7 @@ st.markdown(
         cursor: pointer;
         transition: transform 0.2s;
     }
-    .selfie-checkbox-wrapper div[data-testid="stCheckbox"] > label:hover {
+    .selfie-checkbox-wrapper label:hover {
         transform: translateY(-2px) scale(1.02);
     }
     .selfie-checkbox-wrapper input[type="checkbox"] {
