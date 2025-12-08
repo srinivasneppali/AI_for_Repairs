@@ -1614,28 +1614,31 @@ st.markdown(
         font-size: clamp(1.2rem, 2.4vw, 2rem);
         font-weight: 800;
         letter-spacing: 0.04em;
-        color: #ecfeff;
+        color: #f5fbff;
         width: min(960px, 96%);
         margin: 1.4rem auto 1.8rem auto;
         padding: 1.8rem 3rem;
         position: relative;
         overflow: hidden;
         border-radius: 32px;
-        border: 1px solid rgba(59, 130, 246, 0.45);
+        border: 1px solid rgba(129, 212, 250, 0.55);
         background:
-            radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.35), transparent 55%),
-            radial-gradient(circle at 80% 15%, rgba(236, 72, 153, 0.25), transparent 45%),
-            rgba(2, 6, 23, 0.95);
+            radial-gradient(circle at 15% 30%, rgba(248, 113, 113, 0.55), transparent 50%),
+            radial-gradient(circle at 80% 15%, rgba(244, 114, 182, 0.45), transparent 45%),
+            radial-gradient(circle at 60% 80%, rgba(59, 130, 246, 0.35), transparent 40%),
+            linear-gradient(130deg, #051937 0%, #311b92 40%, #8e24aa 70%, #0ea5e9 100%);
         box-shadow:
-            0 28px 60px rgba(2, 6, 23, 0.9),
-            inset 0 0 40px rgba(56, 189, 248, 0.25),
-            inset 0 0 80px rgba(147, 51, 234, 0.18);
+            0 35px 80px rgba(5, 9, 31, 0.95),
+            0 0 55px rgba(56, 189, 248, 0.4),
+            inset 0 0 55px rgba(249, 115, 22, 0.35),
+            inset 0 0 100px rgba(59, 130, 246, 0.35);
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 1rem;
         isolation: isolate;
         transform-style: preserve-3d;
+        backdrop-filter: blur(6px);
         animation: titleFloat 10s ease-in-out infinite;
     }
     .main-title::before {
@@ -1670,7 +1673,7 @@ st.markdown(
         width: 140%;
         height: 260%;
         border-radius: 50%;
-        border: 1px solid rgba(125, 211, 252, 0.22);
+        border: 1px solid rgba(224, 231, 255, 0.28);
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%) rotate(12deg);
@@ -1691,7 +1694,7 @@ st.markdown(
     }
     .title-neon-ring::after {
         transform: scale(0.82) rotate(35deg);
-        border-color: rgba(125, 211, 252, 0.4);
+        border-color: rgba(244, 114, 182, 0.45);
     }
 
     .title-particles {
@@ -1705,7 +1708,7 @@ st.markdown(
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,255,255,0.95), transparent 70%);
+        background: radial-gradient(circle, rgba(255,255,255,0.95), rgba(251, 191, 36, 0.2) 70%);
         filter: blur(0.8px);
         opacity: 0.8;
         animation: particleDrift linear infinite;
@@ -1746,8 +1749,8 @@ st.markdown(
         left: -25%;
         width: 180px;
         height: 3px;
-        background: linear-gradient(90deg, transparent, rgba(248, 250, 252, 0.8), transparent);
-        filter: drop-shadow(0 0 10px rgba(248, 250, 252, 0.6));
+        background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.9), rgba(248, 250, 252, 0.9));
+        filter: drop-shadow(0 0 18px rgba(248, 250, 252, 0.8));
         animation: cometTrail 9s ease-in-out infinite;
         z-index: 1;
         opacity: 0.75;
@@ -1760,7 +1763,7 @@ st.markdown(
         border-radius: 50%;
         top: -18px;
         right: -10px;
-        background: radial-gradient(circle, rgba(248,250,252,0.6), transparent 62%);
+        background: radial-gradient(circle, rgba(251,191,36,0.7), transparent 62%);
         filter: blur(1px);
     }
 
@@ -1774,7 +1777,7 @@ st.markdown(
         animation: textGlow 8s ease-in-out infinite;
     }
     .title-core span {
-        background: linear-gradient(120deg, #fdf2f8, #c4b5fd, #5eead4);
+        background: linear-gradient(120deg, #fff1c1, #fbcfe8, #fb7185, #f59e0b, #38bdf8);
         -webkit-background-clip: text;
         color: transparent;
         display: inline-block;
@@ -1794,12 +1797,12 @@ st.markdown(
         opacity: 0.4;
     }
     .title-core::before {
-        color: #22d3ee;
+        color: #5eead4;
         transform: translate(3px, 2px);
         animation: textGlitch 6s steps(3) infinite;
     }
     .title-core::after {
-        color: #c084fc;
+        color: #f472b6;
         transform: translate(-2px, -2px);
         animation: textGlitch 6s steps(2) reverse infinite;
     }
@@ -1809,9 +1812,9 @@ st.markdown(
         line-height: 1;
         z-index: 3;
         text-shadow:
-            0 0 14px rgba(251, 207, 232, 0.8),
-            0 0 28px rgba(14, 165, 233, 0.7),
-            0 0 45px rgba(147, 51, 234, 0.6);
+            0 0 14px rgba(255, 243, 224, 0.9),
+            0 0 30px rgba(251, 146, 60, 0.9),
+            0 0 45px rgba(248, 250, 252, 0.75);
         animation: symbolPulse 5s ease-in-out infinite;
     }
     .selected-product-pill {
