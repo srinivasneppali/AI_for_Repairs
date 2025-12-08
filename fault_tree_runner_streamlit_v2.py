@@ -238,6 +238,18 @@ def init_session_state() -> None:
     st.session_state.setdefault("recommended_parts_dynamic", set())
 
 
+def handle_selfie_action_query_param():
+    if st.query_params.get("action") == "open_selfie_cam":
+        st.session_state.show_selfie_camera = True
+        try:
+            del st.query_params["action"]
+        except KeyError:
+            # This can happen if the page is reloaded with the query param still in the URL
+            # The rerun will clear it, so we can ignore.
+            pass
+        st.rerun()
+
+
 def _access_token_secret() -> Optional[str]:
     secret = ACCESS_TOKEN_SECRET or ACCESS_PIN
     return secret
@@ -2354,17 +2366,6 @@ def render_dark_mode_guidelines() -> None:
             """,
         unsafe_allow_html=True,
     )
-
-def handle_selfie_action_query_param():
-    if st.query_params.get("action") == "open_selfie_cam":
-        st.session_state.show_selfie_camera = True
-        try:
-            del st.query_params["action"]
-        except KeyError:
-            # This can happen if the page is reloaded with the query param still in the URL
-            # The rerun will clear it, so we can ignore.
-            pass
-        st.rerun()
 
 def run_pending_scroll(default_target: str = "node") -> None:
     scroll_target = st.session_state.pop("_scroll_target", default_target)
