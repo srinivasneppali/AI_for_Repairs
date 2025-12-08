@@ -2177,16 +2177,39 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+def _persist_dark_theme_preference(enabled: bool) -> None:
+    if enabled:
+        st.query_params["theme"] = "dark"
+    elif "theme" in st.query_params:
+        st.query_params.pop("theme")
+
+
 def _activate_dark_theme_override() -> None:
     st.session_state._dark_theme_enabled = True
     st.session_state._dark_theme_prompt_dismissed = True
     st.session_state["_dark_theme_notice_pending"] = True
+    _persist_dark_theme_preference(True)
 
 
 def render_dark_theme_prompt() -> None:
     st.session_state.setdefault("_dark_theme_enabled", False)
     st.session_state.setdefault("_dark_theme_prompt_dismissed", False)
     st.session_state.setdefault("_dark_theme_notice_pending", False)
+    st.session_state.setdefault("_dark_theme_pref_loaded", False)
+
+    # Restore preference from query parameter exactly once per session
+    if not st.session_state._dark_theme_pref_loaded:
+        theme_qs = st.query_params.get("theme")
+        if isinstance(theme_qs, str):
+            theme_pref = theme_qs.lower()
+        elif theme_qs:
+            theme_pref = theme_qs[0].lower()
+        else:
+            theme_pref = None
+        if theme_pref == "dark":
+            st.session_state._dark_theme_enabled = True
+            st.session_state._dark_theme_prompt_dismissed = True
+        st.session_state._dark_theme_pref_loaded = True
 
     style_holder = st.empty()
     if st.session_state._dark_theme_enabled:
@@ -2205,6 +2228,9 @@ def render_dark_theme_prompt() -> None:
             <div class='dark-mode-card'>
                 <strong>Dark mode recommended</strong><br/>
                 Switch Streamlit's theme to dark so the neon gradients and glow layers render as intended.
+                <div style='font-size:0.82rem;margin-top:0.35rem;opacity:0.8;'>
+                    Tip: To change your browser/Chrome appearance globally, open chrome://settings/appearance.
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -2216,6 +2242,7 @@ def render_dark_theme_prompt() -> None:
         if c2.button("Maybe later", key="skip_dark_theme_prompt"):
             st.session_state._dark_theme_prompt_dismissed = True
             st.session_state["_dark_theme_notice_pending"] = False
+            _persist_dark_theme_preference(False)
             st.rerun()
     elif st.session_state._dark_theme_notice_pending:
         st.markdown(
