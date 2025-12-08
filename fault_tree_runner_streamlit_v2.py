@@ -2604,7 +2604,7 @@ with st.expander("Technician / Case Info", expanded=True):
 required_case = bool(st.session_state.case.get("case_id"))
 required_st = bool(st.session_state.case.get("st_id"))
 if not required_case or not required_st:
-    st.warning("Enter both Case ID and ST ID to continue.")
+    st.warning("Click here after you entered both Case ID and ST ID to continue.")
     st.stop()
 
 # Technician visit proof (selfie)
