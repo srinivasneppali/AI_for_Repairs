@@ -92,6 +92,7 @@ CATEGORY_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "image": "Chimney.png",
         "default_available": False,
         "patterns": ("chimneyhood", "rangehood"),
+    },
     "GEYSER": {
         "label": "Geyser",
         "image": "Geyser.png",
