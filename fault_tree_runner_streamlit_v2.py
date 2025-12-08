@@ -55,86 +55,80 @@ EVIDENCE_COLLECTION_ENABLED = (
 RECOMMENDED_PARTS_KEY = "recommended_parts"
 ISSUE_LABEL_COLOR = os.getenv("ISSUE_LABEL_COLOR", "#f00c0c")
 PRODUCT_IMAGES_DIR = BASE_DIR / "product_images"
-BASE_PRODUCT_CATEGORIES = [
-    {"id": "TV", "label": "TV", "image": "TV.png", "available": False},
-    {"id": "WM", "label": "Washing Machine", "image": "WM.png", "available": True},
-    {"id": "AC", "label": "AC", "image": "AC.png", "available": False},
-    {"id": "REF", "label": "REF", "image": "REF.png", "available": False},
-    {"id": "MWO", "label": "MWO", "image": "MWO.png", "available": False},
-    {"id": "CHIMNEY", "label": "Chimney", "image": "Chimney.png", "available": False},
-]
-PRODUCT_CATEGORIES = [entry.copy() for entry in BASE_PRODUCT_CATEGORIES]
-PRODUCT_CATEGORY_LABELS = {entry["id"]: entry["label"] for entry in PRODUCT_CATEGORIES}
-BASE_AVAILABLE_FLOW_CATEGORIES = {
-    entry["id"] for entry in BASE_PRODUCT_CATEGORIES if entry.get("available")
+CATEGORY_DEFINITIONS: Dict[str, Dict[str, Any]] = {
+    # Update this config to control cards shown to technicians.
+    "TV": {
+        "label": "TV",
+        "image": "TV.png",
+        "default_available": False,
+        "patterns": ("television", "display_tv"),
+    },
+    "WM": {
+        "label": "Washing Machine",
+        "image": "WM.png",
+        "default_available": True,
+        "patterns": ("washingmachine", "washing_machine"),
+    },
+    "AC": {
+        "label": "AC",
+        "image": "AC.png",
+        "default_available": False,
+        "patterns": ("aircon", "air_conditioner"),
+    },
+    "REF": {
+        "label": "REF",
+        "image": "REF.png",
+        "default_available": False,
+        "patterns": ("refrigerator", "fridge"),
+    },
+    "MWO": {
+        "label": "MWO",
+        "image": "MWO.png",
+        "default_available": False,
+        "patterns": ("microwave",),
+    },
+    "CHIMNEY": {
+        "label": "Chimney",
+        "image": "Chimney.png",
+        "default_available": False,
+        "patterns": ("chimneyhood", "rangehood"),
+    },
 }
-CATEGORY_FLOW_PATTERNS = {
-    "WM": ("washingmachine", "washing_machine"),
-    "TV": ("television", "display_tv"),
-    "AC": ("aircon", "air_conditioner"),
-    "REF": ("refrigerator", "fridge"),
-    "MWO": ("microwave",),
-    "CHIMNEY": ("chimneyhood", "rangehood"),
-}
-CATEGORY_NAME_REGEX = re.compile(r"^p2o[_-]+([a-z0-9]+)", re.IGNORECASE)
-
-
-def _infer_category_id_from_path(path: Path) -> Optional[str]:
-    match = CATEGORY_NAME_REGEX.match(path.stem)
-    if match:
-        return match.group(1).upper()
-    return None
-
-
-def _friendly_category_label(cat_id: str) -> str:
-    name = re.sub(r"[_-]+", " ", cat_id).strip()
-    return name.title() if name else cat_id.title()
-
-
-def _patterns_for_category(category_id: str) -> Tuple[str, ...]:
-    patterns = CATEGORY_FLOW_PATTERNS.get(category_id)
+def _pattern_tokens(category_id: str) -> Tuple[str, ...]:
+    meta = CATEGORY_DEFINITIONS.get(category_id, {})
     base = category_id.lower()
-    base_variants = (base, f"{base}_", f"{base}-")
-    if patterns:
-        return tuple(dict.fromkeys((*base_variants, *patterns)))
-    return base_variants
+    tokens = [base, f"{base}_", f"{base}-"]
+    tokens.extend(meta.get("patterns") or [])
+    deduped = tuple(dict.fromkeys(token for token in tokens if token))
+    return deduped or (base,)
 
 
-def compute_live_categories(files: List[Path]) -> Set[str]:
-    """Determine which categories currently have YAML flows."""
-    live: Set[str] = set(BASE_AVAILABLE_FLOW_CATEGORIES)
-    stem_names = [path.stem.lower() for path in files]
-    for entry in PRODUCT_CATEGORIES:
-        cid = entry["id"]
-        if cid in live:
-            continue
-        patterns = _patterns_for_category(cid)
-        for name in stem_names:
-            if any(pattern in name for pattern in patterns):
-                live.add(cid)
-                break
-    return live
+def build_product_catalog(
+    files: List[Path],
+) -> Tuple[List[Dict[str, Any]], Set[str], Dict[str, str]]:
+    """Build list of product cards and detect which categories have flows."""
+    stems = [path.stem.lower() for path in files]
+    catalog: List[Dict[str, Any]] = []
+    live_categories: Set[str] = set()
+    label_map: Dict[str, str] = {}
 
-
-def build_product_catalog(files: List[Path]) -> List[Dict[str, Any]]:
-    """Return the base product list plus any new categories discovered from flow names."""
-    catalog = [entry.copy() for entry in BASE_PRODUCT_CATEGORIES]
-    known_ids = {entry["id"] for entry in catalog}
-    for path in files:
-        cat_id = _infer_category_id_from_path(path)
-        if not cat_id or cat_id in known_ids:
-            continue
-        CATEGORY_FLOW_PATTERNS.setdefault(cat_id, (cat_id.lower(),))
+    for cat_id, meta in CATEGORY_DEFINITIONS.items():
+        tokens = _pattern_tokens(cat_id)
+        has_flow = any(any(token in stem for token in tokens) for stem in stems)
+        available = bool(meta.get("default_available")) or has_flow
+        if available:
+            live_categories.add(cat_id)
+        label = meta.get("label") or cat_id.title()
+        label_map[cat_id] = label
         catalog.append(
             {
                 "id": cat_id,
-                "label": _friendly_category_label(cat_id),
-                "image": None,
-                "available": True,
+                "label": label,
+                "image": meta.get("image"),
+                "available": available,
             }
         )
-        known_ids.add(cat_id)
-    return catalog
+    return catalog, live_categories, label_map
 YAML_FALLBACK_ENCODINGS = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
 ACCESS_TOKEN_PARAM = "access_token"
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
@@ -1108,7 +1102,7 @@ def inject_product_selector_styles() -> None:
     )
 
 
-def render_product_selector(live_categories: Optional[Set[str]] = None) -> None:
+def render_product_selector(product_catalog: List[Dict[str, Any]]) -> None:
     inject_product_selector_styles()
     st.markdown(
         "<div class='product-grid-headline'>Choose the product you are troubleshooting</div>",
@@ -1127,18 +1121,14 @@ def render_product_selector(live_categories: Optional[Set[str]] = None) -> None:
     active_token = current_access_token()
 
     cards_per_row = 2
-    for start in range(0, len(PRODUCT_CATEGORIES), cards_per_row):
+    for start in range(0, len(product_catalog), cards_per_row):
         cols = st.columns(cards_per_row)
         for offset, col in enumerate(cols):
             idx = start + offset
-            if idx >= len(PRODUCT_CATEGORIES):
+            if idx >= len(product_catalog):
                 break
-            category = PRODUCT_CATEGORIES[idx]
-            available_flag = (
-                category["id"] in live_categories
-                if live_categories is not None
-                else bool(category.get("available"))
-            )
+            category = product_catalog[idx]
+            available_flag = bool(category.get("available"))
             desc_text = (
                 "Beam into full AI troubleshooting with holo-guided steps."
                 if available_flag
@@ -1239,7 +1229,7 @@ def set_selected_product(product_id: Optional[str]) -> None:
 def filter_flows_for_category(files: List[Path], category_id: Optional[str]) -> List[Path]:
     if not category_id:
         return []
-    patterns = _patterns_for_category(category_id)
+    patterns = _pattern_tokens(category_id)
     filtered: List[Path] = []
     for path in files:
         name = path.stem.lower()
@@ -1248,7 +1238,7 @@ def filter_flows_for_category(files: List[Path], category_id: Optional[str]) -> 
     return filtered
 
 
-def handle_product_query_param(live_categories: Set[str]) -> None:
+def handle_product_query_param(valid_categories: Set[str], live_categories: Set[str]) -> None:
     params = st.query_params
     product_vals = params.get("product")
     if not product_vals:
@@ -1260,7 +1250,7 @@ def handle_product_query_param(live_categories: Set[str]) -> None:
         set_selected_product(product_choice)
         st.session_state["_scroll_target"] = "top"
         st.rerun()
-    elif product_choice:
+    elif product_choice and product_choice in valid_categories:
         st.session_state.product_notice = product_label(product_choice)
 
 
@@ -1706,10 +1696,10 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 init_session_state()
 restore_access_from_token_query()
 all_flow_files = discover_flow_files()
-PRODUCT_CATEGORIES = build_product_catalog(all_flow_files)
-PRODUCT_CATEGORY_LABELS = {entry["id"]: entry["label"] for entry in PRODUCT_CATEGORIES}
-live_flow_categories = compute_live_categories(all_flow_files)
-handle_product_query_param(live_flow_categories)
+PRODUCT_CATALOG, live_flow_categories, PRODUCT_CATEGORY_LABELS = build_product_catalog(
+    all_flow_files
+)
+handle_product_query_param(set(PRODUCT_CATEGORY_LABELS.keys()), live_flow_categories)
 
 st.markdown(
     """
@@ -2346,7 +2336,7 @@ if ACCESS_PIN and not st.session_state.get("access_granted"):
 selected_product = st.session_state.get("selected_product")
 if not selected_product:
     st.markdown("<div id='product-selector'></div>", unsafe_allow_html=True)
-    render_product_selector(live_flow_categories)
+    render_product_selector(PRODUCT_CATALOG)
     st.stop()
 else:
     pill_col, action_col = st.columns([3, 1])
