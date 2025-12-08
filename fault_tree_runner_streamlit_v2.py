@@ -806,6 +806,7 @@ def apply_button_style_by_label(label: str, css_class: str) -> None:
     """
     Attach a CSS class to a Streamlit button by matching its label in the
     rendered DOM so we can style it without affecting other controls.
+    This version is more robust against rendering delays.
     """
     if not label or not css_class:
         return
@@ -813,14 +814,27 @@ def apply_button_style_by_label(label: str, css_class: str) -> None:
         f"""
         <script>
         (function() {{
-            const doc = window.parent.document;
-            if (!doc) return;
-            const target = Array.from(doc.querySelectorAll('button')).find(
-                (btn) => btn.textContent.trim().startsWith({json.dumps(label)})
-            );
-            if (target) {{
-                target.classList.add({json.dumps(css_class)});
-            }}
+            const tryApplyClass = () => {{
+                const doc = window.parent.document;
+                if (!doc) return false;
+
+                const target = Array.from(doc.querySelectorAll('button')).find(
+                    (btn) => (btn.textContent || "").trim().includes({json.dumps(label)})
+                );
+
+                if (target) {{
+                    target.classList.add({json.dumps(css_class)});
+                    return true;
+                }}
+                return false;
+            }};
+
+            // Use requestAnimationFrame and setTimeout to handle elements that might render with a delay.
+            window.parent.requestAnimationFrame(() => {{
+                if (!tryApplyClass()) {{
+                    setTimeout(tryApplyClass, 250);
+                }}
+            }});
         }})();
         </script>
         """,
