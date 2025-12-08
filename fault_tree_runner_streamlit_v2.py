@@ -2072,6 +2072,18 @@ st.markdown(
         padding: 0.65rem 1.6rem;
         transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
+    .selfie-button::before,
+    .selfie-button-wrapper button::before {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border-radius: inherit;
+        background: radial-gradient(circle, rgba(59,130,246,0.25), transparent 70%);
+        filter: blur(12px);
+        opacity: 0.65;
+        animation: selfieGlowPulse 5s ease-in-out infinite;
+        z-index: -1;
+    }
     .selfie-button::after,
     .selfie-button-wrapper button::after {
         content: "";
@@ -2115,6 +2127,28 @@ st.markdown(
         opacity: 0.45;
         filter: blur(24px);
         z-index: 0;
+    }
+    .selfie-status {
+        color: #dbeafe;
+        font-size: 0.92rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        opacity: 0.9;
+    }
+    .selfie-status::before {
+        content: "●";
+        color: #f97316;
+        font-size: 0.75rem;
+        animation: pulse-border 1.6s ease-in-out infinite;
+    }
+    .selfie-status.on {
+        color: #bbf7d0;
+    }
+    .selfie-status.on::before {
+        color: #22c55e;
     }
     .selfie-button-wrapper button:active {
         transform: translateY(1px);
@@ -2174,6 +2208,10 @@ st.markdown(
     @keyframes selfiePulse {
         0%, 100% { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.75), 0 0 18px rgba(59,130,246,0.45); transform: translateY(0); }
         50% { box-shadow: 0 18px 45px rgba(15, 23, 42, 0.85), 0 0 26px rgba(236,72,153,0.5); transform: translateY(-2px); }
+    }
+    @keyframes selfieGlowPulse {
+        0%, 100% { opacity: 0.3; transform: scale(0.98); }
+        50% { opacity: 0.85; transform: scale(1.04); }
     }
     @keyframes selfieBorderFlow {
         0% { background-position: 0% 50%; }
@@ -2775,8 +2813,15 @@ st.caption(
     "Allow camera access on your browser/device and tap once to enable it when prompted so the selfie can be captured."
 )
 selfie_key = "visit_selfie_capture"
-existing_selfie = st.session_state.get("visit_selfie")
 st.session_state.setdefault("show_selfie_camera", False)
+selfie_status_class = "selfie-status on" if st.session_state.get("show_selfie_camera") else "selfie-status"
+selfie_status_msg = (
+    "Camera is live - capture the selfie now."
+    if st.session_state.get("show_selfie_camera")
+    else "Camera is currently OFF. Tap the button below to enable it and capture the selfie."
+)
+st.markdown(f"<div class='{selfie_status_class}'>{selfie_status_msg}</div>", unsafe_allow_html=True)
+existing_selfie = st.session_state.get("visit_selfie")
 if existing_selfie:
     st.success("Selfie captured for this visit.")
     if st.button("Retake selfie"):
