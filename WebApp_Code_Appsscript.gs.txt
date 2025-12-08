@@ -1,0 +1,297 @@
+/* --- CONFIG --- */
+const SPREADSHEET_ID = '1iwwq90rucEHC5pcBhqtTAg9iY_f7K9t4O_jR9LmoOC4';
+const SHEET_NAME     = 'P2O_Responses';
+const CASES_SHEET    = 'Cases';                // optional helper tab
+const ROOT_FOLDER_ID = '11N71Jws2R9PM9s9XwlmmwZfrfNVxRIpZ';  // ID of Jeeves_P2O_Cases
+const LINK_PERMISSIONS = { anyoneWithLink: true }; // set false if private
+
+/* --- CORS (minimal; not really needed for Python calls) --- */
+function doOptions(e) {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+/* --- ENTRY --- */
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents || '{}');
+    const now  = new Date();
+
+    // Payload basics
+    const flowId     = body.flow_id || '';
+    const caseId     = (body.case_id || 'NA').toString().trim();
+    const sku        = (body.sku    || 'NA').toString().trim();
+    const stId       = (body.st_id  || '').toString().trim();
+    const stepId     = body.step_id || '';
+    const stepLbl    = body.step_label || '';
+    const answers    = body.answers || {};
+    const valueRaw   = Object.prototype.hasOwnProperty.call(answers, 'value')
+      ? answers.value
+      : answers;
+    const valueClean = normalizeValue_(valueRaw);
+    const passed     = body.pass === true;
+    const finalize   = body.finalize === true;
+    const allOK      = body.all_steps_valid === true;
+    const partsUsed  = body.parts_used || [];
+    const resolution = body.resolution || '';
+
+    // Open Sheet
+    const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+    ensureHeader_(sheet);
+
+    // Case folder (CASE_<CaseID> with evidence/ and parts/)
+    const caseFolder      = ensureCaseFolder_(caseId);
+    const evidenceFolder  = ensureChild_(caseFolder, 'evidence');
+    const partsFolder     = ensureChild_(caseFolder, 'parts');
+    const caseFolderURL   = caseFolder.getUrl();
+
+    
+    // Save evidence photo (if any)
+    let photoFileId = '';
+    let photoURL    = '';
+    if (body.photo_b64 && body.photo_mime) {
+      const fname  = safeName_(iso_(now) + '_' + (stepId || 'step')) + ext_(body.photo_mime);
+      const parent = (finalize && body.part_photos) ? partsFolder : evidenceFolder;
+      const f      = saveBase64_(body.photo_b64, body.photo_mime, fname, parent);
+      if (f) {
+        if (LINK_PERMISSIONS.anyoneWithLink) {
+          try {
+            f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          } catch (e) {}
+        }
+        photoFileId = f.getId();
+        photoURL    = f.getUrl();
+      }
+    }
+
+    // Finalize-specific: optional part photos map
+    let partPhotoMap = {};
+    if (finalize && body.part_photos) {
+      for (const part in body.part_photos) {
+        const p = body.part_photos[part];
+        if (p.photo_b64 && p.photo_mime) {
+          const fname = safeName_(iso_(now) + '_' + part) + ext_(p.photo_mime);
+          const f     = saveBase64_(p.photo_b64, p.photo_mime, fname, partsFolder);
+          if (f) {
+            if (LINK_PERMISSIONS.anyoneWithLink) {
+              try {
+                f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+              } catch (e) {}
+            }
+            partPhotoMap[part] = { id: f.getId(), url: f.getUrl() };
+          }
+        }
+      }
+    }
+
+    // Token (only on finalize)
+    let token = '';
+    if (finalize) {
+      const pattern = (body.token_pattern || '{FAULT}-{SKU}-{RAND5}');
+      const fault   = (body.fault_code || 'GEN');
+      token = pattern
+        .replace('{FAULT}', fault)
+        .replace('{SKU}',   sku)
+        .replace('{RAND5}', randCode_(5));
+
+      // Append a Cases row WITH token for this finalized event
+      setCaseStatus_(ss, caseId, caseFolderURL, 'Finalized', now, token);
+    } else {
+      // Append a Cases row for in-progress event (no token yet)
+      setCaseStatus_(ss, caseId, caseFolderURL, 'In-Progress', now, '');
+    }
+
+    // Append a row to P2O_Responses
+    const row = [
+      iso_(now), flowId, caseId, sku, stId,
+      stepId, stepLbl, valueToCell_(valueClean),
+      (answers && 'label_value' in answers)  ? answers.label_value  : '',
+      (answers && 'elapsed_sec' in answers)  ? answers.elapsed_sec  : '',
+      passed ? 'YES' : 'NO',
+      photoFileId, photoURL, caseFolderURL,
+      finalize ? 'YES' : 'NO',
+      finalize ? (allOK ? 'YES' : 'NO') : '',
+      finalize ? token : '',
+      JSON.stringify(partsUsed || []),
+      resolution || '',
+      'v2'
+    ];
+    sheet.appendRow(row);
+
+    const out = { ok: true, caseFolderURL: caseFolderURL };
+    if (finalize) out.token      = token;
+    if (photoFileId) {
+      out.photoFileId = photoFileId;
+      out.photoURL    = photoURL;
+    }
+    if (finalize && partPhotoMap) out.partPhotos = partPhotoMap;
+
+    return jsonOK_(out);
+  } catch (err) {
+    return jsonErr_(err);
+  }
+}
+
+/* --- helpers --- */
+function ensureHeader_(sheet) {
+  const header = [
+    'TimestampUTC','FlowID','CaseID','SKU','ST_ID',
+    'StepID','StepLabel','ValueJSON','LabelValue','ElapsedSec',
+    'Passed','PhotoFileId','PhotoURL','CaseFolderURL','Finalize',
+    'AllStepsValid','GateToken','PartsUsedJSON','Resolution','AppVersion'
+  ];
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(header);
+    return;
+  }
+  const got = sheet.getRange(1, 1, 1, header.length).getValues()[0];
+  if (got.join('|') !== header.join('|')) {
+    sheet.insertRowBefore(1);
+    sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  }
+}
+
+function ensureCaseFolder_(caseId) {
+  const root = DriveApp.getFolderById(ROOT_FOLDER_ID);
+  const name = 'CASE_' + safeName_(caseId || 'NA');
+  const it   = root.getFoldersByName(name);
+  return it.hasNext() ? it.next() : root.createFolder(name);
+}
+
+function ensureChild_(parent, name) {
+  const it = parent.getFoldersByName(name);
+  return it.hasNext() ? it.next() : parent.createFolder(name);
+}
+
+function saveBase64_(b64, mime, name, parent) {
+  try {
+    const blob = Utilities.newBlob(Utilities.base64Decode(b64), mime, name);
+    return parent.createFile(blob);
+  } catch (e) {
+    return null;
+  }
+}
+
+function ext_(mime) {
+  return (mime && mime.indexOf('png') >= 0) ? '.png' : '.jpg';
+}
+
+function iso_(d) {
+  return Utilities.formatDate(d, 'UTC', "yyyy-MM-dd'T'HH-mm-ss'Z'");
+}
+
+function randCode_(n) {
+  const c = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s   = '';
+  for (let i = 0; i < n; i++) s += c[Math.floor(Math.random() * c.length)];
+  return s;
+}
+
+function safeName_(s) {
+  return (s || '')
+    .toString()
+    .replace(/[^0-9A-Za-z._-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 120);
+}
+
+function normalizeValue_(v) {
+  if (v === true) return 'Done';
+  if (v === false) return 'Not done';
+  return v;
+}
+
+function valueToCell_(v) {
+  if (v === null || v === undefined || v === '') return '';
+  try {
+    return JSON.stringify(v);
+  } catch (e) {
+    return String(v);
+  }
+}
+
+function jsonOK_(o) {
+  return ContentService
+    .createTextOutput(JSON.stringify(o))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonErr_(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: false, error: String(e) }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* --- Cases tab helpers (with GateToken support) --- */
+
+// Make sure Cases sheet has: CaseID, CaseFolderURL, CreatedUTC, LastUpdateUTC, Status, GateToken
+function ensureCasesHeader_(sh) {
+  const header = ['CaseID','CaseFolderURL','CreatedUTC','LastUpdateUTC','Status','GateToken'];
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+
+  if (lastRow === 0) {
+    // Fresh sheet: write full header
+    sh.getRange(1, 1, 1, header.length).setValues([header]);
+    return;
+  }
+
+  // Read existing header (up to 6 cols)
+  const existing = sh.getRange(1, 1, 1, Math.max(lastCol, header.length)).getValues()[0];
+
+  // Ensure first 5 headers correct
+  for (var i = 0; i < 5; i++) {
+    if (existing[i] !== header[i]) {
+      sh.getRange(1, i + 1).setValue(header[i]);
+    }
+  }
+
+  // Ensure GateToken header in column F (6)
+  if (existing[5] !== header[5]) {
+    sh.getRange(1, 6).setValue(header[5]);
+  }
+}
+
+function upsertCaseRow_(ss, caseId, url, now) {
+  let sh = ss.getSheetByName(CASES_SHEET);
+  if (!sh) sh = ss.insertSheet(CASES_SHEET);
+
+  ensureCasesHeader_(sh);
+
+  const data = sh.getDataRange().getValues();
+  const idx  = data.findIndex(r => r[0] === caseId);
+
+  if (idx < 0) {
+    // New case, GateToken blank initially
+    sh.appendRow([caseId, url, iso_(now), iso_(now), 'In-Progress', '']);
+  } else {
+    const row       = data[idx];
+    const created   = row[2] || iso_(now);
+    const status    = row[4] || 'In-Progress';
+    const gateToken = row[5] || '';
+    // Update URL & LastUpdateUTC, keep CreatedUTC, Status, GateToken
+    sh.getRange(idx + 1, 1, 1, 6).setValues([
+      [caseId, url, created, iso_(now), status, gateToken]
+    ]);
+  }
+}
+
+function setCaseStatus_(ss, caseId, caseUrl, status, now, token) {
+  let sh = ss.getSheetByName(CASES_SHEET);
+  if (!sh) sh = ss.insertSheet(CASES_SHEET);
+
+  ensureCasesHeader_(sh);
+
+  // Append a new event row for this case
+  sh.appendRow([
+    caseId,              // CaseID
+    caseUrl || '',       // CaseFolderURL
+    iso_(now),           // CreatedUTC (event time)
+    iso_(now),           // LastUpdateUTC (same for append-only log)
+    status,              // Status: 'In-Progress' or 'Finalized'
+    token || ''          // GateToken (only present on finalize)
+  ]);
+}
+

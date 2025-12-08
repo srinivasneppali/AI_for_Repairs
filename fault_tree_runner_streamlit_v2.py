@@ -1221,11 +1221,11 @@ def render_resolution_prompt(tree: Dict[str, Any], lang: str) -> bool:
         else:
             next_id = pending.get("next_node")
             if next_id:
-                    st.session_state.visited_stack.append(next_id)
-                    st.session_state.node_id = next_id
-                    st.session_state["_scroll_anchor"] = f"node-{next_id}"
-                    st.session_state["_scroll_target"] = "top"
-                    st.rerun()
+                st.session_state.visited_stack.append(next_id)
+                st.session_state.node_id = next_id
+                st.session_state["_scroll_anchor"] = f"node-{next_id}"
+                st.session_state["_scroll_target"] = "top"
+                st.rerun()
             else:
                 st.session_state.flow_status = {
                     "type": "completed",
