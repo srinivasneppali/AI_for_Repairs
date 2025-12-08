@@ -2050,17 +2050,20 @@ st.markdown(
       50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.6); }
       100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
     }
+    @keyframes glowing-blue-grey {
+        0% { box-shadow: 0 2px 3px rgba(38, 50, 56, 0.3), 0 0 3px rgba(120, 144, 156, 0.4), 0 0 5px rgba(120, 144, 156, 0.4); }
+        50% { box-shadow: 0 3px 6px rgba(38, 50, 56, 0.4), 0 0 7px rgba(144, 164, 174, 0.6), 0 0 11px rgba(144, 164, 174, 0.6); }
+        100% { box-shadow: 0 2px 3px rgba(38, 50, 56, 0.3), 0 0 3px rgba(120, 144, 156, 0.4), 0 0 5px rgba(120, 144, 156, 0.4); }
+    }
     .selfie-checkbox-wrapper div[data-testid="stCheckbox"] > label {
-        background: linear-gradient(135deg, #f97316, #ec4899, #8b5cf6) !important;
-        border: 1px solid rgba(255,255,255,0.4) !important;
-        color: #fff9ff !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.02em;
-        box-shadow: 0 15px 35px rgba(236, 72, 153, 0.4);
-        border-radius: 18px !important;
-        position: relative;
-        overflow: hidden;
-        animation: selfiePulse 2.6s ease-in-out infinite;
+        background-color: #546E7A !important; /* Blue-Grey */
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        border-radius: 12px !important;
+        border: 1px solid #263238 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        animation: glowing-blue-grey 2.2s ease-in-out infinite;
         padding: 0.8rem 0.5rem;
         line-height: 1.4;
         display: block;
@@ -2070,10 +2073,13 @@ st.markdown(
         transition: transform 0.2s;
     }
     .selfie-checkbox-wrapper div[data-testid="stCheckbox"] > label:hover {
-        transform: scale(1.02);
+        transform: translateY(-2px) scale(1.02);
     }
     .selfie-checkbox-wrapper input[type="checkbox"] {
-        display: none;
+        position: absolute !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
     }
     @keyframes selfiePulse {
         0%, 100% { box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35); transform: translateY(0); }
