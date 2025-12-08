@@ -1842,9 +1842,31 @@ st.markdown(
         box-shadow: 0 4px 18px rgba(15,23,42,0.4);
     }
     .sub-caption {
-        font-size: 0.95rem;
-        color: #1d6fa5;
-        margin-bottom: 1rem;
+        font-size: 1rem;
+        font-weight: 600;
+        text-align: center;
+        margin: 0 auto 1.2rem;
+        letter-spacing: 0.04em;
+        background: linear-gradient(120deg, #7dd3fc, #c084fc, #f97316, #34f5c6);
+        -webkit-background-clip: text;
+        color: transparent;
+        display: inline-block;
+        padding: 0.35rem 1.15rem;
+        border-radius: 999px;
+        position: relative;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.25));
+        background-size: 250% 250%;
+        animation: taglineGradient 11s linear infinite;
+    }
+    .sub-caption::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        opacity: 0.4;
+        filter: blur(4px);
+        animation: taglinePulse 6s ease-in-out infinite;
     }
     .section-title {
         font-size: 1.2rem;
@@ -2065,6 +2087,15 @@ st.markdown(
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
+    @keyframes taglineGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    @keyframes taglinePulse {
+        0%, 100% { opacity: 0.25; filter: blur(4px); }
+        50% { opacity: 0.6; filter: blur(6px); }
+    }
     @keyframes neonBlink {
         0%, 75%, 100% { text-shadow: 0 0 12px rgba(59, 130, 246, 0.45), 0 0 25px rgba(236, 72, 153, 0.38); }
         78% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 38px rgba(251, 191, 36, 0.75); }
@@ -2133,7 +2164,7 @@ title_block = f"""
 """
 st.markdown(title_block, unsafe_allow_html=True)
 st.markdown(
-    "<div class='sub-caption' style='color:#ffffff;font-weight:700;text-align:center;'>Shape troubleshooting decisions at every step to reduce RR and MPD and deliver a more reliable repair experience for customers.</div>",
+    "<div class='sub-caption'>Shape troubleshooting decisions at every step to reduce RR and MPD and deliver a more reliable repair experience for customers.</div>",
     unsafe_allow_html=True,
 )
 
