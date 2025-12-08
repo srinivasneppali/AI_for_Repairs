@@ -2108,6 +2108,25 @@ st.markdown(
         font-size: 1rem;
         backdrop-filter: blur(6px);
     }
+    .selfie-button-wrapper {
+        position: relative;
+        display: block;
+        border-radius: 26px;
+        padding: 0.35rem;
+        isolation: isolate;
+    }
+    .selfie-button-wrapper::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(circle, rgba(59,130,246,0.45), transparent 70%);
+        filter: blur(12px);
+        opacity: 0.65;
+        animation: selfieAura 4s ease-in-out infinite;
+        z-index: -2;
+        pointer-events: none;
+    }
     .selfie-button-wrapper button:active {
         transform: translateY(1px);
         box-shadow:
