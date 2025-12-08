@@ -1778,12 +1778,12 @@ st.markdown(
         animation: textGlow 8s ease-in-out infinite;
     }
     .title-core span {
-        background: linear-gradient(120deg, #f8fafc, #dbeafe, #c7d2fe, #bae6fd);
+        background: linear-gradient(120deg, #fef3c7, #fbcfe8, #c084fc, #38bdf8, #22d3ee);
         -webkit-background-clip: text;
         color: transparent;
         display: inline-block;
-        background-size: 200% 200%;
-        animation: textShimmer 12s linear infinite;
+        background-size: 350% 350%;
+        animation: textAurora 8s ease-in-out infinite;
     }
     .title-core::before,
     .title-core::after {
@@ -1799,14 +1799,16 @@ st.markdown(
         filter: blur(0.4px);
     }
     .title-core::before {
-        color: rgba(148, 197, 255, 0.4);
-        transform: translate(2px, 1px);
-        animation: textGlitch 6s steps(3) infinite;
+        color: transparent;
+        -webkit-text-stroke: 1.4px rgba(94, 234, 212, 0.6);
+        filter: drop-shadow(0 0 12px rgba(45, 212, 191, 0.5));
+        animation: outlinePulse 6s ease-in-out infinite;
     }
     .title-core::after {
-        color: rgba(186, 230, 253, 0.35);
-        transform: translate(-1px, -1px);
-        animation: textGlitch 6s steps(2) reverse infinite;
+        background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.3), transparent 80%);
+        -webkit-background-clip: text;
+        color: transparent;
+        animation: highlightSweep 5s ease-in-out infinite;
     }
 
     .title-symbol {
@@ -2050,9 +2052,20 @@ st.markdown(
         0%, 100% { text-shadow: 0 4px 12px rgba(4, 10, 28, 0.6), 0 0 10px rgba(148, 163, 184, 0.5); }
         50% { text-shadow: 0 6px 18px rgba(4, 10, 28, 0.75), 0 0 16px rgba(59, 130, 246, 0.55); }
     }
-    @keyframes textShimmer {
+    @keyframes textAurora {
         0% { background-position: 0% 50%; }
-        100% { background-position: 200% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    @keyframes outlinePulse {
+        0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.25)); }
+        50% { opacity: 0.7; filter: drop-shadow(0 0 18px rgba(59, 130, 246, 0.45)); }
+    }
+    @keyframes highlightSweep {
+        0% { background-position: -120% 0; opacity: 0; }
+        20% { opacity: 0.6; }
+        80% { opacity: 0.6; }
+        100% { background-position: 220% 0; opacity: 0; }
     }
     @keyframes textGlitch {
         0% { clip-path: inset(0 0 0 0); }
