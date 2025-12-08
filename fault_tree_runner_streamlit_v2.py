@@ -2672,19 +2672,19 @@ if existing_selfie:
         st.rerun()
 else:
     if not st.session_state.show_selfie_camera:
-    query_bits = st.query_params.to_dict()
-    query_bits["action"] = "open_selfie_cam"
+        query_bits = st.query_params.to_dict()
+        query_bits["action"] = "open_selfie_cam"
 
-    button_label = "Open camera for selfie – capture selfie with product and customer"
-    
-    st.markdown(f"""
-        <a href="?{urlencode(query_bits)}" target="_self" style="display: block; text-decoration: none;">
-            <div class="selfie-button" style="text-align: center; padding: 0.8rem 0.5rem; line-height: 1.4;">
-                {button_label}
-            </div>
-        </a>
-    """, unsafe_allow_html=True)
-    st.stop()
+        button_label = "Open camera for selfie – capture selfie with product and customer"
+        
+        st.markdown(f"""
+            <a href="?{urlencode(query_bits)}" target="_self" style="display: block; text-decoration: none;">
+                <div class="selfie-button" style="text-align: center; padding: 0.8rem 0.5rem; line-height: 1.4;">
+                    {button_label}
+                </div>
+            </a>
+        """, unsafe_allow_html=True)
+        st.stop()
     selfie_file = st.camera_input("Capture selfie with product and customer", key=selfie_key)
     if selfie_file:
         encoded_selfie, mime_selfie = b64_of_uploaded(selfie_file)
