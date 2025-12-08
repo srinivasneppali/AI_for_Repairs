@@ -2089,20 +2089,31 @@ st.markdown(
     }
     .selfie-button-wrapper button {
         width: 100%;
-        border-radius: 18px;
+        border-radius: 16px;
         position: relative;
         font-size: 1rem;
         backdrop-filter: blur(6px);
+        z-index: 1;
     }
     .selfie-button-wrapper {
         position: relative;
         display: block;
-        border-radius: 18px;
-        padding: 0.35rem;
-        background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(249, 115, 22, 0.2));
-        border: 1px solid rgba(236, 72, 153, 0.6);
-        box-shadow: 0 0 15px rgba(236, 72, 153, 0.35);
+        border-radius: 20px;
+        padding: 0.55rem;
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(249, 115, 22, 0.35));
+        border: 1px solid rgba(236, 72, 153, 0.65);
+        box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
         animation: pulse-border 2s infinite;
+        overflow: hidden;
+    }
+    .selfie-button-wrapper::before {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border-radius: 16px;
+        background: rgba(10, 15, 25, 0.94);
+        box-shadow: inset 0 0 18px rgba(0,0,0,0.45);
+        z-index: 0;
     }
     .selfie-button-wrapper button:active {
         transform: translateY(1px);
