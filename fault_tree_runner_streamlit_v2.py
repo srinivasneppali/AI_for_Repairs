@@ -74,6 +74,31 @@ ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 ACCESS_TOKEN_TTL_SECONDS = max(int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", "3600")), 60)
 BACK_BUTTON_LABEL = "⬅️ Back to Previous Step"
 BACK_BUTTON_CLASS = "back-step-button"
+DARK_THEME_STYLE = """
+<style id="dark-theme-override">
+body,
+[data-testid="stAppViewContainer"] {
+    background: radial-gradient(circle at 10% 20%, rgba(15,23,42,0.75), rgba(2,6,23,0.98) 55%) !important;
+    color: #f8fafc !important;
+}
+[data-testid="stHeader"] {
+    background: rgba(2, 6, 23, 0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+[data-testid="stSidebar"] {
+    background: rgba(2, 6, 23, 0.95) !important;
+    color: #f8fafc !important;
+}
+[data-testid="stSidebar"] * {
+    color: #f8fafc !important;
+}
+[data-testid="stToolbar"],
+[data-testid="stBottomBlockContainer"] {
+    background: transparent !important;
+}
+</style>
+"""
 
 
 @contextmanager
@@ -1887,6 +1912,19 @@ st.markdown(
         color: #bfd2ff;
         margin-bottom: 0.8rem;
     }
+    .dark-mode-card {
+        background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(15,118,110,0.45));
+        border: 1px solid rgba(59,130,246,0.35);
+        border-radius: 18px;
+        padding: 0.9rem 1.2rem;
+        color: #e2e8f0;
+        box-shadow: 0 15px 30px rgba(2,6,23,0.55);
+        margin-bottom: 0.8rem;
+    }
+    .dark-mode-card.active {
+        border-color: rgba(94,234,212,0.55);
+        box-shadow: 0 20px 40px rgba(15,118,110,0.4);
+    }
     .product-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -2138,6 +2176,60 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+def _activate_dark_theme_override() -> None:
+    st.session_state._dark_theme_enabled = True
+    st.session_state._dark_theme_prompt_dismissed = True
+    st.session_state["_dark_theme_notice_pending"] = True
+
+
+def render_dark_theme_prompt() -> None:
+    st.session_state.setdefault("_dark_theme_enabled", False)
+    st.session_state.setdefault("_dark_theme_prompt_dismissed", False)
+    st.session_state.setdefault("_dark_theme_notice_pending", False)
+
+    style_holder = st.empty()
+    if st.session_state._dark_theme_enabled:
+        style_holder.markdown(DARK_THEME_STYLE, unsafe_allow_html=True)
+    else:
+        style_holder.empty()
+
+    prompt_needed = (
+        not st.session_state._dark_theme_enabled
+        and not st.session_state._dark_theme_prompt_dismissed
+    )
+
+    if prompt_needed:
+        st.markdown(
+            """
+            <div class='dark-mode-card'>
+                <strong>Dark mode recommended</strong><br/>
+                Switch Streamlit's theme to dark so the neon gradients and glow layers render as intended.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        c1, c2 = st.columns([3, 1])
+        if c1.button("Enable dark theme 🌙", key="enable_dark_theme_prompt"):
+            _activate_dark_theme_override()
+            st.rerun()
+        if c2.button("Maybe later", key="skip_dark_theme_prompt"):
+            st.session_state._dark_theme_prompt_dismissed = True
+            st.session_state["_dark_theme_notice_pending"] = False
+            st.rerun()
+    elif st.session_state._dark_theme_notice_pending:
+        st.markdown(
+            "<div class='dark-mode-card active'>Dark theme override applied. Enjoy the optimized visuals!</div>",
+            unsafe_allow_html=True,
+        )
+        st.session_state["_dark_theme_notice_pending"] = False
+    elif not st.session_state._dark_theme_enabled:
+        if st.button("Enable dark theme 🌙", key="enable_dark_theme_secondary"):
+            _activate_dark_theme_override()
+            st.rerun()
+
+
+render_dark_theme_prompt()
 
 title_colors = {
     "yellow": "#ffd166",
