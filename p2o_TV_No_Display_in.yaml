@@ -1,0 +1,325 @@
+meta:
+  id: WM_SA_NO_SPIN_V3
+  title: 'DIAGNOSTIC-TEST-V4: WM Semi-Automatic: Spin Not Working (Full Daisy Chain)'
+  version: '3'
+  language:
+    - en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+start: s1_load_balance_check
+steps:
+  - id: s1_load_balance_check
+    type: action
+    prompt:
+      en: 'Step 1: Load Balance Check. Open the spin lid. Check for unevenly dumped
+        clothes OR a small cloth (sock/handkerchief) fallen between the tub and outer
+        body.'
+    ui:
+      control: radio
+      options:
+        - Clothes were uneven -> Spread evenly
+        - Small cloth was jamming the drum -> Removed
+        - No issue found with load balance
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'No issue found with load balance'
+        next: s2_brake_wire_intro
+    next: s2_brake_wire_intro
+  - id: s2_brake_wire_intro
+    type: quiz
+    prompt:
+      en: 'Step 2: Brake Cable Check. Open the back panel to proceed.'
+    ui:
+      control: radio
+      options:
+        - Panel Open. Proceed.
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Panel Open. Proceed.'
+        next: s2_check_brake_wire_action
+  - id: s2_check_brake_wire_action
+    type: quiz
+    prompt:
+      en: Does the brake wire correctly pull and release the brake band when the lid
+        is closed?
+    ui:
+      control: radio
+      options:
+        - Yes, works correctly
+        - No, cable is loose/broken
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Yes, works correctly'
+        next: s3_safety_switch_check
+      - when: selection == 'No, cable is loose/broken'
+        next: s2_fix_or_replace_brake
+    next: s3_safety_switch_check
+  - id: s2_fix_or_replace_brake
+    type: action
+    prompt:
+      en: Tighten the cable. If broken, mark for replacement.
+    ui:
+      control: radio
+      options:
+        - Tightened and fixed (Spin works now)
+        - Cable is broken (Needs replacement)
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Cable is broken (Needs replacement)'
+        next: s2_log_brake_fault
+    next: s3_safety_switch_check
+  - id: s2_log_brake_fault
+    type: photo
+    prompt:
+      en: Capture photo of broken Brake Wire. (Proceeding to check Safety Switch...)
+    ui:
+      control: none
+    recommends_part: Brake Wire
+    recommends_parts:
+      - Brake Wire
+    next: s3_safety_switch_check
+  - id: s3_safety_switch_check
+    type: quiz
+    prompt:
+      en: 'Step 3: Safety Switch Check. Inspect contacts near the hinge. Are they
+        carbonized, broken, or clean?'
+    ui:
+      control: radio
+      options:
+        - Contacts Clean & Touching (Good)
+        - Carbon/Rust present (Needs Cleaning)
+        - Contacts Bent/Broken (Needs Replacement)
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Contacts Clean & Touching (Good)'
+        next: s4_rat_bite_check
+      - when: selection == 'Carbon/Rust present (Needs Cleaning)'
+        next: s3_clean_switch
+      - when: selection == 'Contacts Bent/Broken (Needs Replacement)'
+        next: s3_log_switch_fault
+    next: s4_rat_bite_check
+  - id: s3_clean_switch
+    type: action
+    prompt:
+      en: Clean contacts with sandpaper. Does spin work now?
+    ui:
+      control: radio
+      options:
+        - Yes, spin working
+        - No, issue persists (Replace Switch)
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'No, issue persists (Replace Switch)'
+        next: s3_log_switch_fault
+    next: s4_rat_bite_check
+  - id: s3_log_switch_fault
+    type: photo
+    prompt:
+      en: Capture photo of faulty Safety Switch. (Proceeding to check Wiring Harness...)
+    ui:
+      control: none
+    recommends_part: Safety Switch
+    recommends_parts:
+      - Safety Switch
+    next: s4_rat_bite_check
+  - id: s4_rat_bite_check
+    type: quiz
+    prompt:
+      en: 'Step 4: Rat Bite Check. Are wires cut?'
+    ui:
+      control: radio
+      options:
+        - No, wires intact
+        - Yes, damaged
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'No, wires intact'
+        next: s5_capacitor_check
+      - when: selection == 'Yes, damaged'
+        next: s4_repair_wires
+    next: s5_capacitor_check
+  - id: s4_repair_wires
+    type: action
+    prompt:
+      en: Repair/Tape wires. Does spin work?
+    ui:
+      control: radio
+      options:
+        - Yes, spin working
+        - No, damage too heavy (Replace Harness)
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'No, damage too heavy (Replace Harness)'
+        next: s4_log_harness_fault
+    next: s5_capacitor_check
+  - id: s4_log_harness_fault
+    type: photo
+    prompt:
+      en: Capture photo of heavily damaged Harness. (Proceeding to check Capacitor...)
+    ui:
+      control: none
+    recommends_part: Main Wiring Harness
+    recommends_parts:
+      - Main Wiring Harness
+    next: s5_capacitor_check
+  - id: s5_capacitor_check
+    type: quiz
+    prompt:
+      en: 'Step 5: Capacitor Check. Is it swollen/burst OR is motor humming?'
+    ui:
+      control: radio
+      options:
+        - No, looks fine / No humming
+        - Yes, Swollen/Burst/Humming
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'No, looks fine / No humming'
+        next: s6_timer_check
+      - when: selection == 'Yes, Swollen/Burst/Humming'
+        next: s5_log_capacitor_fault
+    next: s6_timer_check
+  - id: s5_log_capacitor_fault
+    type: photo
+    prompt:
+      en: Capture photo of Capacitor Rating. (Proceeding to check Timer...)
+    ui:
+      control: none
+    recommends_part: Capacitor
+    recommends_parts:
+      - Capacitor
+    next: s6_timer_check
+  - id: s6_timer_check
+    type: quiz
+    prompt:
+      en: 'Step 6: Timer Check. Does it tick and move?'
+    ui:
+      control: radio
+      options:
+        - Yes, working
+        - No, stuck/silent
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Yes, working'
+        next: s7_leak_check
+      - when: selection == 'No, stuck/silent'
+        next: s6_log_timer_fault
+    next: s7_leak_check
+  - id: s6_log_timer_fault
+    type: photo
+    prompt:
+      en: Capture photo of faulty Timer. (Proceeding to check Motor/Leaks...)
+    ui:
+      control: none
+    recommends_part: Spin Timer
+    recommends_parts:
+      - Spin Timer
+    next: s7_leak_check
+  - id: s7_leak_check
+    type: quiz
+    prompt:
+      en: 'Step 7: Motor Health - Leak Check. Is water leaking from the spin tub onto
+        the motor?'
+    ui:
+      control: radio
+      options:
+        - Yes, water leaking
+        - No visible leakage
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Yes, water leaking'
+        next: s7_flag_leak_found
+      - when: selection == 'No visible leakage'
+        next: s7_jam_check
+    next: s7_jam_check
+  - id: s7_flag_leak_found
+    type: note
+    prompt:
+      en: Leakage detected. This can damage the motor now or in future. Replace the
+        Buffer Seal/Bellow and proceed to verify jam/grounding.
+    ui:
+      control: none
+    recommends_part: Buffer Seal/Bellow
+    recommends_parts:
+      - Buffer Seal/Bellow
+    next: s7_jam_check
+  - id: s7_jam_check
+    type: quiz
+    prompt:
+      en: Rotate the spin tub by hand. Does it move freely?
+    ui:
+      control: radio
+      options:
+        - Tub is jammed / hard to rotate
+        - Tub rotates freely
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Tub is jammed / hard to rotate'
+        next: s7_grounding_check
+      - when: selection == 'Tub rotates freely'
+        next: s7_grounding_check
+    next: s7_grounding_check
+  - id: s7_grounding_check
+    type: quiz
+    prompt:
+      en: Using a multimeter, check for grounding (Motor Body to Earth). Is there
+        leakage?
+    ui:
+      control: radio
+      options:
+        - Yes, motor is grounded (Dead)
+        - No, motor is not grounded
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Yes, motor is grounded (Dead)'
+        next: s7_order_motor_and_seal
+      - when: selection == 'No, motor is not grounded'
+        next: s7_final_decision_router
+    next: s7_final_decision_router
+  - id: s7_order_motor_and_seal
+    type: photo
+    prompt:
+      en: Motor is dead (Grounded/Water Damaged). Order Spin Motor AND Buffer Seal.
+        Capture photo of Motor Nameplate.
+    ui:
+      control: none
+    recommends_parts:
+      - Spin Motor
+      - Buffer Seal/Bellow
+    next: s7_photo_bellow
+  - id: s7_photo_bellow
+    type: photo
+    prompt:
+      en: Capture photo of the Buffer Seal/Bellow to be replaced.
+    ui:
+      control: none
+    next: end_flow_parts_order
+  - id: s7_final_decision_router
+    type: note
+    prompt:
+      en: All physical checks completed.
+    ui:
+      control: none
+    next: end_flow_parts_order
+  - id: end_flow_parts_order
+    type: note
+    prompt:
+      en: Diagnostic Complete. If faults were identified, the Gate Token will cover
+        all recommended parts (Switch, Capacitor, Timer, Motor, etc.). If no faults
+        were found, please contact your Regional Trainer for further guidance.
+    ui:
+      control: none
