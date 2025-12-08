@@ -1610,150 +1610,114 @@ st.markdown(
     """
     <style>
     .main-title {
-        font-size: 2rem;
-        font-weight: 700;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 1.5rem; /* Adjusted for a sleeker look */
+        font-weight: 800; /* Bolder font */
         color: #ffffff;
-        margin: 0.35rem auto 1rem auto;
+        margin: 1rem auto 1.5rem auto;
         position: relative;
         overflow: hidden;
-        z-index: 0;
-        border-radius: 24px;
-        padding: 1rem 2rem;
+        border-radius: 28px; /* Slightly more rounded */
+        padding: 1.5rem 2.5rem;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 0.6rem;
-        min-height: 95px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 22px 55px rgba(15, 23, 42, 0.55);
-        background-size: 260% 260%;
-        animation: glowPulse 5s ease-in-out infinite, gradientShift 15s ease-in-out infinite;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        gap: 0.8rem;
+        min-height: 110px;
+        border: 2px solid rgba(139, 92, 246, 0.4);
+        background: #020617; /* Very dark blue, almost black */
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.2),
+                    0 0 30px rgba(59, 130, 246, 0.2),
+                    inset 0 0 10px rgba(139, 92, 246, 0.2);
+        perspective: 800px;
+        transform-style: preserve-3d;
+        transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        animation: holographic-float 6s ease-in-out infinite;
     }
     .main-title:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 30px 70px rgba(15, 23, 42, 0.7),
-                    0 0 25px rgba(0, 255, 255, 0.8),
-                    0 0 50px rgba(0, 150, 255, 0.7),
-                    0 0 75px rgba(0, 100, 255, 0.6);
-        animation-play-state: paused;
+        transform: rotateY(10deg) rotateX(5deg) scale(1.05);
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.5),
+                    0 0 60px rgba(59, 130, 246, 0.4),
+                    inset 0 0 15px rgba(139, 92, 246, 0.3);
     }
-    .main-title:hover .title-core {
-        text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 16px rgba(255, 255, 255, 0.6);
-    }
+
+    /* Holographic Grid Overlay */
     .main-title::before {
         content: "";
         position: absolute;
-        inset: -3px;
-        background-image:
-            radial-gradient(circle at 12% 20%, rgba(0, 255, 255, 0.25) 0px, transparent 90px),
-            radial-gradient(circle at 80% 10%, rgba(0, 150, 255, 0.2) 0px, transparent 70px),
-            repeating-linear-gradient(120deg, rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 2px, transparent 2px, transparent 16px),
-            repeating-linear-gradient(60deg, rgba(10, 14, 64, 0.45) 0px, rgba(10,14,64,0.45) 1px, transparent 1px, transparent 18px);
-        mix-blend-mode: screen;
-        opacity: 0.35;
-        animation: circuitDrift 22s linear infinite;
-        pointer-events: none;
+        inset: 0;
+        background:
+            linear-gradient(45deg, rgba(59, 130, 246, 0.5) 0%, rgba(139, 92, 246, 0.5) 100%),
+            linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+        background-size: 100% 100%, 30px 30px, 30px 30px;
+        mask-image: radial-gradient(ellipse 80% 100% at 50% 110%, black, transparent);
+        mix-blend-mode: color-dodge;
+        opacity: 0.5;
+        animation: grid-pan 20s linear infinite;
         z-index: 1;
     }
+
+    /* Glare Effect */
     .main-title::after {
         content: "";
         position: absolute;
-        top: -160%;
-        left: -30%;
-        width: 60%;
-        height: 400%;
-        background: linear-gradient(
-            120deg,
-            rgba(255,255,255,0) 30%,
-            rgba(255,255,255,0.7) 50%,
-            rgba(255,255,255,0) 70%
-        );
-        transform: translateX(-120%) rotate(20deg);
-        animation: titleSheen 4s linear infinite;
-        opacity: 0.55;
-        pointer-events: none;
-        z-index: 4;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.15) 50%, transparent 60%);
+        transform: translateX(-100%);
+        animation: glare 5s ease-in-out infinite;
+        z-index: 3;
     }
+
+    .title-core {
+        position: relative;
+        z-index: 2;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5),
+                     0 0 15px rgba(59, 130, 246, 0.5),
+                     0 0 30px rgba(139, 92, 246, 0.4);
+        animation: text-flicker 4s infinite;
+    }
+    .title-core::before,
+    .title-core::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+    }
+    .title-core::before {
+        color: #4f46e5; /* Indigo */
+        text-shadow: -1px 0 #4f46e5;
+        animation: glitch-skew 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+    }
+    .title-core::after {
+        color: #00ffff; /* Cyan */
+        text-shadow: 1px 0 #00ffff;
+        animation: glitch-skew 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+    }
+
+    .title-symbol {
+        font-size: 2.2rem;
+        line-height: 1;
+        z-index: 2;
+        text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(139, 92, 246, 0.7);
+        animation: symbol-bob 4s ease-in-out infinite;
+    }
+    
+    /* Remove old decorative elements as they are replaced by new effects */
     .title-aurora,
     .title-grid,
     .title-orb,
     .title-sparkles {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-    }
-    .title-aurora {
-        background: conic-gradient(from 120deg, rgba(0, 255, 255, 0.35), rgba(0, 150, 255, 0.4), rgba(0, 100, 255, 0.35), rgba(0, 255, 255, 0.35));
-        filter: blur(32px);
-        opacity: 0.55;
-        z-index: 0;
-        animation: auroraFlow 12s ease-in-out infinite;
-    }
-    .title-grid {
-        background-image:
-            linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px);
-        background-size: 28px 28px;
-        opacity: 0.15;
-        z-index: 1;
-        animation: circuitDrift 26s linear infinite;
-    }
-    .title-orb {
-        width: 160px;
-        height: 160px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(0, 255, 255, 0.65), rgba(0, 255, 255, 0));
-        filter: blur(10px);
-        opacity: 0.4;
-        z-index: 2;
-        animation: orbDrift 12s ease-in-out infinite;
-    }
-    .title-orb.orb-left {
-        left: -70px;
-        top: -10px;
-        animation-delay: -2s;
-    }
-    .title-orb.orb-right {
-        right: -60px;
-        bottom: -20px;
-        animation-delay: 1.4s;
-    }
-    .title-sparkles {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.9);
-        box-shadow: 0 0 18px rgba(0, 255, 255, 0.9);
-        z-index: 3;
-        animation: sparklePulse 3s ease-in-out infinite;
-    }
-    .title-sparkles.sparkle-one {
-        top: 24%;
-        left: 18%;
-    }
-    .title-sparkles.sparkle-two {
-        bottom: 18%;
-        right: 16%;
-        width: 11px;
-        height: 11px;
-        animation-delay: 1.3s;
-    }
-    .title-symbol {
-        font-size: 2.4rem;
-        line-height: 1;
-        filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8));
-        z-index: 5;
-        animation: symbolDance 5s ease-in-out infinite;
-    }
-    .title-core {
-        position: relative;
-        z-index: 5;
-        font-size: 1.6rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-shadow: 0 12px 34px rgba(0,0,0,0.55);
-        transition: text-shadow 0.3s ease-in-out;
+        display: none;
     }
     .selected-product-pill {
         display: inline-flex;
@@ -1952,30 +1916,34 @@ st.markdown(
         border-bottom-color: #f59e0b !important;
         border-left-color: rgba(249, 115, 22, 0.4) !important;
     }
-    @keyframes glowPulse {
-        0% { box-shadow: 0 10px 25px rgba(0, 150, 255, 0.25); }
-        50% { box-shadow: 0 20px 45px rgba(0, 255, 255, 0.45); }
-        100% { box-shadow: 0 10px 25px rgba(0, 150, 255, 0.25); }
+    @keyframes holographic-float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
     }
-    @keyframes auroraFlow {
-        0% { transform: rotate(0deg) scale(1); }
-        50% { transform: rotate(180deg) scale(1.05); }
-        100% { transform: rotate(360deg) scale(1); }
+    @keyframes grid-pan {
+        0% { background-position: 0% 0%, 0% 0%, 0% 0%; }
+        100% { background-position: 0% 0%, -60px 60px, -60px 60px; }
     }
-    @keyframes orbDrift {
-        0% { transform: translate3d(0px, 0px, 0) scale(1); opacity: 0.4; }
-        50% { transform: translate3d(20px, -10px, 0) scale(1.1); opacity: 0.55; }
-        100% { transform: translate3d(0px, 0px, 0) scale(1); opacity: 0.4; }
+    @keyframes glare {
+        0% { transform: translateX(-100%); }
+        20% { transform: translateX(100%); }
+        100% { transform: translateX(100%); }
     }
-    @keyframes sparklePulse {
-        0% { transform: scale(0.8); opacity: 0.6; }
-        50% { transform: scale(1.2); opacity: 1; }
-        100% { transform: scale(0.8); opacity: 0.6; }
+    @keyframes text-flicker {
+        0%, 19.9%, 22%, 62.9%, 64%, 100% { opacity: 1; }
+        20%, 21.9%, 63%, 63.9% { opacity: 0.4; }
     }
-    @keyframes symbolDance {
-        0% { transform: translateY(0px) rotate(-3deg); }
-        50% { transform: translateY(-6px) rotate(3deg); }
-        100% { transform: translateY(0px) rotate(-3deg); }
+    @keyframes glitch-skew {
+        0% { transform: skew(-1deg); }
+        10% { transform: skew(1deg); }
+        20% { transform: skew(-2deg); }
+        30% { transform: skew(2deg); }
+        40% { transform: skew(0deg); }
+        100% { transform: skew(0deg); }
+    }
+    @keyframes symbol-bob {
+        0%, 100% { transform: translateY(0) rotate(0); }
+        50% { transform: translateY(-5px) rotate(5deg); }
     }
     @keyframes gradientShift {
         0% { background-position: 0% 50%; }
@@ -2004,16 +1972,11 @@ title_colors = {
     "red": "#ef476f",
 }
 title_color = "linear-gradient(135deg, #00c9ff, #92fe9d)"
+title_text = "✨ AI driven Interactive Troubleshooting - Automated Flow"
 title_block = f"""
-<div class='main-title' style="background:{title_color};">
-  <div class='title-aurora'></div>
-  <div class='title-grid'></div>
-  <div class='title-orb orb-left'></div>
-  <div class='title-orb orb-right'></div>
-  <div class='title-sparkles sparkle-one'></div>
-  <div class='title-sparkles sparkle-two'></div>
+<div class='main-title'>
   <div class='title-symbol'>💡</div>
-  <div class='title-core'>✨ AI driven Interactive Troubleshooting - Automated Flow</div>
+  <div class='title-core' data-text="{title_text}">{title_text}</div>
 </div>
 """
 st.markdown(title_block, unsafe_allow_html=True)
