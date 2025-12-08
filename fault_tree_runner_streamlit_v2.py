@@ -2087,19 +2087,6 @@ st.markdown(
             0 0 25px rgba(59,130,246,0.35);
         pointer-events: none;
     }
-    .selfie-button::before,
-    .selfie-button-wrapper button::before {
-        content: "";
-        position: absolute;
-        inset: 6px;
-        border-radius: inherit;
-        background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
-        z-index: 1;
-        filter: blur(8px);
-        opacity: 0.4;
-        animation: selfieSweep 6s ease-in-out infinite;
-        pointer-events: none;
-    }
     .selfie-button-wrapper button {
         width: 100%;
         border-radius: 18px;
@@ -2110,39 +2097,12 @@ st.markdown(
     .selfie-button-wrapper {
         position: relative;
         display: block;
-        border-radius: 32px;
-        padding: 0.65rem;
-        isolation: isolate;
-        overflow: visible;
-        background: rgba(5,10,25,0.35);
-        box-shadow: inset 0 0 18px rgba(10,20,40,0.8);
-    }
-    .selfie-button-wrapper::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background: radial-gradient(circle at 40% 60%, rgba(59,130,246,0.45), transparent 80%);
-        filter: blur(32px);
-        opacity: 0.6;
-        animation: selfieAura 4s ease-in-out infinite;
-        z-index: -2;
-        pointer-events: none;
-    }
-    .selfie-button-wrapper::after {
-        content: "";
-        position: absolute;
-        top: 8px;
-        bottom: 8px;
-        left: 4px;
-        width: 120px;
-        border-radius: 80px;
-        background: linear-gradient(120deg, rgba(255,255,255,0), rgba(59,130,246,0.45), rgba(255,255,255,0));
-        filter: blur(12px);
-        opacity: 0.9;
-        z-index: -1;
-        pointer-events: none;
-        animation: selfieSlide 4.5s ease-in-out infinite;
+        border-radius: 18px;
+        padding: 0.35rem;
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(249, 115, 22, 0.2));
+        border: 1px solid rgba(236, 72, 153, 0.6);
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.35);
+        animation: pulse-border 2s infinite;
     }
     .selfie-button-wrapper button:active {
         transform: translateY(1px);
@@ -2202,17 +2162,6 @@ st.markdown(
     @keyframes selfiePulse {
         0%, 100% { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.75), 0 0 18px rgba(59,130,246,0.45); transform: translateY(0); }
         50% { box-shadow: 0 18px 45px rgba(15, 23, 42, 0.85), 0 0 26px rgba(236,72,153,0.5); transform: translateY(-2px); }
-    }
-    @keyframes selfieAura {
-        0%, 100% { opacity: 0.55; transform: scale(0.95); }
-        50% { opacity: 0.9; transform: scale(1.08); }
-    }
-    @keyframes selfieSweep {
-        0% { transform: translateX(-30%); opacity: 0.0; }
-        20% { opacity: 0.9; }
-        50% { transform: translateX(120%); opacity: 0.6; }
-        80% { opacity: 0.9; }
-        100% { transform: translateX(-30%); opacity: 0.0; }
     }
     .product-grid {
         display: grid;
