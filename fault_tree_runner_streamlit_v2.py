@@ -2091,13 +2091,13 @@ st.markdown(
     .selfie-button-wrapper button::before {
         content: "";
         position: absolute;
-        inset: -12px;
+        inset: 6px;
         border-radius: inherit;
-        background: radial-gradient(circle, rgba(59,130,246,0.55), transparent 70%);
-        z-index: -1;
-        filter: blur(14px);
-        mix-blend-mode: screen;
-        animation: selfieAura 4.5s ease-in-out infinite;
+        background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+        z-index: 1;
+        filter: blur(8px);
+        opacity: 0.4;
+        animation: selfieSweep 6s ease-in-out infinite;
         pointer-events: none;
     }
     .selfie-button-wrapper button {
@@ -2111,42 +2111,38 @@ st.markdown(
         position: relative;
         display: block;
         border-radius: 32px;
-        padding: 0.55rem;
+        padding: 0.65rem;
         isolation: isolate;
         overflow: visible;
+        background: rgba(5,10,25,0.35);
+        box-shadow: inset 0 0 18px rgba(10,20,40,0.8);
     }
     .selfie-button-wrapper::before {
         content: "";
         position: absolute;
-        inset: -6px;
+        inset: 0;
         border-radius: inherit;
-        background: radial-gradient(circle at 50% 60%, rgba(59,130,246,0.65), transparent 80%);
-        filter: blur(22px);
-        opacity: 0.85;
+        background: radial-gradient(circle at 40% 60%, rgba(59,130,246,0.45), transparent 80%);
+        filter: blur(32px);
+        opacity: 0.6;
         animation: selfieAura 4s ease-in-out infinite;
         z-index: -2;
         pointer-events: none;
-        mix-blend-mode: screen;
     }
     .selfie-button-wrapper::after {
         content: "";
         position: absolute;
-        inset: -4px;
-        border-radius: inherit;
-        background: conic-gradient(
-            rgba(59,130,246,0.0) 0deg,
-            rgba(59,130,246,0.8) 120deg,
-            rgba(14,165,233,0.8) 200deg,
-            rgba(236,72,153,0.8) 280deg,
-            rgba(59,130,246,0.0) 360deg
-        );
-        filter: blur(4px);
-        opacity: 0.85;
+        top: 8px;
+        bottom: 8px;
+        left: 4px;
+        width: 120px;
+        border-radius: 80px;
+        background: linear-gradient(120deg, rgba(255,255,255,0), rgba(59,130,246,0.45), rgba(255,255,255,0));
+        filter: blur(12px);
+        opacity: 0.9;
         z-index: -1;
         pointer-events: none;
-        animation: selfieOrbit 5s linear infinite;
-        -webkit-mask: radial-gradient(circle, transparent 72%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0.0) 100%);
-        mask: radial-gradient(circle, transparent 72%, rgba(0,0,0,0.85) 82%, rgba(0,0,0,0.0) 100%);
+        animation: selfieSlide 4.5s ease-in-out infinite;
     }
     .selfie-button-wrapper button:active {
         transform: translateY(1px);
@@ -2211,14 +2207,12 @@ st.markdown(
         0%, 100% { opacity: 0.55; transform: scale(0.95); }
         50% { opacity: 0.9; transform: scale(1.08); }
     }
-    @keyframes selfieOrbit {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    @keyframes selfieWave {
-        0% { background-position: 0% 40%; opacity: 0.45; }
-        50% { background-position: 100% 60%; opacity: 0.8; }
-        100% { background-position: 0% 40%; opacity: 0.45; }
+    @keyframes selfieSweep {
+        0% { transform: translateX(-30%); opacity: 0.0; }
+        20% { opacity: 0.9; }
+        50% { transform: translateX(120%); opacity: 0.6; }
+        80% { opacity: 0.9; }
+        100% { transform: translateX(-30%); opacity: 0.0; }
     }
     .product-grid {
         display: grid;
