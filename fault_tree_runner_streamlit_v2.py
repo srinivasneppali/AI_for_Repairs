@@ -1627,15 +1627,15 @@ st.markdown(
         border: 1px solid rgba(255, 255, 255, 0.25);
         box-shadow: 0 22px 55px rgba(15, 23, 42, 0.55);
         background-size: 260% 260%;
-        animation: glowPulse 6s ease-in-out infinite, gradientShift 18s ease-in-out infinite;
+        animation: glowPulse 5s ease-in-out infinite, gradientShift 15s ease-in-out infinite;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .main-title:hover {
         transform: translateY(-5px) scale(1.02);
         box-shadow: 0 30px 70px rgba(15, 23, 42, 0.7),
-                    0 0 25px rgba(247, 37, 133, 0.8),
-                    0 0 50px rgba(114, 9, 183, 0.7),
-                    0 0 75px rgba(67, 97, 238, 0.6);
+                    0 0 25px rgba(0, 255, 255, 0.8),
+                    0 0 50px rgba(0, 150, 255, 0.7),
+                    0 0 75px rgba(0, 100, 255, 0.6);
         animation-play-state: paused;
     }
     .main-title:hover .title-core {
@@ -1646,8 +1646,8 @@ st.markdown(
         position: absolute;
         inset: -3px;
         background-image:
-            radial-gradient(circle at 12% 20%, rgba(255,255,255,0.25) 0px, transparent 90px),
-            radial-gradient(circle at 80% 10%, rgba(255,255,255,0.2) 0px, transparent 70px),
+            radial-gradient(circle at 12% 20%, rgba(0, 255, 255, 0.25) 0px, transparent 90px),
+            radial-gradient(circle at 80% 10%, rgba(0, 150, 255, 0.2) 0px, transparent 70px),
             repeating-linear-gradient(120deg, rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 2px, transparent 2px, transparent 16px),
             repeating-linear-gradient(60deg, rgba(10, 14, 64, 0.45) 0px, rgba(10,14,64,0.45) 1px, transparent 1px, transparent 18px);
         mix-blend-mode: screen;
@@ -1670,7 +1670,7 @@ st.markdown(
             rgba(255,255,255,0) 70%
         );
         transform: translateX(-120%) rotate(20deg);
-        animation: titleSheen 4.5s linear infinite;
+        animation: titleSheen 4s linear infinite;
         opacity: 0.55;
         pointer-events: none;
         z-index: 4;
@@ -1684,11 +1684,11 @@ st.markdown(
         pointer-events: none;
     }
     .title-aurora {
-        background: conic-gradient(from 120deg, rgba(58,12,163,0.35), rgba(114,9,183,0.4), rgba(247,37,133,0.35), rgba(58,12,163,0.35));
+        background: conic-gradient(from 120deg, rgba(0, 255, 255, 0.35), rgba(0, 150, 255, 0.4), rgba(0, 100, 255, 0.35), rgba(0, 255, 255, 0.35));
         filter: blur(32px);
         opacity: 0.55;
         z-index: 0;
-        animation: auroraFlow 14s ease-in-out infinite;
+        animation: auroraFlow 12s ease-in-out infinite;
     }
     .title-grid {
         background-image:
@@ -1703,11 +1703,11 @@ st.markdown(
         width: 160px;
         height: 160px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,255,255,0.65), rgba(255,255,255,0));
+        background: radial-gradient(circle, rgba(0, 255, 255, 0.65), rgba(0, 255, 255, 0));
         filter: blur(10px);
         opacity: 0.4;
         z-index: 2;
-        animation: orbDrift 10s ease-in-out infinite;
+        animation: orbDrift 12s ease-in-out infinite;
     }
     .title-orb.orb-left {
         left: -70px;
@@ -1724,9 +1724,9 @@ st.markdown(
         height: 14px;
         border-radius: 50%;
         background: rgba(255,255,255,0.9);
-        box-shadow: 0 0 18px rgba(255,255,255,0.9);
+        box-shadow: 0 0 18px rgba(0, 255, 255, 0.9);
         z-index: 3;
-        animation: sparklePulse 3.4s ease-in-out infinite;
+        animation: sparklePulse 3s ease-in-out infinite;
     }
     .title-sparkles.sparkle-one {
         top: 24%;
@@ -1742,9 +1742,9 @@ st.markdown(
     .title-symbol {
         font-size: 2.4rem;
         line-height: 1;
-        filter: drop-shadow(0 0 8px rgba(255,255,255,0.8));
+        filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8));
         z-index: 5;
-        animation: symbolDance 4.8s ease-in-out infinite;
+        animation: symbolDance 5s ease-in-out infinite;
     }
     .title-core {
         position: relative;
@@ -1944,7 +1944,7 @@ st.markdown(
     @keyframes pulseGlow {
         0% { box-shadow: 0 0 6px rgba(15, 23, 42, 0.5); }
         50% { box-shadow: 0 0 18px rgba(96, 165, 250, 0.9); }
-        100% { box-shadow: 0 0 6px rgba(15, 23, 42, 0.5); }
+        100% { box-shadow: 0 0 6px rgba(15, 23, 42, .5); }
     }
     .stSpinner > div > div {
         border-top-color: #f59e0b !important;
@@ -1953,9 +1953,9 @@ st.markdown(
         border-left-color: rgba(249, 115, 22, 0.4) !important;
     }
     @keyframes glowPulse {
-        0% { box-shadow: 0 10px 25px rgba(114, 9, 183, 0.25); }
-        50% { box-shadow: 0 20px 45px rgba(247, 37, 133, 0.45); }
-        100% { box-shadow: 0 10px 25px rgba(114, 9, 183, 0.25); }
+        0% { box-shadow: 0 10px 25px rgba(0, 150, 255, 0.25); }
+        50% { box-shadow: 0 20px 45px rgba(0, 255, 255, 0.45); }
+        100% { box-shadow: 0 10px 25px rgba(0, 150, 255, 0.25); }
     }
     @keyframes auroraFlow {
         0% { transform: rotate(0deg) scale(1); }
@@ -2003,7 +2003,7 @@ title_colors = {
     "blue": "#118ab2",
     "red": "#ef476f",
 }
-title_color = "linear-gradient(135deg, #3a0ca3, #7209b7, #f72585)"
+title_color = "linear-gradient(135deg, #00c9ff, #92fe9d)"
 title_block = f"""
 <div class='main-title' style="background:{title_color};">
   <div class='title-aurora'></div>
@@ -2012,7 +2012,7 @@ title_block = f"""
   <div class='title-orb orb-right'></div>
   <div class='title-sparkles sparkle-one'></div>
   <div class='title-sparkles sparkle-two'></div>
-  <div class='title-symbol'>⚡</div>
+  <div class='title-symbol'>💡</div>
   <div class='title-core'>✨ AI driven Interactive Troubleshooting - Automated Flow</div>
 </div>
 """
