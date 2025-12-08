@@ -68,20 +68,22 @@ STATIC_AVAILABLE_FLOW_CATEGORIES = {
     entry["id"] for entry in PRODUCT_CATEGORIES if entry.get("available")
 }
 CATEGORY_FLOW_PATTERNS = {
-    "WM": ("wm", "washingmachine", "washing_machine"),
-    "TV": ("tv", "television", "display"),
-    "AC": ("ac", "aircon", "air_conditioner"),
-    "REF": ("ref", "refrigerator", "fridge"),
-    "MWO": ("mwo", "microwave"),
-    "CHIMNEY": ("chimney", "hood"),
+    "WM": ("washingmachine", "washing_machine"),
+    "TV": ("television", "display_tv"),
+    "AC": ("aircon", "air_conditioner"),
+    "REF": ("refrigerator", "fridge"),
+    "MWO": ("microwave",),
+    "CHIMNEY": ("chimneyhood", "rangehood"),
 }
 
 
 def _patterns_for_category(category_id: str) -> Tuple[str, ...]:
     patterns = CATEGORY_FLOW_PATTERNS.get(category_id)
+    base = category_id.lower()
+    base_variants = (base, f"{base}_", f"{base}-")
     if patterns:
-        return patterns
-    return (category_id.lower(),)
+        return tuple(dict.fromkeys((*base_variants, *patterns)))
+    return base_variants
 
 
 def compute_live_categories(files: List[Path]) -> Set[str]:
