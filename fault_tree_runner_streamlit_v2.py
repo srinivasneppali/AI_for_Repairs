@@ -2123,29 +2123,22 @@ st.markdown(
         box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         margin: 0.6rem 0;
     }
-    @keyframes glowing-blue-grey {
-        0% { box-shadow: 0 2px 3px rgba(38, 50, 56, 0.3), 0 0 3px rgba(120, 144, 156, 0.4), 0 0 5px rgba(120, 144, 156, 0.4); }
-        50% { box-shadow: 0 3px 6px rgba(38, 50, 56, 0.4), 0 0 7px rgba(144, 164, 174, 0.6), 0 0 11px rgba(144, 164, 174, 0.6); }
-        100% { box-shadow: 0 2px 3px rgba(38, 50, 56, 0.3), 0 0 3px rgba(120, 144, 156, 0.4), 0 0 5px rgba(120, 144, 156, 0.4); }
-    }
     .back-step-button {
-        background-color: #546E7A !important; /* Blue-Grey, Text 2 */
+        background-color: #37474F !important; /* Dark Blue-Grey */
         color: #FFFFFF !important;
         font-weight: 700 !important;
         border-radius: 12px !important;
         border: 1px solid #263238 !important;
-        box-shadow: 0 2px 4px rgba(38, 50, 56, 0.3); /* 3D Effect */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         text-transform: uppercase;
         letter-spacing: 0.06em;
         transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-        animation: glowing-blue-grey 2.2s ease-in-out infinite;
         position: relative;
     }
     .back-step-button:hover {
-        background-color: #607D8B !important;
+        background-color: #455A64 !important; /* Slightly lighter on hover */
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(38, 50, 56, 0.4), 0 0 16px rgba(144, 164, 174, 0.9), 0 0 24px rgba(144, 164, 174, 0.9) !important;
-        animation-play-state: paused;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
     }
     .back-step-button:active {
         transform: translateY(1px);
@@ -2557,6 +2550,7 @@ if available_flows:
             load_flow_from_path(chosen_path)
             st.session_state["_scroll_anchor"] = "case-info"
             st.session_state["_scroll_target"] = "node"
+            st.rerun()
 else:
     st.warning("No YAML flows found in the workspace. Upload one to begin.")
 
