@@ -2028,12 +2028,14 @@ st.markdown(
         box-shadow: 0 20px 40px rgba(15,118,110,0.4);
     }
     .selfie-button {
-        background: linear-gradient(135deg, #1f2937, #111827) !important;
-        border: 1px solid rgba(148, 163, 184, 0.7) !important;
-        color: #f8fafc !important;
+        background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
+        border: 1px solid rgba(142, 197, 252, 0.9) !important;
+        color: #ffffff !important;
         font-weight: 800 !important;
         letter-spacing: 0.03em;
-        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.75), 0 0 18px rgba(59, 130, 246, 0.45);
+        box-shadow:
+            0 18px 40px rgba(8, 36, 86, 0.65),
+            0 0 30px rgba(14, 165, 233, 0.55);
         border-radius: 18px !important;
         position: relative;
         overflow: hidden;
@@ -2044,8 +2046,10 @@ st.markdown(
         position: absolute;
         inset: 3px;
         border-radius: 15px;
-        background: rgba(255,255,255,0.06);
-        box-shadow: inset 0 0 12px rgba(59,130,246,0.4);
+        background: rgba(255,255,255,0.08);
+        box-shadow:
+            inset 0 0 18px rgba(59,130,246,0.55),
+            0 0 20px rgba(59,130,246,0.35);
         pointer-events: none;
     }
     .case-id-prompt-box {
