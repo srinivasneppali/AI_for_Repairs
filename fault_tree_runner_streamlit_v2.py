@@ -2758,14 +2758,61 @@ if existing_selfie:
 else:
     if not st.session_state.show_selfie_camera:
         button_label = "Open camera for selfie - capture selfie with product and customer"
+
+        # CSS-first styling so it works the same on desktop & mobile (no JS timing/race)
+        st.markdown("""
+        <style>
+        /* Ensure we catch Streamlit's internal button element on all viewports */
+        .selfie-button-wrapper [data-testid="stButton"] button,
+        .selfie-button-wrapper button {
+          background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
+          border: 1px solid rgba(142,197,252,0.9) !important;
+          color: #ffffff !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.03em !important;
+          border-radius: 18px !important;
+          box-shadow: 0 18px 40px rgba(8,36,86,0.65), 0 0 30px rgba(14,165,233,0.55) !important;
+          width: 100% !important;                /* full-width on all devices */
+          position: relative;
+          isolation: isolate;
+          -webkit-tap-highlight-color: transparent;  /* nicer mobile tap */
+          touch-action: manipulation;
+        }
+                    
+        /* Subtle glassy inner sheen */
+        .selfie-button-wrapper [data-testid="stButton"] button::after {
+          content: "";
+          position: absolute; inset: 3px; border-radius: 15px;
+          background: rgba(255,255,255,0.08);
+          box-shadow: inset 0 0 18px rgba(59,130,246,0.55), 0 0 20px rgba(59,130,246,0.35);
+          pointer-events: none;
+        }
+                    
+        /* Press feedback */
+        .selfie-button-wrapper [data-testid="stButton"] button:active {
+          transform: translateY(1px);
+          box-shadow: 0 12px 24px rgba(8,36,86,0.65), 0 0 18px rgba(59,130,246,0.5) !important;
+        }
+                    
+        /* Tighter typography on small screens so the long label looks identical */
+        @media (max-width: 768px) {
+          .selfie-button-wrapper [data-testid="stButton"] button {
+            font-size: 0.95rem !important;
+            padding: 0.85rem 1rem !important;
+            line-height: 1.25 !important;
+          }
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         st.markdown("<div class='selfie-button-wrapper'>", unsafe_allow_html=True)
         open_cam = st.button(
             button_label,
             key="enable_selfie_camera",
             help="Turns on your device camera so you can take a selfie with the customer.",
+            use_container_width=True,   # Streamlit full-width helper
         )
         st.markdown("</div>", unsafe_allow_html=True)
-        apply_button_style_by_label(button_label, "selfie-button")
         if open_cam:
             st.session_state.show_selfie_camera = True
             st.rerun()
