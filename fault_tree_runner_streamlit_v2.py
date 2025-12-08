@@ -92,6 +92,11 @@ CATEGORY_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "image": "Chimney.png",
         "default_available": False,
         "patterns": ("chimneyhood", "rangehood"),
+    "GEYSER": {
+        "label": "Geyser",
+        "image": "Geyser.png",
+        "default_available": False,
+        "patterns": ("geyser",),
     },
 }
 def _pattern_tokens(category_id: str) -> Tuple[str, ...]:
