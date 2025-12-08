@@ -1941,19 +1941,20 @@ st.markdown(
     }
     .sub-caption {
         font-size: 1rem;
-        font-weight: 700;
+        font-weight: 600;
         text-align: center;
         margin: 0.4rem auto 1.2rem;
-        letter-spacing: 0.02em;
-        color: #ffffff;
-        display: inline-block;
-        padding: 0.35rem 1.1rem;
-        border-radius: 999px;
-        position: relative;
-        background: linear-gradient(120deg, rgba(255,255,255,0.95), rgba(255,255,255,0.6));
+        letter-spacing: 0.03em;
+        background: linear-gradient(120deg, #bae6fd, #fbcfe8, #fde68a, #a7f3d0);
         -webkit-background-clip: text;
         color: transparent;
-        animation: taglineGradient 11s linear infinite;
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        position: relative;
+        filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.25));
+        background-size: 220% 220%;
+        animation: taglineGradient 12s linear infinite;
     }
     .sub-caption::after {
         content: "";
@@ -2484,8 +2485,6 @@ if available_flows:
     issue_label_color = ISSUE_LABEL_COLOR or "#ef476f"
     issue_label_text_color = "#ffffff"
     st.markdown("<div id='issue-selector'></div>", unsafe_allow_html=True)
-    if st.session_state.get("_scroll_anchor") == "issue-selector":
-        run_pending_scroll("top")
     st.markdown(
         f"<div class='{header_class}' style='font-size:1.2rem;font-weight:800;color:{issue_label_text_color};background:{issue_label_color};padding:0.5rem 0.9rem;border-radius:10px;margin-top:1.2rem;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.15);'>Select troubleshooting issue</div>",
         unsafe_allow_html=True,
@@ -2510,6 +2509,8 @@ if available_flows:
         chosen_path = label_to_path[selected_label]
         if selected_flow_path != str(chosen_path) or st.session_state.get("tree") is None:
             load_flow_from_path(chosen_path)
+            st.session_state["_scroll_anchor"] = "case-info"
+            st.session_state["_scroll_target"] = "node"
 else:
     st.warning("No YAML flows found in the workspace. Upload one to begin.")
 
@@ -2561,6 +2562,7 @@ if render_resolution_prompt(tree, lang):
     st.stop()
 
 # Case info
+st.markdown("<div id='case-info'></div>", unsafe_allow_html=True)
 with st.expander("Technician / Case Info", expanded=True):
     c1, c2 = st.columns(2)
     with c1:
@@ -2574,19 +2576,28 @@ with st.expander("Technician / Case Info", expanded=True):
 
 # Technician visit proof (selfie)
 st.markdown(
-    "<div class='section-title' style='color:#ffffff;font-weight:700;'>Take your Selfie with product</div>",
+    "<div class='section-title' style='color:#ffffff;font-weight:700;'>Take your Selfie with product and customer</div>",
     unsafe_allow_html=True,
 )
+st.caption("Allow camera access on your browser/device when prompted so the selfie can be attached to the report.")
 selfie_key = "visit_selfie_capture"
 existing_selfie = st.session_state.get("visit_selfie")
+st.session_state.setdefault("show_selfie_camera", False)
 if existing_selfie:
     st.success("Selfie captured for this visit.")
     if st.button("Retake selfie"):
         st.session_state.pop("visit_selfie", None)
         st.session_state.pop("visit_selfie_mime", None)
+        st.session_state["show_selfie_camera"] = False
         st.rerun()
 else:
-    selfie_file = st.camera_input("Capture selfie with product", key=selfie_key)
+    if not st.session_state.show_selfie_camera:
+        st.info("Camera is currently off. Tap the button below to enable it, then grant permission to your browser.")
+        if st.button("Enable camera for selfie", key="enable_selfie_camera"):
+            st.session_state.show_selfie_camera = True
+            st.rerun()
+        st.stop()
+    selfie_file = st.camera_input("Capture selfie with product and customer", key=selfie_key)
     if selfie_file:
         encoded_selfie, mime_selfie = b64_of_uploaded(selfie_file)
         st.session_state["visit_selfie"] = encoded_selfie
