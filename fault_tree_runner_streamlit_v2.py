@@ -1998,25 +1998,21 @@ st.markdown(
         border-color: rgba(94,234,212,0.55);
         box-shadow: 0 20px 40px rgba(15,118,110,0.4);
     }
-
-    .selfie-cta {
-        margin: 0.6rem 0 1rem 0;
-        padding: 0.85rem 1.2rem;
-        background: linear-gradient(120deg, #3b82f6, #a855f7, #ec4899);
-        border: 1px solid rgba(255,255,255,0.3);
-        border-radius: 16px;
-        color: #fdf4ff;
-        font-weight: 700;
-        text-align: center;
-        box-shadow: 0 15px 35px rgba(59,130,246,0.35);
+    .selfie-button {
+        background: linear-gradient(135deg, #3b82f6, #a855f7, #ec4899) !important;
+        border: 1px solid rgba(255,255,255,0.35) !important;
+        color: #fefaff !important;
+        font-weight: 700 !important;
+        box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35);
+        border-radius: 14px !important;
         position: relative;
         overflow: hidden;
     }
-    .selfie-cta::after {
+    .selfie-button::after {
         content: "";
         position: absolute;
-        inset: 2px;
-        border-radius: 14px;
+        inset: 3px;
+        border-radius: 11px;
         background: rgba(255,255,255,0.08);
         pointer-events: none;
     }
@@ -2601,7 +2597,9 @@ st.markdown(
     "<div class='section-title' style='color:#ffffff;font-weight:700;'>Take your Selfie with product and customer</div>",
     unsafe_allow_html=True,
 )
-st.caption("Allow camera access on your browser/device when prompted so the selfie can be captured.")
+st.caption(
+    "Allow camera access on your browser/device and tap once to enable it when prompted so the selfie can be captured."
+)
 selfie_key = "visit_selfie_capture"
 existing_selfie = st.session_state.get("visit_selfie")
 st.session_state.setdefault("show_selfie_camera", False)
@@ -2614,20 +2612,12 @@ if existing_selfie:
         st.rerun()
 else:
     if not st.session_state.show_selfie_camera:
-        st.markdown(
-            """
-            <div class="selfie-cta">
-                Camera is OFF right now.<br/>
-                Tap once to enable it, then grant permission when your browser prompts you.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
         open_cam = st.button(
             "Open camera for selfie – capture selfie with product and customer",
             key="enable_selfie_camera",
             help="Turns on your device camera so you can take a selfie with the customer.",
         )
+        apply_button_style_by_label("Open camera for selfie", "selfie-button")
         if open_cam:
             st.session_state.show_selfie_camera = True
             st.rerun()
