@@ -1140,7 +1140,7 @@ def render_product_selector(product_catalog: List[Dict[str, Any]]) -> None:
                 if available_flag
                 else "Holograms charging - this flow unlocks soon."
             )
-            status_label = "AI Ready" if available_flag else "Calibrating"
+            status_label = "AI Ready" if available_flag else "Work In Progress"
             cta_label = "✨ Launch AI Flow" if available_flag else "🚧 Coming Soon"
             wrapper_tag = "a" if available_flag else "div"
             wrapper_classes = (
