@@ -2824,6 +2824,20 @@ else:
         }
         </style>
         """, unsafe_allow_html=True)
+        # --- END OF FIXED CSS ---
+
+        st.markdown("<div class='selfie-button-wrapper'>", unsafe_allow_html=True)
+        
+        # This is the line that was likely missing or overwritten:
+        open_cam = st.button(
+            button_label,
+            key="enable_selfie_camera",
+            help="Turns on your device camera so you can take a selfie with the customer.",
+            use_container_width=True,   # Streamlit full-width helper
+        )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
         if open_cam:
             st.session_state.show_selfie_camera = True
             st.rerun()
