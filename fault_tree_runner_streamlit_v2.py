@@ -2593,7 +2593,7 @@ if existing_selfie:
 else:
     if not st.session_state.show_selfie_camera:
         st.info("Camera is currently off. Tap the button below to enable it, then grant permission to your browser.")
-        if st.button("Enable camera for selfie", key="enable_selfie_camera"):
+        if st.button("Open camera for selfie - Capture selfie with product and customer", key="enable_selfie_camera"):
             st.session_state.show_selfie_camera = True
             st.rerun()
         st.stop()
