@@ -1778,12 +1778,18 @@ st.markdown(
         animation: textGlow 8s ease-in-out infinite;
     }
     .title-core span {
-        background: linear-gradient(120deg, #fef3c7, #fbcfe8, #c084fc, #38bdf8, #22d3ee);
+        position: relative;
+        background: linear-gradient(120deg, #fff7ae, #ffbbf4, #c084fc, #7dd3fc, #34f5c6, #f472b6);
         -webkit-background-clip: text;
         color: transparent;
         display: inline-block;
-        background-size: 350% 350%;
-        animation: textAurora 8s ease-in-out infinite;
+        background-size: 400% 400%;
+        -webkit-text-stroke: 0.35px rgba(255, 255, 255, 0.35);
+        text-shadow:
+            0 0 12px rgba(59, 130, 246, 0.4),
+            0 0 25px rgba(236, 72, 153, 0.35);
+        animation: textAurora 9s ease-in-out infinite,
+                   neonBlink 2.8s steps(2) infinite;
     }
     .title-core::before,
     .title-core::after {
@@ -1800,15 +1806,17 @@ st.markdown(
     }
     .title-core::before {
         color: transparent;
-        -webkit-text-stroke: 1.4px rgba(94, 234, 212, 0.6);
-        filter: drop-shadow(0 0 12px rgba(45, 212, 191, 0.5));
-        animation: outlinePulse 6s ease-in-out infinite;
+        -webkit-text-stroke: 1.4px rgba(94, 234, 212, 0.75);
+        filter: drop-shadow(0 0 16px rgba(45, 212, 191, 0.65));
+        animation: outlinePulse 6s ease-in-out infinite,
+                   hueShift 9s linear infinite;
     }
     .title-core::after {
-        background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.3), transparent 80%);
+        background: linear-gradient(100deg, transparent 15%, rgba(255,255,255,0.55), transparent 85%);
         -webkit-background-clip: text;
         color: transparent;
-        animation: highlightSweep 5s ease-in-out infinite;
+        animation: highlightSweep 5s ease-in-out infinite,
+                   colorWarp 14s linear infinite;
     }
 
     .title-symbol {
@@ -2057,15 +2065,31 @@ st.markdown(
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
+    @keyframes neonBlink {
+        0%, 75%, 100% { text-shadow: 0 0 12px rgba(59, 130, 246, 0.45), 0 0 25px rgba(236, 72, 153, 0.38); }
+        78% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 38px rgba(251, 191, 36, 0.75); }
+        85% { text-shadow: 0 0 8px rgba(148, 163, 184, 0.3), 0 0 16px rgba(14, 165, 233, 0.35); }
+    }
     @keyframes outlinePulse {
-        0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.25)); }
-        50% { opacity: 0.7; filter: drop-shadow(0 0 18px rgba(59, 130, 246, 0.45)); }
+        0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.35)); }
+        50% { opacity: 0.8; filter: drop-shadow(0 0 22px rgba(94, 234, 212, 0.65)); }
+    }
+    @keyframes hueShift {
+        0% { -webkit-text-stroke-color: rgba(94, 234, 212, 0.75); }
+        33% { -webkit-text-stroke-color: rgba(14, 165, 233, 0.75); }
+        66% { -webkit-text-stroke-color: rgba(236, 72, 153, 0.75); }
+        100% { -webkit-text-stroke-color: rgba(94, 234, 212, 0.75); }
     }
     @keyframes highlightSweep {
         0% { background-position: -120% 0; opacity: 0; }
         20% { opacity: 0.6; }
         80% { opacity: 0.6; }
         100% { background-position: 220% 0; opacity: 0; }
+    }
+    @keyframes colorWarp {
+        0% { filter: hue-rotate(0deg); opacity: 0.25; }
+        50% { filter: hue-rotate(160deg); opacity: 0.55; }
+        100% { filter: hue-rotate(320deg); opacity: 0.3; }
     }
     @keyframes textGlitch {
         0% { clip-path: inset(0 0 0 0); }
