@@ -242,10 +242,12 @@ def handle_selfie_action_query_param():
     if st.query_params.get("action") == "open_selfie_cam":
         st.session_state.show_selfie_camera = True
         try:
-            del st.query_params["action"]
+            # Remove params that cause state resets, to avoid navigating away
+            if "action" in st.query_params:
+                del st.query_params["action"]
+            if "product" in st.query_params:
+                del st.query_params["product"]
         except KeyError:
-            # This can happen if the page is reloaded with the query param still in the URL
-            # The rerun will clear it, so we can ignore.
             pass
         st.rerun()
 
