@@ -1716,6 +1716,7 @@ def render_completion_panel(tree: Dict[str, Any], meta: Dict[str, Any], lang: st
 # -----------------------------
 init_session_state()
 restore_access_from_token_query()
+handle_selfie_action_query_param()
 all_flow_files = discover_flow_files()
 PRODUCT_CATALOG, live_flow_categories, PRODUCT_CATEGORY_LABELS = build_product_catalog(
     all_flow_files
@@ -2354,6 +2355,17 @@ def render_dark_mode_guidelines() -> None:
         unsafe_allow_html=True,
     )
 
+def handle_selfie_action_query_param():
+    if st.query_params.get("action") == "open_selfie_cam":
+        st.session_state.show_selfie_camera = True
+        try:
+            del st.query_params["action"]
+        except KeyError:
+            # This can happen if the page is reloaded with the query param still in the URL
+            # The rerun will clear it, so we can ignore.
+            pass
+        st.rerun()
+
 def run_pending_scroll(default_target: str = "node") -> None:
     scroll_target = st.session_state.pop("_scroll_target", default_target)
     scroll_anchor = st.session_state.pop("_scroll_anchor", None)
@@ -2660,16 +2672,19 @@ if existing_selfie:
         st.rerun()
 else:
     if not st.session_state.show_selfie_camera:
-        open_cam = st.button(
-            "Open camera for selfie – capture selfie with product and customer",
-            key="enable_selfie_camera",
-            help="Turns on your device camera so you can take a selfie with the customer.",
-        )
-        apply_button_style_by_label("Open camera for selfie", "selfie-button")
-        if open_cam:
-            st.session_state.show_selfie_camera = True
-            st.rerun()
-        st.stop()
+    query_bits = st.query_params.to_dict()
+    query_bits["action"] = "open_selfie_cam"
+
+    button_label = "Open camera for selfie – capture selfie with product and customer"
+    
+    st.markdown(f"""
+        <a href="?{urlencode(query_bits)}" target="_self" style="display: block; text-decoration: none;">
+            <div class="selfie-button" style="text-align: center; padding: 0.8rem 0.5rem; line-height: 1.4;">
+                {button_label}
+            </div>
+        </a>
+    """, unsafe_allow_html=True)
+    st.stop()
     selfie_file = st.camera_input("Capture selfie with product and customer", key=selfie_key)
     if selfie_file:
         encoded_selfie, mime_selfie = b64_of_uploaded(selfie_file)
