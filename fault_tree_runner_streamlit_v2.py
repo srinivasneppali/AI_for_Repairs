@@ -2179,7 +2179,8 @@ st.markdown(
 
 def render_dark_mode_guidelines() -> None:
     st.markdown(DARK_THEME_STYLE, unsafe_allow_html=True)
-    with st.expander("Click here for dark-mode guidelines", expanded=False):
+    expander_label = "Enable dark mode for the best viewing experience — click here for guidelines"
+    with st.expander(expander_label, expanded=False):
         st.markdown(
             """
             <div class='dark-mode-card'>
