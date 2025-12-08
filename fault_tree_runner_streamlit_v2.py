@@ -2054,42 +2054,45 @@ st.markdown(
     }
     .selfie-button,
     .selfie-button-wrapper button {
-        background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
-        border: 1px solid rgba(142, 197, 252, 0.9) !important;
+        background: rgba(6, 10, 28, 0.96) !important;
+        border: none !important;
         color: #ffffff !important;
         font-weight: 800 !important;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
         box-shadow:
-            0 30px 80px rgba(7, 16, 45, 0.85),
-            0 0 45px rgba(14, 165, 233, 0.68),
-            0 0 65px rgba(59, 130, 246, 0.55);
-        border-radius: 18px !important;
+            0 24px 50px rgba(4, 6, 24, 0.8),
+            0 0 35px rgba(59, 130, 246, 0.45);
+        border-radius: 20px !important;
         position: relative;
         overflow: hidden;
-        z-index: 0;
-        animation: selfiePulse 2.6s ease-in-out infinite;
-        min-height: 52px;
+        min-height: 56px;
         text-transform: none;
         -webkit-appearance: none;
         appearance: none;
-        padding: 0.45rem 1rem;
+        padding: 0.65rem 1.6rem;
         transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
     .selfie-button::after,
     .selfie-button-wrapper button::after {
         content: "";
         position: absolute;
-        inset: 3px;
-        border-radius: 15px;
-        background: rgba(255,255,255,0.08);
-        box-shadow:
-            inset 0 0 24px rgba(59,130,246,0.65),
-            0 0 25px rgba(59,130,246,0.35);
+        inset: -1px;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(120deg, #a855f7, #ec4899, #f97316, #3b82f6);
+        background-size: 220% 220%;
+        animation: selfieBorderFlow 7s ease infinite;
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        z-index: -1;
         pointer-events: none;
     }
     .selfie-button-wrapper button {
         width: 100%;
-        border-radius: 16px;
+        border-radius: 20px;
         position: relative;
         font-size: 1rem;
         backdrop-filter: blur(6px);
@@ -2098,21 +2101,19 @@ st.markdown(
     .selfie-button-wrapper {
         position: relative;
         display: block;
-        border-radius: 20px;
-        padding: 0.55rem;
-        background: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(249, 115, 22, 0.35));
-        border: 1px solid rgba(236, 72, 153, 0.65);
-        box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
-        animation: pulse-border 2s infinite;
-        overflow: hidden;
+        border-radius: 22px;
+        padding: 0.2rem;
+        background: radial-gradient(circle at top, rgba(59,130,246,0.45), transparent 75%);
+        box-shadow: 0 18px 35px rgba(4,6,24,0.55);
     }
     .selfie-button-wrapper::before {
         content: "";
         position: absolute;
-        inset: 3px;
-        border-radius: 16px;
-        background: rgba(10, 15, 25, 0.94);
-        box-shadow: inset 0 0 18px rgba(0,0,0,0.45);
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(120deg, rgba(59,130,246,0.4), rgba(236,72,153,0.4), rgba(249,115,22,0.4));
+        opacity: 0.45;
+        filter: blur(24px);
         z-index: 0;
     }
     .selfie-button-wrapper button:active {
@@ -2173,6 +2174,11 @@ st.markdown(
     @keyframes selfiePulse {
         0%, 100% { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.75), 0 0 18px rgba(59,130,246,0.45); transform: translateY(0); }
         50% { box-shadow: 0 18px 45px rgba(15, 23, 42, 0.85), 0 0 26px rgba(236,72,153,0.5); transform: translateY(-2px); }
+    }
+    @keyframes selfieBorderFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
     .product-grid {
         display: grid;
