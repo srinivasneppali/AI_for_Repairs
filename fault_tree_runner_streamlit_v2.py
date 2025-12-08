@@ -101,6 +101,43 @@ body,
 """
 
 
+def bootstrap_theme_preference_script() -> None:
+    components.html(
+        """
+        <script>
+        (function () {
+            const prefKey = 'fault_tree_dark_theme';
+            const syncKey = 'fault_tree_dark_theme_synced';
+            try {
+                const stored = window.localStorage.getItem(prefKey);
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const params = new URLSearchParams(window.parent.location.search);
+                const existing = params.get('theme');
+                let desired = stored;
+                if (!desired && prefersDark) {
+                    desired = 'dark';
+                }
+                if (desired && existing !== desired && !window.sessionStorage.getItem(syncKey)) {
+                    params.set('theme', desired);
+                    const base = window.parent.location.origin + window.parent.location.pathname;
+                    const hash = window.parent.location.hash || '';
+                    const query = params.toString();
+                    const url = query ? `${base}?${query}${hash}` : `${base}${hash}`;
+                    window.sessionStorage.setItem(syncKey, '1');
+                    window.parent.location.replace(url);
+                    return;
+                }
+                window.sessionStorage.removeItem(syncKey);
+            } catch (err) {
+                console.warn('Dark theme bootstrap failed', err);
+            }
+        })();
+        </script>
+        """,
+        height=0,
+    )
+
+
 @contextmanager
 def jeeves_spinner(
     text: str = "🚀 Syncing your step with Jeeves Cloud...",
@@ -2188,6 +2225,7 @@ def _activate_dark_theme_override() -> None:
     st.session_state._dark_theme_enabled = True
     st.session_state._dark_theme_prompt_dismissed = True
     st.session_state["_dark_theme_notice_pending"] = True
+    st.session_state["_dark_theme_localstorage_pending"] = "dark"
     _persist_dark_theme_preference(True)
 
 
@@ -2196,6 +2234,7 @@ def render_dark_theme_prompt() -> None:
     st.session_state.setdefault("_dark_theme_prompt_dismissed", False)
     st.session_state.setdefault("_dark_theme_notice_pending", False)
     st.session_state.setdefault("_dark_theme_pref_loaded", False)
+    st.session_state.setdefault("_dark_theme_localstorage_pending", None)
 
     # Restore preference from query parameter exactly once per session
     if not st.session_state._dark_theme_pref_loaded:
@@ -2235,15 +2274,40 @@ def render_dark_theme_prompt() -> None:
             """,
             unsafe_allow_html=True,
         )
-        c1, c2 = st.columns([3, 1])
+        c1, c2, c3 = st.columns([3, 1, 1])
         if c1.button("Enable dark theme 🌙", key="enable_dark_theme_prompt"):
             _activate_dark_theme_override()
             st.rerun()
         if c2.button("Maybe later", key="skip_dark_theme_prompt"):
             st.session_state._dark_theme_prompt_dismissed = True
             st.session_state["_dark_theme_notice_pending"] = False
+            st.session_state["_dark_theme_localstorage_pending"] = "light"
             _persist_dark_theme_preference(False)
             st.rerun()
+        if c3.button("Browser theme…", key="open_browser_theme_settings"):
+            components.html(
+                """
+                <script>
+                (function(){
+                    const ua = navigator.userAgent || '';
+                    let target = 'https://support.google.com/chrome/answer/9275525';
+                    if (ua.includes('Edg/')) {
+                        target = 'edge://settings/appearance';
+                    } else if (ua.includes('Firefox/')) {
+                        target = 'about:preferences#general';
+                    } else if (ua.includes('Chrome/')) {
+                        target = 'chrome://settings/appearance';
+                    }
+                    try {
+                        window.open(target, '_blank');
+                    } catch (err) {
+                        window.open('https://support.google.com/chrome/answer/9275525', '_blank');
+                    }
+                })();
+                </script>
+                """,
+                height=0,
+            )
     elif st.session_state._dark_theme_notice_pending:
         st.markdown(
             "<div class='dark-mode-card active'>Dark theme override applied. Enjoy the optimized visuals!</div>",
@@ -2256,7 +2320,32 @@ def render_dark_theme_prompt() -> None:
             st.rerun()
 
 
+def sync_dark_theme_localstorage_pending() -> None:
+    desired = st.session_state.get("_dark_theme_localstorage_pending")
+    if not desired:
+        return
+    script_value = json.dumps(desired)
+    components.html(
+        f"""
+        <script>
+        (function () {{
+            const prefKey = 'fault_tree_dark_theme';
+            try {{
+                localStorage.setItem(prefKey, {script_value});
+            }} catch (err) {{
+                console.warn('Failed to persist theme locally', err);
+            }}
+        }})();
+        </script>
+        """,
+        height=0,
+    )
+    st.session_state["_dark_theme_localstorage_pending"] = None
+
+
+bootstrap_theme_preference_script()
 render_dark_theme_prompt()
+sync_dark_theme_localstorage_pending()
 
 title_colors = {
     "yellow": "#ffd166",
