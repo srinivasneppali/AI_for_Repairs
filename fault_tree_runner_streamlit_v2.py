@@ -2451,6 +2451,7 @@ if ACCESS_PIN and not st.session_state.get("access_granted"):
         persist_access_token_query_param()
         st.session_state["_scroll_anchor"] = "product-selector"
         st.session_state["_scroll_target"] = "node"
+        st.rerun()
     else:
         st.error("Incorrect PIN. Please try again.")
         st.stop()
