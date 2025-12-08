@@ -2692,7 +2692,7 @@ if existing_selfie:
         st.rerun()
 else:
     if not st.session_state.show_selfie_camera:
-        button_label = "Open camera for selfie – capture selfie with product and customer"
+        button_label = "Click here to take your selfie with product and customer"
         open_cam = st.button(
             button_label,
             key="enable_selfie_camera",
