@@ -76,11 +76,11 @@ CATEGORY_FLOW_PATTERNS = {
     "MWO": ("microwave",),
     "CHIMNEY": ("chimneyhood", "rangehood"),
 }
-CATEGORY_NAME_REGEX = re.compile(r"p2o[_-]([a-z0-9]+)", re.IGNORECASE)
+CATEGORY_NAME_REGEX = re.compile(r"^p2o[_-]+([a-z0-9]+)", re.IGNORECASE)
 
 
 def _infer_category_id_from_path(path: Path) -> Optional[str]:
-    match = CATEGORY_NAME_REGEX.search(path.stem)
+    match = CATEGORY_NAME_REGEX.match(path.stem)
     if match:
         return match.group(1).upper()
     return None
