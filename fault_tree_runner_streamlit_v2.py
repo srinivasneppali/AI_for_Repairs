@@ -2615,7 +2615,12 @@ if existing_selfie:
 else:
     if not st.session_state.show_selfie_camera:
         st.markdown(
-            
+            """
+            <div class="selfie-cta">
+                Camera is OFF right now.<br/>
+                Tap once to enable it, then grant permission when your browser prompts you.
+            </div>
+            """,
             unsafe_allow_html=True,
         )
         open_cam = st.button(
