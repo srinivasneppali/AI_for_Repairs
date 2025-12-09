@@ -2836,13 +2836,13 @@ if existing_selfie:
             # CSS-first styling so it works the same on desktop & mobile (no JS timing/race)        st.markdown("""
         <style>
         /* Target the wrapper to ensure full width */
-        .selfie-button-wrapper {
+        .selfie-button-wrapper {{
             width: 100%;
             display: block;
-        }
+        }}
         
         /* Advanced targeting for the button to force styles on Mobile & Desktop */
-        .selfie-button-wrapper [data-testid="stButton"] button {
+        .selfie-button-wrapper [data-testid="stButton"] button {{
           background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
           border: 1px solid rgba(142,197,252,0.9) !important;
           color: #ffffff !important;
@@ -2865,36 +2865,36 @@ if existing_selfie:
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
           transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-        }
+        }}
         
         /* Force text color inside the button (sometimes Streamlit uses <p> tags) */
-        .selfie-button-wrapper [data-testid="stButton"] button p {
+        .selfie-button-wrapper [data-testid="stButton"] button p {{
             color: #ffffff !important;
             font-weight: 800 !important;
-        }
+        }}
                     
         /* Subtle glassy inner sheen */
-        .selfie-button-wrapper [data-testid="stButton"] button::after {
+        .selfie-button-wrapper [data-testid="stButton"] button::after {{
           content: "";
           position: absolute; inset: 3px; border-radius: 15px;
           background: rgba(255,255,255,0.08);
           box-shadow: inset 0 0 18px rgba(59,130,246,0.55), 0 0 20px rgba(59,130,246,0.35);
           pointer-events: none;
-        }
+        }}
                     
         /* Press feedback */
-        .selfie-button-wrapper [data-testid="stButton"] button:active {
+        .selfie-button-wrapper [data-testid="stButton"] button:active {{
           transform: translateY(2px) scale(0.98) !important;
           box-shadow: 0 8px 20px rgba(8,36,86,0.65), 0 0 15px rgba(59,130,246,0.5) !important;
-        }
+        }}
         
         /* Mobile Specific Adjustments */
-        @media (max-width: 768px) {
-          .selfie-button-wrapper [data-testid="stButton"] button {
+        @media (max-width: 768px) {{
+          .selfie-button-wrapper [data-testid="stButton"] button {{
             font-size: 0.95rem !important;
             padding: 14px 14px !important; /* Slightly larger touch area padding */
-          }
-        }
+          }}
+        }}
         </style>
         """, unsafe_allow_html=True)
         # --- END OF FIXED CSS ---
