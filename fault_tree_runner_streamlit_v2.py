@@ -2805,6 +2805,7 @@ if not required_case or not required_st:
     st.stop()
 
 # Technician visit proof (selfie)
+# Technician visit proof (selfie)
 st.markdown(
     "<div class='section-title' style='color:#ffffff;font-weight:700;'>Take your Selfie with product and customer</div>",
     unsafe_allow_html=True,
@@ -2814,6 +2815,8 @@ st.caption(
 )
 selfie_key = "visit_selfie_capture"
 st.session_state.setdefault("show_selfie_camera", False)
+
+# Display selfie status message
 selfie_status_class = "selfie-status on" if st.session_state.get("show_selfie_camera") else "selfie-status"
 selfie_status_msg = (
     "Camera is live - capture the selfie now."
@@ -2821,6 +2824,7 @@ selfie_status_msg = (
     else "Camera is currently OFF. Tap the button below to enable it and capture the selfie."
 )
 st.markdown(f"<div class='{selfie_status_class}'>{selfie_status_msg}</div>", unsafe_allow_html=True)
+
 existing_selfie = st.session_state.get("visit_selfie")
 if existing_selfie:
     st.success("Selfie captured for this visit.")
@@ -2829,92 +2833,74 @@ if existing_selfie:
         st.session_state.pop("visit_selfie_mime", None)
         st.session_state["show_selfie_camera"] = False
         st.rerun()
-    else:
-        if not st.session_state.show_selfie_camera:
-            button_label = "Click here to take your selfie with product and customer 👆"
-
-            # CSS-first styling so it works the same on desktop & mobile (no JS timing/race)        st.markdown("""
-        <style>
-        /* Target the wrapper to ensure full width */
-        .selfie-button-wrapper {{
-            width: 100%;
-            display: block;
-        }}
-        
-        /* Advanced targeting for the button to force styles on Mobile & Desktop */
-        .selfie-button-wrapper [data-testid="stButton"] button {{
-          background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
-          border: 1px solid rgba(142,197,252,0.9) !important;
-          color: #ffffff !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.03em !important;
-          border-radius: 18px !important;
-          box-shadow: 0 18px 40px rgba(8,36,86,0.65), 0 0 30px rgba(14,165,233,0.55) !important;
-          
-          /* KEY FIXES FOR MOBILE RESPONSIVENESS */
-          width: 100% !important;
-          white-space: normal !important;  /* Allows text to wrap on mobile */
-          word-wrap: break-word !important; /* Prevents overflow */
-          height: auto !important;          /* Allows button to grow taller */
-          min-height: 60px !important;      /* Ensures it's never too small */
-          padding: 12px 16px !important;    /* Adds breathing room for text */
-          line-height: 1.4 !important;      /* Better spacing for multi-line text */
-          
-          position: relative;
-          isolation: isolate;
-          -webkit-tap-highlight-color: transparent;
-          touch-action: manipulation;
-          transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-        }}
-        
-        /* Force text color inside the button (sometimes Streamlit uses <p> tags) */
-        .selfie-button-wrapper [data-testid="stButton"] button p {{
-            color: #ffffff !important;
-            font-weight: 800 !important;
-        }}
-                    
-        /* Subtle glassy inner sheen */
-        .selfie-button-wrapper [data-testid="stButton"] button::after {{
-          content: "";
-          position: absolute; inset: 3px; border-radius: 15px;
-          background: rgba(255,255,255,0.08);
-          box-shadow: inset 0 0 18px rgba(59,130,246,0.55), 0 0 20px rgba(59,130,246,0.35);
-          pointer-events: none;
-        }}
-                    
-        /* Press feedback */
-        .selfie-button-wrapper [data-testid="stButton"] button:active {{
-          transform: translateY(2px) scale(0.98) !important;
-          box-shadow: 0 8px 20px rgba(8,36,86,0.65), 0 0 15px rgba(59,130,246,0.5) !important;
-        }}
-        
-        /* Mobile Specific Adjustments */
-        @media (max-width: 768px) {{
-          .selfie-button-wrapper [data-testid="stButton"] button {{
-            font-size: 0.95rem !important;
-            padding: 14px 14px !important; /* Slightly larger touch area padding */
-          }}
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-        # --- END OF FIXED CSS ---
+else:
+    if not st.session_state.show_selfie_camera:
+        # This large CSS block is now in a regular python string, which is guaranteed
+        # to not cause the "invalid decimal literal" SyntaxError.
+        st.markdown(
+            """
+            <style>
+            .selfie-button-wrapper [data-testid="stButton"] button {
+              background: linear-gradient(140deg, #0d47a1, #1565c0, #1e88e5) !important;
+              border: 1px solid rgba(142,197,252,0.9) !important;
+              color: #ffffff !important;
+              font-weight: 800 !important;
+              letter-spacing: 0.03em !important;
+              border-radius: 18px !important;
+              box-shadow: 0 18px 40px rgba(8,36,86,0.65), 0 0 30px rgba(14,165,233,0.55) !important;
+              width: 100% !important;
+              white-space: normal !important;
+              word-wrap: break-word !important;
+              height: auto !important;
+              min-height: 60px !important;
+              padding: 12px 16px !important;
+              line-height: 1.4 !important;
+              position: relative;
+              isolation: isolate;
+              -webkit-tap-highlight-color: transparent;
+              touch-action: manipulation;
+              transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+            }
+            .selfie-button-wrapper [data-testid="stButton"] button p {
+                color: #ffffff !important;
+                font-weight: 800 !important;
+            }
+            .selfie-button-wrapper [data-testid="stButton"] button::after {
+              content: "";
+              position: absolute; inset: 3px; border-radius: 15px;
+              background: rgba(255,255,255,0.08);
+              box-shadow: inset 0 0 18px rgba(59,130,246,0.55), 0 0 20px rgba(59,130,246,0.35);
+              pointer-events: none;
+            }
+            .selfie-button-wrapper [data-testid="stButton"] button:active {
+              transform: translateY(2px) scale(0.98) !important;
+              box-shadow: 0 8px 20px rgba(8,36,86,0.65), 0 0 15px rgba(59,130,246,0.5) !important;
+            }
+            @media (max-width: 768px) {
+              .selfie-button-wrapper [data-testid="stButton"] button {
+                font-size: 0.95rem !important;
+                padding: 14px 14px !important;
+              }
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown("<div class='selfie-button-wrapper'>", unsafe_allow_html=True)
-        
-        # This is the line that was likely missing or overwritten:
         open_cam = st.button(
-            button_label,
+            "Click here to take your selfie with product and customer 👆",
             key="enable_selfie_camera",
             help="Turns on your device camera so you can take a selfie with the customer.",
-            use_container_width=True,   # Streamlit full-width helper
+            use_container_width=True,
         )
-        
         st.markdown("</div>", unsafe_allow_html=True)
-        
+
         if open_cam:
             st.session_state.show_selfie_camera = True
             st.rerun()
         st.stop()
+        
     selfie_file = st.camera_input("Capture selfie with product and customer", key=selfie_key)
     if selfie_file:
         encoded_selfie, mime_selfie = b64_of_uploaded(selfie_file)
@@ -2922,7 +2908,6 @@ if existing_selfie:
         st.session_state["visit_selfie_mime"] = mime_selfie
     else:
         st.stop()
-
 
 # -----------------------------
 # Sidebar Progress & Utilities
