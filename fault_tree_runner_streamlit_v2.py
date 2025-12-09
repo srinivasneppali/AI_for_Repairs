@@ -2799,7 +2799,7 @@ required_case = bool(st.session_state.case.get("case_id"))
 required_st = bool(st.session_state.case.get("st_id"))
 if not required_case or not required_st:
     st.markdown(
-        "<div class='case-id-prompt-box'>Click here after you entered both Case ID and ST ID to continue.</div>",
+        "<div class='case-id-prompt-box'>Click here 👆 after you entered both Case ID and ST ID to continue.</div>",
         unsafe_allow_html=True
     )
     st.stop()
@@ -2829,12 +2829,11 @@ if existing_selfie:
         st.session_state.pop("visit_selfie_mime", None)
         st.session_state["show_selfie_camera"] = False
         st.rerun()
-else:
-    if not st.session_state.show_selfie_camera:
-        button_label = "Open camera for selfie - capture selfie with product and customer"
+    else:
+        if not st.session_state.show_selfie_camera:
+            button_label = "Click here to take your selfie with product and customer 👆"
 
-        # CSS-first styling so it works the same on desktop & mobile (no JS timing/race)
-        st.markdown("""
+            # CSS-first styling so it works the same on desktop & mobile (no JS timing/race)        st.markdown("""
         <style>
         /* Target the wrapper to ensure full width */
         .selfie-button-wrapper {
