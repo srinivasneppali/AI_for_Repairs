@@ -157,4 +157,4 @@ def process_excel(file_path, output_path):
     print(f"Success! YAML generated at: {output_path}")
 
 if __name__ == "__main__":
-    process_excel('troubleshooting_logic.xlsx', 'p2o_No_Spin_in_SATL_WM.yaml')
+    process_excel('troubleshooting_logic.xlsx', 'p2o_Wash_Cycle_Not_Working_Issue_in_WM.yaml')

@@ -1,0 +1,526 @@
+meta:
+  id: WM_WASH_NOT_WORKING_V1
+  title: 'DIAGNOSTIC: WM – Wash Not Working (Full Daisy Chain)'
+  version: '1'
+  language:
+    - en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+start: s1_ac_input_check
+steps:
+  - id: s1_ac_input_check
+    type: quiz
+    prompt:
+      en: 'Step 1 – AC input: Measure voltage at the customer socket feeding the WM
+        (PN 220–240V AC, NE <5V, PE 220–240V).'
+    ui:
+      control: radio
+      options:
+        - AC voltage and earthing within spec
+        - AC voltage / earthing out of spec – external wiring issue
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'AC voltage / earthing out of spec – external wiring issue'
+        next: s1_log_ac_input_issue
+    next: s2_machine_type_select
+  - id: s1_log_ac_input_issue
+    type: photo
+    prompt:
+      en: AC supply or earthing is not OK. Inform customer to correct wiring with
+        electrician before further diagnosis.
+    ui:
+      control: none
+    next: end_flow_summary
+  - id: s2_machine_type_select
+    type: quiz
+    prompt:
+      en: Step 2 – Select washing machine type for 'Wash Not Working' troubleshooting.
+    ui:
+      control: radio
+      options:
+        - Semi Automatic WM
+        - Top Load WM
+        - Front Load WM
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Semi Automatic WM'
+        next: s2_sa_wash_timer_check
+      - when: selection == 'Top Load WM'
+        next: s2_tl_fl_pcb_power_check
+      - when: selection == 'Front Load WM'
+        next: s2_tl_fl_pcb_power_check
+  - id: s2_sa_wash_timer_check
+    type: quiz
+    prompt:
+      en: 'Step 2A – SA: Run wash program and observe wash timer rotation and ticking.'
+    ui:
+      control: radio
+      options:
+        - Wash timer stuck / no rotation / no sound
+        - Wash timer OK but wash motor not running
+        - After timer check, wash started working (issue resolved)
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Wash timer stuck / no rotation / no sound'
+        next: s2_sa_log_wash_timer_fault
+      - when: selection == 'Wash timer OK but wash motor not running'
+        next: s3_water_inlet_and_level
+      - when: selection == 'After timer check, wash started working (issue resolved)'
+        next: end_flow_summary
+    next: s3_water_inlet_and_level
+  - id: s2_sa_log_wash_timer_fault
+    type: photo
+    prompt:
+      en: Wash timer faulty – stuck or not moving during program.
+    ui:
+      control: none
+    recommends_part: Wash Timer
+    recommends_parts:
+      - Wash Timer
+    next: end_flow_summary
+  - id: s2_tl_fl_pcb_power_check
+    type: quiz
+    prompt:
+      en: 'Step 2B – TL/FL: Check main PCB power. Switch ON, start quick program,
+        verify display and 230V AC at PCB input.'
+    ui:
+      control: radio
+      options:
+        - PCB OFF and no 230V at PCB input (power not reaching PCB)
+        - 230V present at PCB input but PCB not powering ON
+        - PCB powers ON and indicators / display OK
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'PCB OFF and no 230V at PCB input (power not reaching PCB)'
+        next: s2_log_power_path_fault
+      - when: selection == '230V present at PCB input but PCB not powering ON'
+        next: s2_log_main_pcb_fault
+      - when: selection == 'PCB powers ON and indicators / display OK'
+        next: s3_water_inlet_and_level
+    next: s3_water_inlet_and_level
+  - id: s2_log_power_path_fault
+    type: photo
+    prompt:
+      en: Power cord / EMI filter / input harness faulty – PCB not getting 230V AC.
+    ui:
+      control: none
+    recommends_part: Power Cord or Plug; EMI Filter; Input Harness
+    recommends_parts:
+      - Power Cord or Plug; EMI Filter; Input Harness
+    next: end_flow_summary
+  - id: s2_log_main_pcb_fault
+    type: photo
+    prompt:
+      en: Main PCB gets 230V AC but does not power ON (no LEDs / display).
+    ui:
+      control: none
+    recommends_part: Main PCB
+    recommends_parts:
+      - Main PCB
+    next: end_flow_summary
+  - id: s3_water_inlet_and_level
+    type: quiz
+    prompt:
+      en: 'Step 3 – Water inlet: Open tap, check water entering drum. Measure AC at
+        inlet valve when machine calls for water.'
+    ui:
+      control: radio
+      options:
+        - No / weak water flow and 220–240V present at inlet valve coil
+        - No water flow and 0V at inlet valve during fill
+        - Tap pressure low but valve and voltages OK
+        - Water enters normally and water level looks OK
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'No / weak water flow and 220–240V present at inlet valve
+          coil'
+        next: s3_log_inlet_valve_fault
+      - when: selection == 'No water flow and 0V at inlet valve during fill'
+        next: s3_log_pcb_inlet_output_fault
+      - when: selection == 'Tap pressure low but valve and voltages OK'
+        next: s3_log_low_water_pressure
+      - when: selection == 'Water enters normally and water level looks OK'
+        next: s4_pressure_sensor_path
+    next: s4_pressure_sensor_path
+  - id: s3_log_inlet_valve_fault
+    type: photo
+    prompt:
+      en: Inlet valve energised (220–240V at coil) but no water into drum OR coil
+        resistance out of spec / burnt.
+    ui:
+      control: none
+    recommends_part: Inlet Valve
+    recommends_parts:
+      - Inlet Valve
+    next: end_flow_summary
+  - id: s3_log_pcb_inlet_output_fault
+    type: photo
+    prompt:
+      en: PCB not giving AC output to inlet valve during fill command, though input
+        supply path is OK.
+    ui:
+      control: none
+    recommends_part: Main PCB; Inlet Valve Harness
+    recommends_parts:
+      - Main PCB; Inlet Valve Harness
+    next: end_flow_summary
+  - id: s3_log_low_water_pressure
+    type: photo
+    prompt:
+      en: External tap pressure low or irregular; machine and inlet valve normal (customer
+        side issue).
+    ui:
+      control: none
+    next: end_flow_summary
+  - id: s4_pressure_sensor_path
+    type: quiz
+    prompt:
+      en: 'Step 4 – Pressure sensor & hose: Inspect hose for damage or clog, check
+        3–5V DC supply at sensor and continuity of harness.'
+    ui:
+      control: radio
+      options:
+        - Pressure hose damaged / cracked / rat bite / air leak
+        - Hose clogged but cleaned and refitted; level now OK
+        - No 3–5V DC supply from PCB at pressure sensor connector
+        - Harness between PCB and sensor damaged or open
+        - Supply OK but sensor output abnormal / not changing
+        - Drum / tub damaged or leaking at pressure port
+        - All checks OK but wash still not starting
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Pressure hose damaged / cracked / rat bite / air leak'
+        next: s4_log_pressure_hose_fault
+      - when: selection == 'Hose clogged but cleaned and refitted; level now OK'
+        next: s5_door_lid_lock_path
+      - when: selection == 'No 3–5V DC supply from PCB at pressure sensor connector'
+        next: s4_log_pcb_waterlevel_fault
+      - when: selection == 'Harness between PCB and sensor damaged or open'
+        next: s4_log_waterlevel_harness_fault
+      - when: selection == 'Supply OK but sensor output abnormal / not changing'
+        next: s4_log_pressure_sensor_fault
+      - when: selection == 'Drum / tub damaged or leaking at pressure port'
+        next: s4_log_drum_air_leak_fault
+      - when: selection == 'All checks OK but wash still not starting'
+        next: s5_door_lid_lock_path
+    next: s5_door_lid_lock_path
+  - id: s4_log_pressure_hose_fault
+    type: photo
+    prompt:
+      en: Pressure hose / sensor pipe physically damaged or leaking air.
+    ui:
+      control: none
+    recommends_part: Pressure Hose / Sensor Pipe
+    recommends_parts:
+      - Pressure Hose / Sensor Pipe
+    next: end_flow_summary
+  - id: s4_log_pcb_waterlevel_fault
+    type: photo
+    prompt:
+      en: PCB not providing required 3–5V DC supply to pressure sensor.
+    ui:
+      control: none
+    recommends_part: Main PCB
+    recommends_parts:
+      - Main PCB
+    next: end_flow_summary
+  - id: s4_log_waterlevel_harness_fault
+    type: photo
+    prompt:
+      en: Harness between PCB and pressure sensor open / damaged / rat bite.
+    ui:
+      control: none
+    recommends_part: Pressure Sensor Harness
+    recommends_parts:
+      - Pressure Sensor Harness
+    next: end_flow_summary
+  - id: s4_log_pressure_sensor_fault
+    type: photo
+    prompt:
+      en: Pressure sensor / water level switch faulty though hose and PCB supply are
+        OK.
+    ui:
+      control: none
+    recommends_part: Pressure Sensor / Level Switch
+    recommends_parts:
+      - Pressure Sensor / Level Switch
+    next: end_flow_summary
+  - id: s4_log_drum_air_leak_fault
+    type: photo
+    prompt:
+      en: Drum / tub air chamber or pressure port cracked or leaking, giving wrong
+        level signal.
+    ui:
+      control: none
+    recommends_part: Inner Drum / Tub Assembly
+    recommends_parts:
+      - Inner Drum / Tub Assembly
+    next: end_flow_summary
+  - id: s5_door_lid_lock_path
+    type: quiz
+    prompt:
+      en: 'Step 5 – Door lock (FL) / lid switch (SA & TL): Check door/lid closure,
+        latch condition, 220V supply to lock, switch action and wiring.'
+    ui:
+      control: radio
+      options:
+        - Mechanical latch damaged / jammed
+        - No 220V AC from PCB to door lock / lid switch
+        - 220V present but lock coil / lid switch not engaging
+        - Soap / detergent residue cleaned; lock now works
+        - Door lock and circuit OK but wash still not starting
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Mechanical latch damaged / jammed'
+        next: s5_log_mechanical_lock_fault
+      - when: selection == 'No 220V AC from PCB to door lock / lid switch'
+        next: s5_log_pcb_doorlock_fault
+      - when: selection == '220V present but lock coil / lid switch not engaging'
+        next: s5_log_doorlock_coil_fault
+      - when: selection == 'Soap / detergent residue cleaned; lock now works'
+        next: s6_wash_motor_capacitor
+      - when: selection == 'Door lock and circuit OK but wash still not starting'
+        next: s6_wash_motor_capacitor
+    next: s6_wash_motor_capacitor
+  - id: s5_log_mechanical_lock_fault
+    type: photo
+    prompt:
+      en: Mechanical door/lid latch broken, misaligned or jammed so lock cannot engage.
+    ui:
+      control: none
+    recommends_part: Door Lock / Lid Latch Assembly
+    recommends_parts:
+      - Door Lock / Lid Latch Assembly
+    next: end_flow_summary
+  - id: s5_log_pcb_doorlock_fault
+    type: photo
+    prompt:
+      en: PCB not supplying 220V AC to door lock / lid switch even though input supply
+        and earlier wiring are OK.
+    ui:
+      control: none
+    recommends_part: Main PCB
+    recommends_parts:
+      - Main PCB
+    next: end_flow_summary
+  - id: s5_log_doorlock_coil_fault
+    type: photo
+    prompt:
+      en: Door lock coil or lid switch not operating despite correct 220V AC supply
+        from PCB.
+    ui:
+      control: none
+    recommends_part: Door Lock / Lid Switch Assembly
+    recommends_parts:
+      - Door Lock / Lid Switch Assembly
+    next: end_flow_summary
+  - id: s6_wash_motor_capacitor
+    type: quiz
+    prompt:
+      en: 'Step 6 – Wash motor & capacitor: Check load, motor free rotation, winding
+        resistances (or UVW for inverter) and capacitor condition.'
+    ui:
+      control: radio
+      options:
+        - Overload / unbalanced load – after correction wash works
+        - Motor shaft not rotating freely / mechanically jammed
+        - Motor winding resistance out of spec / open / short
+        - Inverter motor UVW resistances not equal
+        - Motor hums; capacitor swollen / burst / failed
+        - Motor and capacitor OK but wash still not working
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Overload / unbalanced load – after correction wash works'
+        next: end_flow_summary
+      - when: selection == 'Motor shaft not rotating freely / mechanically jammed'
+        next: s6_log_motor_mechanical_fault
+      - when: selection == 'Motor winding resistance out of spec / open / short'
+        next: s6_log_motor_electrical_fault
+      - when: selection == 'Inverter motor UVW resistances not equal'
+        next: s6_log_inverter_motor_fault
+      - when: selection == 'Motor hums; capacitor swollen / burst / failed'
+        next: s6_log_capacitor_fault
+      - when: selection == 'Motor and capacitor OK but wash still not working'
+        next: s7_pulsator_and_belt
+    next: s7_pulsator_and_belt
+  - id: s6_log_motor_mechanical_fault
+    type: photo
+    prompt:
+      en: Wash motor mechanically jammed – heavy resistance even with belt removed.
+    ui:
+      control: none
+    recommends_part: Wash Motor
+    recommends_parts:
+      - Wash Motor
+    next: end_flow_summary
+  - id: s6_log_motor_electrical_fault
+    type: photo
+    prompt:
+      en: Wash motor winding resistance does not match specification (open or short).
+    ui:
+      control: none
+    recommends_part: Wash Motor
+    recommends_parts:
+      - Wash Motor
+    next: end_flow_summary
+  - id: s6_log_inverter_motor_fault
+    type: photo
+    prompt:
+      en: Inverter wash motor UVW resistances unbalanced, indicating internal fault.
+    ui:
+      control: none
+    recommends_part: Inverter Wash Motor
+    recommends_parts:
+      - Inverter Wash Motor
+    next: end_flow_summary
+  - id: s6_log_capacitor_fault
+    type: photo
+    prompt:
+      en: Wash motor capacitor bulged, leaking, burnt or capacitance value out of
+        spec.
+    ui:
+      control: none
+    recommends_part: Wash Motor Capacitor
+    recommends_parts:
+      - Wash Motor Capacitor
+    next: end_flow_summary
+  - id: s7_pulsator_and_belt
+    type: quiz
+    prompt:
+      en: 'Step 7 – Pulsator / agitator & belt: Check belt condition and tension,
+        and pulsator coupling with gearbox.'
+    ui:
+      control: radio
+      options:
+        - Belt off / loose / worn / cut
+        - Motor pulley turns but pulsator free-spins / slips
+        - Belt and pulsator OK but wash still not working
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Belt off / loose / worn / cut'
+        next: s7_log_belt_fault
+      - when: selection == 'Motor pulley turns but pulsator free-spins / slips'
+        next: s7_log_pulsator_fault
+      - when: selection == 'Belt and pulsator OK but wash still not working'
+        next: s8_drum_and_bearing
+    next: s8_drum_and_bearing
+  - id: s7_log_belt_fault
+    type: photo
+    prompt:
+      en: Drive belt removed, loose, cracked or cut so torque is not transferred to
+        drum.
+    ui:
+      control: none
+    recommends_part: Drive Belt
+    recommends_parts:
+      - Drive Belt
+    next: end_flow_summary
+  - id: s7_log_pulsator_fault
+    type: photo
+    prompt:
+      en: Pulsator / agitator splines or coupling worn – pulsator free-spins by hand.
+    ui:
+      control: none
+    recommends_part: Pulsator / Agitator Assembly
+    recommends_parts:
+      - Pulsator / Agitator Assembly
+    next: end_flow_summary
+  - id: s8_drum_and_bearing
+    type: quiz
+    prompt:
+      en: 'Step 8 – Drum / bearing / spider: Rotate drum by hand with power OFF, listen
+        for rough noise and feel resistance or rubbing.'
+    ui:
+      control: radio
+      options:
+        - Bearing noise or heavy resistance when turning drum
+        - Drum / spider rubbing outer tub or visibly damaged
+        - Drum rotates smoothly without abnormal noise
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Bearing noise or heavy resistance when turning drum'
+        next: s8_log_bearing_fault
+      - when: selection == 'Drum / spider rubbing outer tub or visibly damaged'
+        next: s8_log_drum_spider_fault
+      - when: selection == 'Drum rotates smoothly without abnormal noise'
+        next: s9_clutch_gearbox
+    next: s9_clutch_gearbox
+  - id: s8_log_bearing_fault
+    type: photo
+    prompt:
+      en: Drum bearings rough, noisy or seized causing hard rotation.
+    ui:
+      control: none
+    recommends_part: Bearing Kit; Seal
+    recommends_parts:
+      - Bearing Kit; Seal
+    next: end_flow_summary
+  - id: s8_log_drum_spider_fault
+    type: photo
+    prompt:
+      en: Drum spider / inner tub cracked or rubbing, blocking smooth wash movement.
+    ui:
+      control: none
+    recommends_part: Drum / Spider Assembly
+    recommends_parts:
+      - Drum / Spider Assembly
+    next: end_flow_summary
+  - id: s9_clutch_gearbox
+    type: quiz
+    prompt:
+      en: 'Step 9 – Clutch / gearbox: During wash, check if gearbox output turns with
+        motor. With power OFF, turn manually to feel slip or jam.'
+    ui:
+      control: radio
+      options:
+        - Gearbox / clutch not rotating with motor (internal slip)
+        - Gearbox / clutch seized or very hard to rotate
+        - Clutch and gearbox appear OK but wash still not working
+    require_pass: true
+    resolution_prompt: false
+    branches:
+      - when: selection == 'Gearbox / clutch not rotating with motor (internal slip)'
+        next: s9_log_gearbox_fault
+      - when: selection == 'Gearbox / clutch seized or very hard to rotate'
+        next: s9_log_gearbox_fault
+      - when: selection == 'Clutch and gearbox appear OK but wash still not working'
+        next: s9_log_unresolved_wash_issue
+    next: end_flow_summary
+  - id: s9_log_gearbox_fault
+    type: photo
+    prompt:
+      en: Clutch / gearbox slipping or jammed; torque not passed properly to pulsator
+        / drum.
+    ui:
+      control: none
+    recommends_part: Gearbox / Clutch Assembly
+    recommends_parts:
+      - Gearbox / Clutch Assembly
+    next: end_flow_summary
+  - id: s9_log_unresolved_wash_issue
+    type: photo
+    prompt:
+      en: All major checks done; clutch / gearbox OK but wash still not working –
+        escalate or consider product replacement.
+    ui:
+      control: none
+    next: end_flow_summary
+  - id: end_flow_summary
+    type: note
+    prompt:
+      en: End of diagnostic chain for 'Wash Not Working'. Review findings, confirm
+        recommended parts, capture final photos and generate Gate Token if required.
+    ui:
+      control: none
