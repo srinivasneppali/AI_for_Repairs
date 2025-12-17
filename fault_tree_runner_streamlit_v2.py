@@ -699,7 +699,7 @@ def key_from_part(part: str) -> str:
 
 
 def wants_resolution_prompt(node: Dict[str, Any]) -> bool:
-    return bool(node.get("resolution_prompt", True))
+    return bool(node.get("resolution_prompt", False))
 
 
 def prettify_flow_label(path: Path) -> str:
