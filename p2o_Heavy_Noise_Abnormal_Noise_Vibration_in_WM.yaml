@@ -1,0 +1,465 @@
+meta:
+  id: WM_NOISE_VIBRATION_V1
+  title: 'DIAGNOSTIC: WM – Heavy Noise / Abnormal Noise / Vibration (Full Daisy Chain)'
+  version: 1
+  language: en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+start: s1_machine_type_select
+steps:
+- id: s1_machine_type_select
+  type: quiz
+  prompt:
+    en: Step 1 – Select washing machine type. This sets the correct checks for noise/vibration troubleshooting.
+  ui:
+    control: radio
+    options:
+    - Semi Automatic WM
+    - Top Load WM
+    - Front Load WM
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Semi Automatic WM'
+    next: s2_noise_phase
+  - when: selection == 'Top Load WM'
+    next: s2_noise_phase
+  - when: selection == 'Front Load WM'
+    next: s2_noise_phase
+- id: s2_noise_phase
+  type: quiz
+  prompt:
+    en: 'Step 2 – Ask customer: when does the noise/vibration happen? Then reproduce the same condition.'
+  ui:
+    control: radio
+    options:
+    - During Fill / Water Inlet
+    - During Wash / Agitation
+    - During Drain
+    - During Spin / High Speed
+    - Multiple stages / Not sure
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'During Fill / Water Inlet'
+    next: s10_inlet_noise_intro
+  - when: selection == 'During Drain'
+    next: s11_drain_noise_intro
+  next: s3_simulation_test
+- id: s3_simulation_test
+  type: quiz
+  prompt:
+    en: 'Step 3 – Simulation test: Run a quick program with 25%–50% load (never empty for spin). Observe and confirm the exact
+      stage where noise/vibration is reproduced.'
+  ui:
+    control: radio
+    options:
+    - Issue reproduced (noise/vibration confirmed)
+    - Issue not reproduced now (intermittent / usage dependent)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Issue not reproduced now (intermittent / usage dependent)'
+    next: s3a_intermit_guidance
+  next: s4_noise_type
+- id: s3a_intermit_guidance
+  type: quiz
+  prompt:
+    en: 'Noise is not reproduced now. Educate customer: avoid single bulky item, avoid very low load, ensure machine is level,
+      and request a short video from customer when it happens. If possible, proceed with preventive checks for levelling and
+      external contact.'
+  ui:
+    control: radio
+    options:
+    - Proceed with preventive checks (levelling/external contact)
+    - Stop diagnosis (needs customer video / observation)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Stop diagnosis (needs customer video / observation)'
+    next: s99_unresolved_escalate
+  next: s4_level_check
+- id: s4_noise_type
+  type: quiz
+  prompt:
+    en: Step 4 – Identify noise type. This helps route to the most likely root cause.
+  ui:
+    control: radio
+    options:
+    - Banging / thumping (machine jumps or tub hits cabinet)
+    - Grinding / roaring (like metal rub / rough bearing sound)
+    - Squealing (belt slip / high-pitch)
+    - Rattling / clanking (loose object / loose screw)
+    - Humming / buzzing (pump or motor hum)
+    - Water hammer / chattering (inlet valve area)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Water hammer / chattering (inlet valve area)'
+    next: s10_inlet_noise_intro
+  - when: selection == 'Humming / buzzing (pump or motor hum)'
+    next: s11_drain_noise_intro
+  next: s5_level_check
+- id: s5_level_check
+  type: quiz
+  prompt:
+    en: 'Step 5 – Installation check: Use spirit level. Ensure all 4 feet firmly touch floor, machine is level, and not touching
+      wall/cabinet. For Front Load: confirm transport/transit bolts are removed (if present, severe vibration/noise occurs).'
+  ui:
+    control: radio
+    options:
+    - Found levelling / external contact / transit bolt issue (corrected)
+    - Levelling and installation are OK
+  require_pass: true
+  resolution_prompt: false
+  next: s6_retest_after_level
+- id: s6_retest_after_level
+  type: quiz
+  prompt:
+    en: Step 6 – Retest after levelling/external contact correction. Run a short spin and check if noise/vibration is resolved.
+  ui:
+    control: radio
+    options:
+    - Resolved after levelling/external contact fix
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s7_load_balance_check
+  next: end_flow_summary
+- id: s7_load_balance_check
+  type: quiz
+  prompt:
+    en: 'Step 7 – Load/balance check: Verify clothes are evenly distributed. Avoid single bulky item and very low load. For
+      Semi Automatic: ensure spin cap is used and load is not one-sided.'
+  ui:
+    control: radio
+    options:
+    - Load issue found and corrected (redistributed / spin cap used)
+    - Load seems OK
+  require_pass: true
+  resolution_prompt: false
+  next: s8_retest_after_load
+- id: s8_retest_after_load
+  type: quiz
+  prompt:
+    en: Step 8 – Retest after load correction. Run wash agitation and then spin. Is the noise/vibration resolved?
+  ui:
+    control: radio
+    options:
+    - Resolved after load correction
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s9_foreign_object_check
+  next: end_flow_summary
+- id: s9_foreign_object_check
+  type: quiz
+  prompt:
+    en: 'Step 9 – Foreign object & loose part check: Inspect drum/tub for coins, buttons, bra wire, nails. Check pulsator/agitator
+      screw tightness (TL/SA). For FL, check door gasket area for trapped object. Remove object and tighten loose screws.'
+  ui:
+    control: radio
+    options:
+    - Foreign object / loose screw found and fixed
+    - No foreign object / loose screw found
+  require_pass: true
+  resolution_prompt: false
+  next: s9a_retest_after_object
+- id: s9a_retest_after_object
+  type: quiz
+  prompt:
+    en: Retest after removing foreign object / tightening. Is noise resolved?
+  ui:
+    control: radio
+    options:
+    - Resolved
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s12_tub_hit_check
+  next: end_flow_summary
+- id: s12_tub_hit_check
+  type: quiz
+  prompt:
+    en: 'Step 10 – Check if tub/basket hits cabinet: During spin, does the tub assembly move excessively and hit the body,
+      or machine jumps even with correct load and level?'
+  ui:
+    control: radio
+    options:
+    - Yes – tub hits cabinet / excessive basket movement
+    - No – tub does not hit cabinet
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes – tub hits cabinet / excessive basket movement'
+    next: s13_suspension_system_check
+  next: s15_bearing_noise_check
+- id: s13_suspension_system_check
+  type: quiz
+  prompt:
+    en: 'Step 11 – Suspension system: Push down the basket/tub and release. It should bounce smoothly and settle. Inspect
+      suspension rods (TL), shock absorbers/dampers (FL), and springs/mounts for bending, breakage, oil leak, or misfit.'
+  ui:
+    control: radio
+    options:
+    - Suspension issue found (rod/shock/spring damaged or weak)
+    - Suspension looks OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Suspension issue found (rod/shock/spring damaged or weak)'
+    next: s13_log_suspension_fault
+  next: s14_balancer_ring_check
+- id: s13_log_suspension_fault
+  type: photo
+  prompt:
+    en: Suspension system fault confirmed (rod/shock/spring damaged/weak/misplaced). Capture clear photo evidence and recommend
+      replacement as set (replace all rods/shocks as per model practice).
+  ui:
+    control: none
+  recommends_part: Suspension Rod Set
+  recommends_parts:
+  - Suspension Rod Set
+  - Shock Absorber Set
+  - Springs/Mounts
+  next: end_flow_summary
+- id: s14_balancer_ring_check
+  type: quiz
+  prompt:
+    en: 'Step 12 – Balancer / balancing ring: Check balancing ring condition (leak, empty, damage). For TL, confirm water/salt
+      solution present if the design uses it. If ring is empty/leaking, vibration increases.'
+  ui:
+    control: radio
+    options:
+    - Balancer/balancing ring issue found (leak/empty/damaged)
+    - Balancer/balancing ring OK / not applicable
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Balancer/balancing ring issue found (leak/empty/damaged)'
+    next: s14_log_balancer_fault
+  next: s15_bearing_noise_check
+- id: s14_log_balancer_fault
+  type: photo
+  prompt:
+    en: Balancer/balancing ring faulty (leak/empty/damaged). Capture photo evidence and recommend replacement (balancer/basket
+      assembly as per model).
+  ui:
+    control: none
+  recommends_part: Balancer Ring
+  recommends_parts:
+  - Balancer Ring
+  - Basket Assembly
+  next: end_flow_summary
+- id: s15_bearing_noise_check
+  type: quiz
+  prompt:
+    en: 'Step 13 – Bearing check: With power OFF, rotate drum/basket by hand. Listen for grinding/roaring, feel roughness,
+      and check for play (up/down movement). Grinding/rough rotation indicates bearing/seal/spider issue.'
+  ui:
+    control: radio
+    options:
+    - Grinding/roaring/rough rotation present (bearing suspected)
+    - No bearing-type noise
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Grinding/roaring/rough rotation present (bearing suspected)'
+    next: s15_log_bearing_fault
+  next: s16_drive_system_check
+- id: s15_log_bearing_fault
+  type: photo
+  prompt:
+    en: Bearing suspected (grinding/rough rotation/play). Capture evidence (audio/video if possible) and recommend bearing/seal
+      repair or drum/spider assembly as per model.
+  ui:
+    control: none
+  recommends_part: Bearing Kit
+  recommends_parts:
+  - Bearing Kit
+  - Oil Seal
+  - Drum/Spider Assembly
+  next: end_flow_summary
+- id: s16_drive_system_check
+  type: quiz
+  prompt:
+    en: 'Step 14 – Drive system: Inspect belt (crack, glazing, slack), pulley tightness, motor mount bolts. Check clutch/coupler
+      alignment (metallic rubbing) and any loose hardware. Identify squeal (belt slip) vs metallic rub (clutch/coupler).'
+  ui:
+    control: radio
+    options:
+    - Belt/pulley issue found (loose/cracked/slipping)
+    - Clutch/coupler/mount issue found (metal rub/misalignment/loose bolts)
+    - No visible drive system issue
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Belt/pulley issue found (loose/cracked/slipping)'
+    next: s16_log_belt_pulley_fault
+  - when: selection == 'Clutch/coupler/mount issue found (metal rub/misalignment/loose bolts)'
+    next: s16_log_clutch_coupler_fault
+  next: s17_retest_after_drive_fix
+- id: s16_log_belt_pulley_fault
+  type: photo
+  prompt:
+    en: Drive belt/pulley fault confirmed (cracked/loose/slipping pulley). Capture photo and recommend belt/pulley service
+      or replacement.
+  ui:
+    control: none
+  recommends_part: Drive Belt
+  recommends_parts:
+  - Drive Belt
+  - Pulley
+  next: s17_retest_after_drive_fix
+- id: s16_log_clutch_coupler_fault
+  type: photo
+  prompt:
+    en: Clutch/coupler/mounting fault confirmed (metal rubbing, misalignment, loose bolts). Capture photo evidence and recommend
+      repair/replacement as per model.
+  ui:
+    control: none
+  recommends_part: Motor Coupler
+  recommends_parts:
+  - Motor Coupler
+  - Clutch Assembly
+  - Mounting Hardware
+  next: s17_retest_after_drive_fix
+- id: s17_retest_after_drive_fix
+  type: quiz
+  prompt:
+    en: Step 15 – Retest after drive system correction. Run wash + spin and confirm if abnormal noise is resolved.
+  ui:
+    control: radio
+    options:
+    - Resolved after drive system fix
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s18_motor_pump_hum_check
+  next: end_flow_summary
+- id: s18_motor_pump_hum_check
+  type: quiz
+  prompt:
+    en: 'Step 16 – Humming/buzzing check: Determine if sound is from drain pump area or motor area. Pump noise is usually
+      during drain; motor hum may occur during wash/spin with poor rotation.'
+  ui:
+    control: radio
+    options:
+    - Noise source seems like drain pump area
+    - Noise source seems like motor area
+    - Not sure
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Noise source seems like drain pump area'
+    next: s11_drain_noise_intro
+  - when: selection == 'Noise source seems like motor area'
+    next: s19_log_motor_noise_fault
+  next: s99_unresolved_escalate
+- id: s19_log_motor_noise_fault
+  type: photo
+  prompt:
+    en: Motor-related abnormal noise suspected (humming, abnormal vibration at motor, or noise increases with RPM). Capture
+      evidence and recommend further diagnosis or motor replacement as per model.
+  ui:
+    control: none
+  recommends_part: Motor
+  recommends_parts:
+  - Motor
+  - Motor Mounts
+  next: end_flow_summary
+- id: s10_inlet_noise_intro
+  type: note
+  prompt:
+    en: 'Inlet noise path: abnormal noise near inlet valve/tap is commonly due to very high or fluctuating water pressure
+      (water hammer) or a chattering inlet valve.'
+  ui:
+    control: none
+  next: s10_inlet_pressure_check
+- id: s10_inlet_pressure_check
+  type: quiz
+  prompt:
+    en: 'Inlet noise check: Is the noise happening when water is entering? Check tap fully open/partially open behavior, use
+      tap adjuster, and verify pressure stability (avoid sudden ON/OFF).'
+  ui:
+    control: radio
+    options:
+    - High/fluctuating water pressure (noise reduces after adjusting tap/pressure)
+    - Noise persists even with stable pressure
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Noise persists even with stable pressure'
+    next: s10_log_inlet_valve_noise_fault
+  next: end_flow_summary
+- id: s10_log_inlet_valve_noise_fault
+  type: photo
+  prompt:
+    en: Inlet valve noise suspected even with stable water pressure. Capture evidence and recommend inlet valve inspection/replacement.
+  ui:
+    control: none
+  recommends_part: Inlet Valve
+  recommends_parts:
+  - Inlet Valve
+  - Tap Adjuster/Pressure Regulator
+  next: end_flow_summary
+- id: s11_drain_noise_intro
+  type: note
+  prompt:
+    en: 'Drain noise path: abnormal noise during drain is commonly due to coins/foreign objects in drain filter/pump impeller,
+      or a failing drain pump.'
+  ui:
+    control: none
+  next: s11_drain_filter_check
+- id: s11_drain_filter_check
+  type: quiz
+  prompt:
+    en: 'Drain noise check: Open and clean drain filter. Inspect for coins, pins, debris. Check pump impeller for obstruction/damage.
+      Retest drain.'
+  ui:
+    control: radio
+    options:
+    - Foreign object found/removed (noise resolved)
+    - Noise persists after cleaning (pump suspected)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Noise persists after cleaning (pump suspected)'
+    next: s11_log_drain_pump_fault
+  next: end_flow_summary
+- id: s11_log_drain_pump_fault
+  type: photo
+  prompt:
+    en: Drain pump abnormal noise suspected (persists after filter cleaning). Capture evidence and recommend drain pump replacement.
+  ui:
+    control: none
+  recommends_part: Drain Pump
+  recommends_parts:
+  - Drain Pump
+  - Drain Filter
+  next: end_flow_summary
+- id: s99_unresolved_escalate
+  type: photo
+  prompt:
+    en: Unresolved abnormal noise/vibration after all standard checks. Capture video/photo evidence, record when it happens
+      (wash/spin/fill/drain), and escalate for advanced diagnosis (tub assembly, gearbox, controller, structural damage).
+  ui:
+    control: none
+  next: end_flow_summary
+- id: end_flow_summary
+  type: note
+  prompt:
+    en: End of diagnostic chain for 'Heavy Noise / Abnormal Noise / Vibration'. Review findings, confirm recommended part(s)
+      if any, capture final evidence, and generate Gate Token if required.
+  ui:
+    control: none
