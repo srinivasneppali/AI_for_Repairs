@@ -1,0 +1,473 @@
+meta:
+  id: WM_ALL_DRAIN_NOT_WORKING_V1
+  title: 'DIAGNOSTIC: WM – Drain Not Working (SA/TL/FL) (Full Daisy Chain)'
+  version: 1
+  language: en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+start: s1_machine_type_select
+steps:
+- id: s1_machine_type_select
+  type: quiz
+  prompt:
+    en: Step 1 – Select washing machine type for 'Drain Not Working'.
+  ui:
+    control: radio
+    options:
+    - Semi Automatic WM
+    - Top Load WM
+    - Front Load WM
+  require_pass: true
+  branches:
+  - when: selection == 'Semi Automatic WM'
+    next: s2_customer_interview
+  - when: selection == 'Top Load WM'
+    next: s2_customer_interview
+  - when: selection == 'Front Load WM'
+    next: s2_customer_interview
+- id: s2_customer_interview
+  type: quiz
+  prompt:
+    en: Step 2 – Discuss with customer and confirm the exact symptom. Then reproduce by running a drain/spin step.
+  ui:
+    control: radio
+    options:
+    - No drain at all (water stays inside)
+    - Slow drain (takes too long)
+    - Intermittent drain (sometimes works)
+    - Abnormal noise during drain
+    - Water leak noticed during drain
+  require_pass: true
+  branches:
+  - when: selection == 'Abnormal noise during drain'
+    next: s5_filter_cointrap_check
+  - when: selection == 'Water leak noticed during drain'
+    next: s3_leak_side_check
+  next: s3_simulation_reproduce
+- id: s3_simulation_reproduce
+  type: quiz
+  prompt:
+    en: 'Step 3 – Reproduce: Run a quick program and observe the DRAIN stage. For SA, select DRAIN on selector. Confirm whether
+      water exits through drain hose.'
+  ui:
+    control: radio
+    options:
+    - Issue reproduced (drain not working confirmed)
+    - Issue not reproduced now (intermittent / usage dependent)
+  require_pass: true
+  branches:
+  - when: selection == 'Issue not reproduced now (intermittent / usage dependent)'
+    next: s3a_intermit_guidance
+  next: s4_drain_hose_install_check
+- id: s3a_intermit_guidance
+  type: note
+  prompt:
+    en: 'Intermittent drain: Ask for a short customer video during failure. Still proceed with basic checks: drain hose routing,
+      filter cleaning, and loose wiring. If unresolved, escalate with evidence.'
+  ui:
+    control: none
+  next: s4_drain_hose_install_check
+- id: s3_leak_side_check
+  type: quiz
+  prompt:
+    en: 'Leak triage: Identify where the water leak appears while draining.'
+  ui:
+    control: radio
+    options:
+    - Leak from inlet nipple / inlet pipe area
+    - Leak from drain hose / standpipe area
+    - Leak from bottom of machine (pump/valve area)
+    - Leak from spin tub side / internal pipe
+    - Leak side not clear
+  require_pass: true
+  next: s4_drain_hose_install_check
+- id: s4_drain_hose_install_check
+  type: quiz
+  prompt:
+    en: 'Step 4 – Drain hose check (SA/TL/FL): Inspect hose for kink, clog, crushing, improper height, or deep insertion into
+      standpipe. Straighten, clean, and reposition. Ensure hose outlet is not blocked.'
+  ui:
+    control: radio
+    options:
+    - Drain hose issue found and corrected (kink/clog/routing)
+    - Drain hose looks OK
+  require_pass: true
+  next: s4a_retest_after_hose
+- id: s4a_retest_after_hose
+  type: quiz
+  prompt:
+    en: Retest after drain hose correction. Run DRAIN and confirm water exits normally.
+  ui:
+    control: radio
+    options:
+    - Resolved after hose correction
+    - Not resolved
+  require_pass: true
+  branches:
+  - when: selection == 'Not resolved'
+    next: s5_filter_cointrap_check
+  next: end_flow_summary
+- id: s5_filter_cointrap_check
+  type: quiz
+  prompt:
+    en: 'Step 5 – Blockage check: Clean drain filter/coin trap (FL/TL if present). Inspect pump/valve inlet for coins, hairpins,
+      lint. Remove debris and ensure free water path.'
+  ui:
+    control: radio
+    options:
+    - Debris found and removed (water path cleared)
+    - No debris found / already clean
+  require_pass: true
+  next: s5a_retest_after_cleaning
+- id: s5a_retest_after_cleaning
+  type: quiz
+  prompt:
+    en: Retest after cleaning filter/coin trap. Does the machine drain correctly now?
+  ui:
+    control: radio
+    options:
+    - Resolved after cleaning
+    - Not resolved
+  require_pass: true
+  branches:
+  - when: selection == 'Not resolved'
+    next: s6_route_by_machine_type
+  next: end_flow_summary
+- id: s6_route_by_machine_type
+  type: quiz
+  prompt:
+    en: Step 6 – Route to type-specific drain mechanism checks.
+  ui:
+    control: radio
+    options:
+    - Proceed – Semi Automatic drain mechanism
+    - Proceed – Top Load drain mechanism
+    - Proceed – Front Load drain mechanism
+  require_pass: true
+  branches:
+  - when: selection == 'Proceed – Semi Automatic drain mechanism'
+    next: s7_sa_drain_selector_strap_check
+  - when: selection == 'Proceed – Top Load drain mechanism'
+    next: s8_tl_lid_switch_check
+  - when: selection == 'Proceed – Front Load drain mechanism'
+    next: s9_fl_door_lock_check
+- id: s7_sa_drain_selector_strap_check
+  type: quiz
+  prompt:
+    en: 'SA Step 7 – Check drain selector: Ensure DRAIN is selected. Open back cover and inspect drain selector strap/wire,
+      hook, and spring/rubber for damage or disconnection.'
+  ui:
+    control: radio
+    options:
+    - Strap/hook/spring issue found (damaged/loose)
+    - Drain selector mechanism looks OK
+  require_pass: true
+  branches:
+  - when: selection == 'Strap/hook/spring issue found (damaged/loose)'
+    next: s7_log_sa_selector_fault
+  next: s7a_sa_drain_bellow_check
+- id: s7_log_sa_selector_fault
+  type: photo
+  prompt:
+    en: '[SA_SELECTOR] Drain selector strap/hook/spring issue found. Capture clear photo evidence and recommend replacement
+      or refit as per model.'
+  ui:
+    control: none
+  recommends_part: Drain Selector Strap
+  recommends_parts:
+  - Drain Selector Strap
+  - Hook
+  - Spring
+  - Drain Rubber
+  next: s7a_sa_drain_bellow_check
+- id: s7a_sa_drain_bellow_check
+  type: quiz
+  prompt:
+    en: 'SA Step 8 – Check drain bellow and drain line: Inspect for coin/hairpin obstruction in drain line and bellow. Remove
+      blockage and ensure free passage.'
+  ui:
+    control: radio
+    options:
+    - Obstruction found and cleared
+    - No obstruction found
+  require_pass: true
+  next: s7b_sa_retest
+- id: s7b_sa_retest
+  type: quiz
+  prompt:
+    en: 'SA Retest: Select DRAIN and confirm water exits properly.'
+  ui:
+    control: radio
+    options:
+    - Resolved
+    - Not resolved
+  require_pass: true
+  branches:
+  - when: selection == 'Not resolved'
+    next: s10_sa_drain_valve_check
+  next: end_flow_summary
+- id: s10_sa_drain_valve_check
+  type: quiz
+  prompt:
+    en: 'SA Step 9 – Check drain valve: Inspect valve for mechanical blockage (lint, dirt, coins) and stuck valve condition.
+      Free it if possible.'
+  ui:
+    control: radio
+    options:
+    - Drain valve blocked/stuck
+    - Drain valve OK / no blockage
+  require_pass: true
+  branches:
+  - when: selection == 'Drain valve blocked/stuck'
+    next: s10_log_sa_drain_valve_fault
+  next: s12_pressure_sensor_path
+- id: s10_log_sa_drain_valve_fault
+  type: photo
+  prompt:
+    en: '[SA_DRAIN_VALVE] Drain valve blocked/stuck. Capture evidence and recommend drain valve replacement.'
+  ui:
+    control: none
+  recommends_part: Drain Valve
+  recommends_parts:
+  - Drain Valve
+  next: s12_pressure_sensor_path
+- id: s8_tl_lid_switch_check
+  type: quiz
+  prompt:
+    en: 'TL Step 7 – Lid switch check: Machine may not drain if lid open detection fails. Check lid switch action and wiring.
+      Use direct test if required.'
+  ui:
+    control: radio
+    options:
+    - Lid switch faulty / not detected
+    - Lid switch OK
+  require_pass: true
+  branches:
+  - when: selection == 'Lid switch faulty / not detected'
+    next: s8_log_lid_switch_fault
+  next: s8a_tl_drain_motor_valve_check
+- id: s8_log_lid_switch_fault
+  type: photo
+  prompt:
+    en: '[LID_SWITCH] Lid switch faulty. Capture photo evidence and recommend lid switch replacement.'
+  ui:
+    control: none
+  recommends_part: Lid Switch
+  recommends_parts:
+  - Lid Switch
+  next: s8a_tl_drain_motor_valve_check
+- id: s8a_tl_drain_motor_valve_check
+  type: quiz
+  prompt:
+    en: 'TL Step 8 – Drain motor/valve: Activate drain. Check if drain motor/valve actuates. Measure AC voltage at drain motor/valve
+      (expect 220–240V AC during drain).'
+  ui:
+    control: radio
+    options:
+    - 220–240V AC present but motor/valve not working
+    - 0V at motor/valve during drain command
+    - Motor/valve works but water still not draining
+  require_pass: true
+  branches:
+  - when: selection == '220–240V AC present but motor/valve not working'
+    next: s8_log_tl_drain_motor_fault
+  - when: selection == '0V at motor/valve during drain command'
+    next: s14_pcb_output_check
+  next: s12_pressure_sensor_path
+- id: s8_log_tl_drain_motor_fault
+  type: photo
+  prompt:
+    en: '[DRAIN_MOTOR] Drain motor/valve gets 220–240V AC but does not actuate. Capture evidence and recommend replacement.'
+  ui:
+    control: none
+  recommends_part: Drain Motor
+  recommends_parts:
+  - Drain Motor
+  - Drain Valve/Solenoid
+  next: s12_pressure_sensor_path
+- id: s9_fl_door_lock_check
+  type: quiz
+  prompt:
+    en: 'FL Step 7 – Door lock check: Machine may not drain if door lock is not engaged. Confirm lock status and wiring.'
+  ui:
+    control: radio
+    options:
+    - Door lock faulty / not locking
+    - Door lock OK
+  require_pass: true
+  branches:
+  - when: selection == 'Door lock faulty / not locking'
+    next: s9_log_door_lock_fault
+  next: s9a_fl_drain_pump_check
+- id: s9_log_door_lock_fault
+  type: photo
+  prompt:
+    en: '[DOOR_LOCK] Door lock not engaging. Capture evidence and recommend door lock replacement.'
+  ui:
+    control: none
+  recommends_part: Door Lock
+  recommends_parts:
+  - Door Lock
+  next: s9a_fl_drain_pump_check
+- id: s9a_fl_drain_pump_check
+  type: quiz
+  prompt:
+    en: 'FL Step 8 – Drain pump: Activate drain. Check if pump runs. Measure AC voltage at pump (expect 220–240V AC during
+      drain). Check pump resistance and wiring continuity from PCB to pump.'
+  ui:
+    control: radio
+    options:
+    - 220–240V AC present but pump not working
+    - 0V at pump during drain command
+    - Pump runs but drain is still slow or blocked
+  require_pass: true
+  branches:
+  - when: selection == '220–240V AC present but pump not working'
+    next: s9_log_fl_drain_pump_fault
+  - when: selection == '0V at pump during drain command'
+    next: s14_pcb_output_check
+  - when: selection == 'Pump runs but drain is still slow or blocked'
+    next: s9_log_fl_pump_blockage
+  next: s12_pressure_sensor_path
+- id: s9_log_fl_drain_pump_fault
+  type: photo
+  prompt:
+    en: '[DRAIN_PUMP] Drain pump gets 220–240V AC but not working. Capture evidence and recommend pump replacement.'
+  ui:
+    control: none
+  recommends_part: Drain Pump
+  recommends_parts:
+  - Drain Pump
+  next: s12_pressure_sensor_path
+- id: s9_log_fl_pump_blockage
+  type: photo
+  prompt:
+    en: '[PUMP_BLOCK] Pump runs but drain path still restricted (impeller/housing blockage). Capture evidence and recommend
+      pump service or replacement.'
+  ui:
+    control: none
+  recommends_part: Drain Pump
+  recommends_parts:
+  - Drain Pump
+  - Drain Hose
+  next: s12_pressure_sensor_path
+- id: s12_pressure_sensor_path
+  type: quiz
+  prompt:
+    en: 'Step 7 – Pressure sensor & hose (TL/FL): Inspect pressure hose for clog, debris, lint, air leak, and proper connection
+      to tub and sensor. Check 3–5V DC supply from PCB at sensor connector and wiring continuity.'
+  ui:
+    control: radio
+    options:
+    - Pressure hose clogged / air leak / damaged
+    - No 3–5V DC supply at sensor from PCB
+    - Harness damaged / continuity failed
+    - Sensor suspected (supply OK but output abnormal)
+    - Pressure sensor path OK
+  require_pass: true
+  branches:
+  - when: selection == 'Pressure hose clogged / air leak / damaged'
+    next: s12_log_pressure_hose_fault
+  - when: selection == 'No 3–5V DC supply at sensor from PCB'
+    next: s12_log_pcb_level_supply_fault
+  - when: selection == 'Harness damaged / continuity failed'
+    next: s12_log_level_harness_fault
+  - when: selection == 'Sensor suspected (supply OK but output abnormal)'
+    next: s12_log_pressure_sensor_fault
+  next: s14_pcb_output_check
+- id: s12_log_pressure_hose_fault
+  type: photo
+  prompt:
+    en: '[PRESSURE_HOSE] Pressure hose clogged/leaking/damaged. Capture evidence and recommend hose replacement and port cleaning.'
+  ui:
+    control: none
+  recommends_part: Pressure Hose
+  recommends_parts:
+  - Pressure Hose
+  next: s14_pcb_output_check
+- id: s12_log_pcb_level_supply_fault
+  type: photo
+  prompt:
+    en: '[PCB_LEVEL_SUPPLY] PCB not providing 3–5V DC to pressure sensor. Capture evidence and recommend PCB repair/replacement.'
+  ui:
+    control: none
+  recommends_part: Main PCB
+  recommends_parts:
+  - Main PCB
+  next: s14_pcb_output_check
+- id: s12_log_level_harness_fault
+  type: photo
+  prompt:
+    en: '[LEVEL_HARNESS] Pressure sensor harness damaged (rat bite/loose/corrosion). Capture evidence and recommend harness
+      replacement.'
+  ui:
+    control: none
+  recommends_part: Pressure Sensor Harness
+  recommends_parts:
+  - Pressure Sensor Harness
+  next: s14_pcb_output_check
+- id: s12_log_pressure_sensor_fault
+  type: photo
+  prompt:
+    en: '[PRESSURE_SENSOR] Pressure sensor suspected faulty. Capture evidence and recommend replacement.'
+  ui:
+    control: none
+  recommends_part: Pressure Sensor / Level Switch
+  recommends_parts:
+  - Pressure Sensor / Level Switch
+  next: s14_pcb_output_check
+- id: s14_pcb_output_check
+  type: quiz
+  prompt:
+    en: 'Step 8 – PCB output & wiring: Check 220–240V AC at PCB output to drain pump/motor/valve during drain command. Verify
+      harness continuity from PCB to component. Inspect PCB for burn/damage.'
+  ui:
+    control: radio
+    options:
+    - PCB output missing (0V) during drain
+    - Harness continuity failed / connector loose
+    - PCB output OK but drain still not working
+  require_pass: true
+  branches:
+  - when: selection == 'PCB output missing (0V) during drain'
+    next: s14_log_pcb_fault
+  - when: selection == 'Harness continuity failed / connector loose'
+    next: s14_log_harness_fault
+  next: s99_unresolved_escalate
+- id: s14_log_pcb_fault
+  type: photo
+  prompt:
+    en: '[PCB_DRAIN_OUT] PCB not giving drain output. Capture evidence and recommend PCB replacement.'
+  ui:
+    control: none
+  recommends_part: Main PCB
+  recommends_parts:
+  - Main PCB
+  next: s99_unresolved_escalate
+- id: s14_log_harness_fault
+  type: photo
+  prompt:
+    en: '[DRAIN_HARNESS] Drain harness/connector issue. Capture evidence and recommend harness repair/replacement.'
+  ui:
+    control: none
+  recommends_part: Drain Harness / Connector
+  recommends_parts:
+  - Drain Harness / Connector
+  next: s99_unresolved_escalate
+- id: s99_unresolved_escalate
+  type: photo
+  prompt:
+    en: Unresolved drain issue after standard checks. Capture clear evidence (photo/video), record stage of failure, and escalate
+      for advanced diagnosis (tub air chamber blockage, internal pipe damage, controller fault, mechanical obstruction).
+  ui:
+    control: none
+  next: end_flow_summary
+- id: end_flow_summary
+  type: note
+  prompt:
+    en: End of diagnostic chain for 'Drain Not Working'. Review findings, confirm recommended part(s) if any, capture final
+      evidence, and generate Gate Token if required.
+  ui:
+    control: none
