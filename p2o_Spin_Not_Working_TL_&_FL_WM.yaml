@@ -1,0 +1,439 @@
+meta:
+  id: WM_ALL_SPIN_NOT_WORKING_TLFL_V1
+  title: 'DIAGNOSTIC: WM – Spin Not Working (Top Load Automatic & Front Load) (Full Daisy Chain)'
+  version: 1
+  language: en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+start: s1_machine_type_select
+steps:
+- id: s1_machine_type_select
+  type: quiz
+  prompt:
+    en: Step 1 – Select washing machine type for 'Spin Not Working'.
+  ui:
+    control: radio
+    options:
+    - Top Load Automatic WM
+    - Front Load WM
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Top Load Automatic WM'
+    next: s2_customer_interview
+  - when: selection == 'Front Load WM'
+    next: s2_customer_interview
+- id: s2_customer_interview
+  type: quiz
+  prompt:
+    en: 'Step 2 – Confirm symptom with customer and reproduce. Ask: Does spin never start, starts then stops, or very low
+      RPM? Also ask: Does water drain before spin?'
+  ui:
+    control: radio
+    options:
+    - No spin at all (never starts)
+    - Spin starts then stops / error shown
+    - Low RPM / weak spin
+    - Intermittent spin (sometimes works)
+  require_pass: true
+  resolution_prompt: false
+  next: s3_reproduce_quick_spin
+- id: s3_reproduce_quick_spin
+  type: quiz
+  prompt:
+    en: 'Step 3 – Reproduce: Run a quick program and reach SPIN. Use a 25%–50% load (never empty for spin). Observe: Does
+      drum rotate, does machine drain first, any hum sound, any error code?'
+  ui:
+    control: radio
+    options:
+    - Issue reproduced (spin not working confirmed)
+    - Issue not reproduced now (usage dependent / intermittent)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Issue not reproduced now (usage dependent / intermittent)'
+    next: s3a_intermit_guidance
+  next: s4_load_balance_check
+- id: s3a_intermit_guidance
+  type: note
+  prompt:
+    en: 'Intermittent issue: Ask customer to share a short video when failure happens. Still proceed with the basic checks
+      (load balance, foreign object jam, lid/door switch, wiring).'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: s4_load_balance_check
+- id: s4_load_balance_check
+  type: quiz
+  prompt:
+    en: 'Step 4 – Basic load balance: Open lid/door after pausing. Are clothes dumped on one side or a single bulky item present?
+      For Top Load: spread evenly and press down using safety cover/plastic disc (if provided). For Front Load: redistribute
+      load evenly.'
+  ui:
+    control: radio
+    options:
+    - Unbalanced load found (corrected)
+    - Load appears balanced
+  require_pass: true
+  resolution_prompt: false
+  next: s4a_retest_after_balance
+- id: s4a_retest_after_balance
+  type: quiz
+  prompt:
+    en: Retest after load redistribution. Run SPIN again. Is spin working now?
+  ui:
+    control: radio
+    options:
+    - Resolved after load correction
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s5_small_cloth_jam_check
+  next: end_flow_summary
+- id: s5_small_cloth_jam_check
+  type: quiz
+  prompt:
+    en: 'Step 5 – Check for small cloth jam: For Top Load, inspect gap between inner tub and outer tub. Sometimes sock/handkerchief
+      gets stuck and jams rotation. Remove the cloth if found (use torch). For Front Load, check door gasket area for trapped
+      cloth/foreign object.'
+  ui:
+    control: radio
+    options:
+    - Cloth/foreign object found and removed
+    - No cloth/foreign object found
+  require_pass: true
+  resolution_prompt: false
+  next: s5a_retest_after_jam_remove
+- id: s5a_retest_after_jam_remove
+  type: quiz
+  prompt:
+    en: Retest after removing jammed cloth/object. Run SPIN again. Is spin working now?
+  ui:
+    control: radio
+    options:
+    - Resolved after removing jam
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s6_lock_switch_check
+  next: end_flow_summary
+- id: s6_lock_switch_check
+  type: quiz
+  prompt:
+    en: 'Step 6 – Lid/Door lock check (mandatory for spin): Top Load: safety switch contacts near lid hinge must close properly.
+      Clean carbon/rust using sandpaper. Front Load: confirm door lock engages and no door error. Also check switch/lock wiring
+      and continuity.'
+  ui:
+    control: radio
+    options:
+    - Lock/switch contact issue found (cleaned/adjusted)
+    - Lock/switch physically broken or continuity failed
+    - Lock/switch seems OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Lock/switch physically broken or continuity failed'
+    next: s6_log_lock_switch_fault
+  next: s6a_retest_after_lock
+- id: s6_log_lock_switch_fault
+  type: photo
+  prompt:
+    en: '[LID_DOOR_SWITCH] Lid switch/door lock faulty. Capture photo evidence (contacts/broken part) and recommend replacement.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Lid Switch
+  recommends_parts:
+  - Lid Switch
+  - Door Lock
+  next: s6a_retest_after_lock
+- id: s6a_retest_after_lock
+  type: quiz
+  prompt:
+    en: Retest after lid/door lock correction. Run SPIN again. Is spin working now?
+  ui:
+    control: radio
+    options:
+    - Resolved after lock/switch fix
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s7_wiring_ratbite_check
+  next: end_flow_summary
+- id: s7_wiring_ratbite_check
+  type: quiz
+  prompt:
+    en: 'Step 7 – Rat bite & wiring harness check: Open rear/top panel. Inspect harness from lid/door lock, motor, capacitor,
+      drain, and PCB. Look for cuts, burnt connectors, loose sockets, corrosion. Repair minor cuts with proper insulation;
+      replace harness if heavily damaged.'
+  ui:
+    control: radio
+    options:
+    - Wiring issue found (repaired/connector refit)
+    - Wiring heavily damaged (harness replace needed)
+    - No wiring issue found
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Wiring heavily damaged (harness replace needed)'
+    next: s7_log_harness_fault
+  next: s8_drain_dependency_check
+- id: s7_log_harness_fault
+  type: photo
+  prompt:
+    en: '[MAIN_HARNESS] Main wiring harness damaged (rat bite/burn). Capture photo evidence and recommend harness replacement.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Main Wiring Harness
+  recommends_parts:
+  - Main Wiring Harness
+  - Connectors
+  next: s8_drain_dependency_check
+- id: s8_drain_dependency_check
+  type: quiz
+  prompt:
+    en: 'Step 8 – Drain dependency: Spin will not start if water is not draining. During the spin attempt, did water drain
+      out properly?'
+  ui:
+    control: radio
+    options:
+    - Water drains normally
+    - Water not draining / water stays in tub
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Water not draining / water stays in tub'
+    next: s8a_quick_drain_checks
+  next: s9_capacitor_presence_check
+- id: s8a_quick_drain_checks
+  type: quiz
+  prompt:
+    en: 'Quick drain checks (before spin): Check drain hose kink/clog, clean drain filter/coin trap, and verify drain pump/motor
+      gets 220–240V AC during drain command. If drain is not working, resolve drain issue first.'
+  ui:
+    control: radio
+    options:
+    - Drain blockage found and cleared (retest spin)
+    - 220–240V AC present but drain pump/motor not working
+    - 0V at drain pump/motor (PCB/harness suspected)
+    - Drain issue unresolved (use Drain Not Working flow)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == '220–240V AC present but drain pump/motor not working'
+    next: s8_log_drain_actuator_fault
+  - when: selection == '0V at drain pump/motor (PCB/harness suspected)'
+    next: s12_pcb_output_check
+  - when: selection == 'Drain issue unresolved (use Drain Not Working flow)'
+    next: s99_unresolved_escalate
+  next: s8b_retest_after_drain_fix
+- id: s8_log_drain_actuator_fault
+  type: photo
+  prompt:
+    en: '[DRAIN_ACTUATOR] Drain pump/motor gets 220–240V AC but not working. Capture evidence and recommend replacement.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Drain Pump
+  recommends_parts:
+  - Drain Pump
+  - Drain Motor
+  - Drain Valve
+  next: s8b_retest_after_drain_fix
+- id: s8b_retest_after_drain_fix
+  type: quiz
+  prompt:
+    en: Retest after drain correction. Now run SPIN. Is spin working?
+  ui:
+    control: radio
+    options:
+    - Resolved after drain fix
+    - Not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Not resolved'
+    next: s9_capacitor_presence_check
+  next: end_flow_summary
+- id: s9_capacitor_presence_check
+  type: quiz
+  prompt:
+    en: 'Step 9 – Capacitor presence: Is there a cylindrical capacitor connected to the spin/wash motor (common in Top Load
+      non-inverter models)?'
+  ui:
+    control: radio
+    options:
+    - Capacitor present
+    - No capacitor (inverter/direct drive)
+    - Not sure
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Capacitor present'
+    next: s10_capacitor_check
+  next: s11_motor_mech_check
+- id: s10_capacitor_check
+  type: quiz
+  prompt:
+    en: 'Step 10 – Capacitor check: Inspect capacitor body for swelling/leak/burst. If motor hums but drum not rotating and
+      mechanical parts are free, suspect weak capacitor. Replace with same rating (example 5µF/6µF as per model).'
+  ui:
+    control: radio
+    options:
+    - Capacitor swollen/leaked/burst
+    - Motor hums and spin not rotating (weak capacitor suspected)
+    - Capacitor looks OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Capacitor swollen/leaked/burst'
+    next: s10_log_capacitor_fault
+  - when: selection == 'Motor hums and spin not rotating (weak capacitor suspected)'
+    next: s10_log_capacitor_fault
+  next: s11_motor_mech_check
+- id: s10_log_capacitor_fault
+  type: photo
+  prompt:
+    en: '[CAPACITOR] Capacitor suspected faulty/weak. Capture photo evidence and recommend capacitor replacement with correct
+      rating.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Capacitor
+  recommends_parts:
+  - Capacitor
+  next: s11_motor_mech_check
+- id: s11_motor_mech_check
+  type: quiz
+  prompt:
+    en: 'Step 11 – Mechanical check: With power OFF, try rotating drum by hand. For Top Load, with lid closed/brake released
+      as per model, rotate spin coupling. Is rotation free or tight/jammed?'
+  ui:
+    control: radio
+    options:
+    - Rotation tight/jammed
+    - Rotation free/smooth
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Rotation tight/jammed'
+    next: s11_log_clutch_jam_fault
+  next: s12_pcb_output_check
+- id: s11_log_clutch_jam_fault
+  type: photo
+  prompt:
+    en: '[CLUTCH_JAM] Mechanical jam suspected (clutch/gearbox/drum). Capture evidence and recommend clutch/gearbox service
+      or replacement as per model.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Clutch Assembly
+  recommends_parts:
+  - Clutch Assembly
+  - Gearbox
+  - Drum Assembly
+  next: s12_pcb_output_check
+- id: s12_pcb_output_check
+  type: quiz
+  prompt:
+    en: 'Step 12 – Control PCB checks: Inspect PCB for burn/damage. During SPIN command, check output to motor (and drain
+      actuator if relevant). Verify harness continuity from PCB to motor/drive. If PCB output missing or PCB damaged, suspect
+      PCB.'
+  ui:
+    control: radio
+    options:
+    - PCB burnt/damaged
+    - PCB output missing during spin (0V)
+    - Harness/connector issue (loose/corrosion/continuity fail)
+    - PCB output OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'PCB burnt/damaged'
+    next: s12_log_pcb_fault
+  - when: selection == 'PCB output missing during spin (0V)'
+    next: s12_log_pcb_fault
+  - when: selection == 'Harness/connector issue (loose/corrosion/continuity fail)'
+    next: s7_log_harness_fault
+  next: s13_motor_condition_check
+- id: s12_log_pcb_fault
+  type: photo
+  prompt:
+    en: '[PCB] PCB fault suspected (burn/output missing). Capture photo evidence and recommend PCB replacement.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Main PCB
+  recommends_parts:
+  - Main PCB
+  next: s13_motor_condition_check
+- id: s13_motor_condition_check
+  type: quiz
+  prompt:
+    en: 'Step 13 – Motor condition: Check for water leakage onto motor shaft/seal area and motor rust. Check motor grounding
+      and winding health as per service procedure. If leakage is present, replace seal/buffer and motor together to prevent
+      repeat failure.'
+  ui:
+    control: radio
+    options:
+    - Water leakage onto motor/rust found
+    - Motor grounded / winding issue suspected
+    - Motor looks OK (no leakage/ground issue)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Water leakage onto motor/rust found'
+    next: s13_log_leak_motor_fault
+  - when: selection == 'Motor grounded / winding issue suspected'
+    next: s13_log_motor_fault
+  next: s99_unresolved_escalate
+- id: s13_log_leak_motor_fault
+  type: photo
+  prompt:
+    en: '[LEAK_MOTOR] Water leakage onto motor area. Capture evidence and recommend seal/buffer plus motor replacement.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Motor
+  recommends_parts:
+  - Motor
+  - Buffer Seal/Bellow
+  - Oil Seal
+  next: s99_unresolved_escalate
+- id: s13_log_motor_fault
+  type: photo
+  prompt:
+    en: '[MOTOR] Motor suspected faulty (grounding/winding). Capture evidence and recommend motor replacement.'
+  ui:
+    control: none
+  resolution_prompt: false
+  recommends_part: Motor
+  recommends_parts:
+  - Motor
+  next: s99_unresolved_escalate
+- id: s99_unresolved_escalate
+  type: photo
+  prompt:
+    en: 'Unresolved: Spin still not working after standard checks. Capture full evidence (photo/video), record any error code,
+      and escalate for advanced diagnosis (inverter drive, tacho sensor, bearing/spider, control board logic).'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow_summary
+- id: end_flow_summary
+  type: note
+  prompt:
+    en: End of diagnostic chain for 'Spin Not Working (TL/FL)'. Review findings, confirm recommended part(s) if any, capture
+      final evidence, and generate Gate Token if required.
+  ui:
+    control: none
+  resolution_prompt: false
