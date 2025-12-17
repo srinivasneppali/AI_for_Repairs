@@ -1,0 +1,475 @@
+meta:
+  id: WM_ALL_DRAIN_NOT_WORKING_V2
+  title: 'DIAGNOSTIC: WM – Drain Not Working (Smart Skip & Logic Fix)'
+  version: 2
+  language: en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+
+start: s1_machine_type_select
+
+steps:
+  # ==========================================
+  # STEP 1: MACHINE IDENTIFICATION
+  # ==========================================
+  - id: s1_machine_type_select
+    type: quiz
+    prompt:
+      en: Step 1 – Select washing machine type for 'Drain Not Working'.
+    ui:
+      control: radio
+      options:
+        - Semi Automatic WM
+        - Top Load WM
+        - Front Load WM
+    require_pass: true
+    branches:
+      - when: selection == 'Semi Automatic WM'
+        next: s2_customer_interview
+      - when: selection == 'Top Load WM'
+        next: s2_customer_interview
+      - when: selection == 'Front Load WM'
+        next: s2_customer_interview
+
+  # ==========================================
+  # STEP 2: TRIAGE & REPRODUCE
+  # ==========================================
+  - id: s2_customer_interview
+    type: quiz
+    prompt:
+      en: Step 2 – Discuss with customer. Identify the exact symptom.
+    ui:
+      control: radio
+      options:
+        - No drain at all (water stays inside)
+        - Slow drain (takes too long)
+        - Abnormal noise during drain
+        - Water leak noticed during drain
+    require_pass: true
+    branches:
+      - when: selection == 'Abnormal noise during drain'
+        next: s5_filter_cointrap_check
+      - when: selection == 'Water leak noticed during drain'
+        next: s3_leak_side_check
+    next: s3_simulation_reproduce
+
+  - id: s3_simulation_reproduce
+    type: quiz
+    prompt:
+      en: Step 3 – Reproduce: Run a DRAIN program. Does water exit?
+    ui:
+      control: radio
+      options:
+        - Issue reproduced (Drain failed)
+        - Issue not reproduced (Working now)
+    require_pass: true
+    branches:
+      - when: selection == 'Issue not reproduced (Working now)'
+        next: s3a_intermit_guidance
+    next: s4_drain_hose_install_check
+
+  - id: s3a_intermit_guidance
+    type: note
+    prompt:
+      en: 'Intermittent Issue: Proceed with physical checks (Hose, Filter, Wiring) to identify potential loose connections or partial clogs.'
+    ui:
+      control: none
+    next: s4_drain_hose_install_check
+
+  - id: s3_leak_side_check
+    type: quiz
+    prompt:
+      en: 'Leak Triage: Where is the leak coming from?'
+    ui:
+      control: radio
+      options:
+        - Leak from drain hose area
+        - Leak from bottom (pump/valve)
+        - Leak not clear
+    require_pass: true
+    next: s4_drain_hose_install_check
+
+  # ==========================================
+  # STEP 4: HOSE CHECK (SMART SKIP ADDED)
+  # ==========================================
+  - id: s4_drain_hose_install_check
+    type: action
+    prompt:
+      en: 'Step 4 – Drain Hose: Check for kinks, clogs, or improper height.'
+    ui:
+      control: radio
+      options:
+        - Issue found and fixed (Kink/Clog removed)
+        - Drain hose looks OK
+    require_pass: true
+    branches:
+      # LOGIC FIX: If "OK", SKIP the retest step. Go straight to Filter check.
+      - when: selection == 'Drain hose looks OK'
+        next: s5_filter_cointrap_check
+    next: s4a_retest_after_hose
+
+  - id: s4a_retest_after_hose
+    type: quiz
+    prompt:
+      en: Retest: You corrected the hose. Does it drain now?
+    ui:
+      control: radio
+      options:
+        - Yes, Resolved
+        - Not resolved
+    require_pass: true
+    branches:
+      - when: selection == 'Yes, Resolved'
+        next: end_flow_summary
+    next: s5_filter_cointrap_check
+
+  # ==========================================
+  # STEP 5: FILTER CHECK (SMART SKIP ADDED)
+  # ==========================================
+  - id: s5_filter_cointrap_check
+    type: action
+    prompt:
+      en: 'Step 5 – Blockage Check: Open Drain Filter/Coin Trap (TL/FL) or check Valve inlet (SA). Remove any debris.'
+    ui:
+      control: radio
+      options:
+        - Debris found and removed
+        - Filter/Path is clean (No debris)
+    require_pass: true
+    branches:
+      # LOGIC FIX: If "Clean", SKIP retest. Go to Machine Route.
+      - when: selection == 'Filter/Path is clean (No debris)'
+        next: s6_route_by_machine_type
+    next: s5a_retest_after_cleaning
+
+  - id: s5a_retest_after_cleaning
+    type: quiz
+    prompt:
+      en: Retest: Debris removed. Does it drain now?
+    ui:
+      control: radio
+      options:
+        - Yes, Resolved
+        - Not resolved
+    require_pass: true
+    branches:
+      - when: selection == 'Yes, Resolved'
+        next: end_flow_summary
+    next: s6_route_by_machine_type
+
+  # ==========================================
+  # STEP 6: ROUTING
+  # ==========================================
+  - id: s6_route_by_machine_type
+    type: quiz
+    prompt:
+      en: Step 6 – Routing to machine-specific mechanism checks.
+    ui:
+      control: radio
+      options:
+        - Proceed – Semi Automatic
+        - Proceed – Top Load
+        - Proceed – Front Load
+    require_pass: true
+    branches:
+      - when: selection == 'Proceed – Semi Automatic'
+        next: s7_sa_drain_selector_strap_check
+      - when: selection == 'Proceed – Top Load'
+        next: s8_tl_lid_switch_check
+      - when: selection == 'Proceed – Front Load'
+        next: s9_fl_door_lock_check
+
+  # ==========================================
+  # PATH A: SEMI AUTOMATIC (SA)
+  # ==========================================
+  - id: s7_sa_drain_selector_strap_check
+    type: quiz
+    prompt:
+      en: 'SA Check 1: Drain Selector. Is the strap/wire broken or loose?'
+    ui:
+      control: radio
+      options:
+        - Strap/Spring broken or loose
+        - Mechanism looks OK
+    require_pass: true
+    branches:
+      - when: selection == 'Strap/Spring broken or loose'
+        next: s7_log_sa_selector_fault
+    next: s10_sa_drain_valve_check
+
+  - id: s7_log_sa_selector_fault
+    type: photo
+    prompt:
+      en: Capture photo of damaged Selector/Strap.
+    ui:
+      control: none
+    recommends_parts:
+      - Drain Selector Strap
+    next: s10_sa_drain_valve_check
+
+  - id: s10_sa_drain_valve_check
+    type: quiz
+    prompt:
+      en: 'SA Check 2: Drain Valve. Is it stuck or mechanically blocked inside?'
+    ui:
+      control: radio
+      options:
+        - Valve blocked/stuck
+        - Valve moves freely / OK
+    require_pass: true
+    branches:
+      - when: selection == 'Valve blocked/stuck'
+        next: s10_log_sa_drain_valve_fault
+    # LOGIC FIX: SA does NOT go to Pressure Sensor. If valve is OK but no drain, it's a deep clog or escalation.
+    next: s99_unresolved_escalate
+
+  - id: s10_log_sa_drain_valve_fault
+    type: photo
+    prompt:
+      en: Capture photo of defective Drain Valve.
+    ui:
+      control: none
+    recommends_parts:
+      - Drain Valve
+    next: end_flow_summary
+
+  # ==========================================
+  # PATH B: TOP LOAD (TL)
+  # ==========================================
+  - id: s8_tl_lid_switch_check
+    type: quiz
+    prompt:
+      en: 'TL Check 1: Lid Switch. If broken, machine will not spin/drain.'
+    ui:
+      control: radio
+      options:
+        - Lid Switch Faulty
+        - Lid Switch OK
+    require_pass: true
+    branches:
+      - when: selection == 'Lid Switch Faulty'
+        next: s8_log_lid_switch_fault
+    next: s8a_tl_drain_motor_voltage_check
+
+  - id: s8_log_lid_switch_fault
+    type: photo
+    prompt:
+      en: Capture photo of faulty Lid Switch.
+    ui:
+      control: none
+    recommends_parts:
+      - Lid Switch
+    next: s8a_tl_drain_motor_voltage_check
+
+  - id: s8a_tl_drain_motor_voltage_check
+    type: quiz
+    prompt:
+      en: 'TL Check 2: Drain Motor Voltage. Select DRAIN. Measure voltage at motor.'
+    ui:
+      control: radio
+      options:
+        - 220V Present but Motor not pulling
+        - 0V (No Power) at Motor
+        - Motor pulls, but water won't exit
+    require_pass: true
+    branches:
+      - when: selection == '220V Present but Motor not pulling'
+        next: s8_log_tl_drain_motor_fault
+      # LOGIC FIX: If 0V, check Pressure Sensor before PCB!
+      - when: selection == '0V (No Power) at Motor'
+        next: s12_pressure_sensor_check
+      # If motor pulls but no water, it's a clog, not a sensor issue.
+      - when: selection == 'Motor pulls, but water won't exit'
+        next: s99_unresolved_escalate
+    next: s12_pressure_sensor_check
+
+  - id: s8_log_tl_drain_motor_fault
+    type: photo
+    prompt:
+      en: Capture photo of Drain Motor. (Power OK, Motor Dead).
+    ui:
+      control: none
+    recommends_parts:
+      - Drain Motor
+    next: end_flow_summary
+
+  # ==========================================
+  # PATH C: FRONT LOAD (FL)
+  # ==========================================
+  - id: s9_fl_door_lock_check
+    type: quiz
+    prompt:
+      en: 'FL Check 1: Door Lock. Is door locking?'
+    ui:
+      control: radio
+      options:
+        - Door Lock Faulty
+        - Door Lock OK
+    require_pass: true
+    branches:
+      - when: selection == 'Door Lock Faulty'
+        next: s9_log_door_lock_fault
+    next: s9a_fl_drain_pump_voltage_check
+
+  - id: s9_log_door_lock_fault
+    type: photo
+    prompt:
+      en: Capture photo of faulty Door Lock.
+    ui:
+      control: none
+    recommends_parts:
+      - Door Lock
+    next: s9a_fl_drain_pump_voltage_check
+
+  - id: s9a_fl_drain_pump_voltage_check
+    type: quiz
+    prompt:
+      en: 'FL Check 2: Drain Pump Voltage. Select DRAIN. Measure voltage at pump.'
+    ui:
+      control: radio
+      options:
+        - 220V Present but Pump silent/humming
+        - 0V (No Power) at Pump
+        - Pump runs, but water won't exit
+    require_pass: true
+    branches:
+      - when: selection == '220V Present but Pump silent/humming'
+        next: s9_log_fl_drain_pump_fault
+      # LOGIC FIX: If 0V, check Pressure Sensor before PCB!
+      - when: selection == '0V (No Power) at Pump'
+        next: s12_pressure_sensor_check
+      - when: selection == 'Pump runs, but water won't exit'
+        next: s9_log_fl_pump_blockage
+    next: s12_pressure_sensor_check
+
+  - id: s9_log_fl_drain_pump_fault
+    type: photo
+    prompt:
+      en: Capture photo of Drain Pump. (Power OK, Pump Dead).
+    ui:
+      control: none
+    recommends_parts:
+      - Drain Pump
+    next: end_flow_summary
+
+  - id: s9_log_fl_pump_blockage
+    type: photo
+    prompt:
+      en: Capture photo of blocked pump housing/impeller.
+    ui:
+      control: none
+    recommends_parts:
+      - Drain Pump
+    next: end_flow_summary
+
+  # ==========================================
+  # SHARED: SENSOR & PCB (TL/FL ONLY)
+  # ==========================================
+  - id: s12_pressure_sensor_check
+    type: quiz
+    prompt:
+      en: 'Step 7 – Pressure Sensor: Check Hose & Voltage (3-5V DC). If sensor reads "Empty" falsely, PCB will not power drain.'
+    ui:
+      control: radio
+      options:
+        - Hose Clogged / Leaking
+        - Sensor Faulty (Supply OK, Output Wrong)
+        - Wiring Damaged
+        - No Supply (0V DC) from PCB
+        - Sensor & Path OK
+    require_pass: true
+    branches:
+      - when: selection == 'Hose Clogged / Leaking'
+        next: s12_log_pressure_hose_fault
+      - when: selection == 'Sensor Faulty (Supply OK, Output Wrong)'
+        next: s12_log_pressure_sensor_fault
+      - when: selection == 'Wiring Damaged'
+        next: s12_log_level_harness_fault
+      - when: selection == 'No Supply (0V DC) from PCB'
+        next: s14_log_pcb_fault
+    next: s14_pcb_output_check
+
+  - id: s12_log_pressure_hose_fault
+    type: photo
+    prompt:
+      en: Capture photo of damaged Pressure Hose.
+    ui:
+      control: none
+    recommends_parts:
+      - Pressure Hose
+    next: s14_pcb_output_check
+
+  - id: s12_log_pressure_sensor_fault
+    type: photo
+    prompt:
+      en: Capture photo of faulty Pressure Sensor.
+    ui:
+      control: none
+    recommends_parts:
+      - Pressure Sensor
+    next: s14_pcb_output_check
+
+  - id: s12_log_level_harness_fault
+    type: photo
+    prompt:
+      en: Capture photo of damaged Harness.
+    ui:
+      control: none
+    recommends_parts:
+      - Sensor Harness
+    next: s14_pcb_output_check
+
+  - id: s14_pcb_output_check
+    type: quiz
+    prompt:
+      en: 'Step 8 – Final PCB Check. If all components are OK but 0V output persists, PCB is likely faulty.'
+    ui:
+      control: radio
+      options:
+        - PCB Fault confirmed
+        - Wiring continuity failed
+    require_pass: true
+    branches:
+      - when: selection == 'PCB Fault confirmed'
+        next: s14_log_pcb_fault
+      - when: selection == 'Wiring continuity failed'
+        next: s14_log_harness_fault
+    next: s99_unresolved_escalate
+
+  - id: s14_log_pcb_fault
+    type: photo
+    prompt:
+      en: Capture photo of Main PCB.
+    ui:
+      control: none
+    recommends_parts:
+      - Main PCB
+    next: end_flow_summary
+
+  - id: s14_log_harness_fault
+    type: photo
+    prompt:
+      en: Capture photo of damaged Main Harness.
+    ui:
+      control: none
+    recommends_parts:
+      - Main Harness
+    next: end_flow_summary
+
+  - id: s99_unresolved_escalate
+    type: note
+    prompt:
+      en: Issue unresolved after all checks. Escalate to Senior Tech.
+    ui:
+      control: none
+    next: end_flow_summary
+
+  - id: end_flow_summary
+    type: note
+    prompt:
+      en: Diagnostic Complete.
+    ui:
+      control: none
+    next: null
