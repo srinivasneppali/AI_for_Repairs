@@ -1,0 +1,413 @@
+meta:
+  id: WM_ALL_WASH_NOT_WORKING_V1
+  title: 'DIAGNOSTIC: WM - Wash Not Working (Stop on Fix)'
+  version: '1.0'
+  language:
+    - en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+
+start: s1_ac_voltage_check
+
+steps:
+  # ==========================================
+  # STEP 1: POWER & INFRASTRUCTURE
+  # ==========================================
+  - id: s1_ac_voltage_check
+    type: quiz
+    prompt:
+      en: "Step 1: AC Voltage Check. Measure Wall Socket Voltage (Phase-Neutral)."
+    ui:
+      control: radio
+      options:
+        - "Voltage OK (220V - 240V)"
+        - "Voltage Low/Unstable (< 200V)"
+        - "Earthing Issue (Neutral-Earth > 5V)"
+    require_pass: true
+    branches:
+      - when: selection == 'Voltage Low/Unstable (< 200V)'
+        next: s1_advise_electrician
+      - when: selection == 'Earthing Issue (Neutral-Earth > 5V)'
+        next: s1_advise_electrician
+    next: s2_machine_type_branch
+
+  - id: s1_advise_electrician
+    type: note
+    prompt:
+      en: "Issue is with Customer Power Supply. Advise customer to arrange an Electrician. Close call."
+    ui:
+      control: none
+    next: null
+
+  - id: s2_machine_type_branch
+    type: quiz
+    prompt:
+      en: "Step 2: Select Machine Type to proceed with specific checks."
+    ui:
+      control: radio
+      options:
+        - "Semi Automatic (SA)"
+        - "Fully Automatic (Top/Front Load)"
+    require_pass: true
+    branches:
+      - when: selection == 'Semi Automatic (SA)'
+        next: s3_sa_timer_check
+      - when: selection == 'Fully Automatic (Top/Front Load)'
+        next: s3_fa_pcb_power_check
+
+  # ==========================================
+  # PATH A: SEMI AUTOMATIC (SA) FLOW
+  # ==========================================
+  - id: s3_sa_timer_check
+    type: quiz
+    prompt:
+      en: "SA Step 3: Wash Timer Check. Turn knob. Is it rotating and making sound?"
+    ui:
+      control: radio
+      options:
+        - "Timer working (Rotating/Sound OK)"
+        - "Timer Stuck / No Sound / Broken Knob"
+    require_pass: true
+    branches:
+      - when: selection == 'Timer Stuck / No Sound / Broken Knob'
+        next: s3_log_sa_timer
+    next: s6_motor_capacitor_check
+
+  - id: s3_log_sa_timer
+    type: photo
+    prompt:
+      en: "Capture photo of faulty Wash Timer."
+    ui:
+      control: none
+    recommends_parts:
+      - "Wash Timer"
+    next: s6_motor_capacitor_check
+
+  # ==========================================
+  # PATH B: FULLY AUTOMATIC (TL/FL) FLOW
+  # ==========================================
+  - id: s3_fa_pcb_power_check
+    type: quiz
+    prompt:
+      en: "FA Step 3: Main PCB Check. Is Display ON? Check Voltage at EMI Filter Input vs Output."
+    ui:
+      control: radio
+      options:
+        - "Display ON / Voltage OK"
+        - "No Power: Input OK at EMI, but No Output (EMI Fail)"
+        - "No Power: Voltage reaching PCB but not turning on"
+    require_pass: true
+    branches:
+      - when: selection == 'No Power: Input OK at EMI, but No Output (EMI Fail)'
+        next: s3_log_pcb_emi_fault
+      - when: selection == 'No Power: Voltage reaching PCB but not turning on'
+        next: s3_log_pcb_dead
+    next: s4_fa_inlet_valve_check
+
+  - id: s3_log_pcb_emi_fault
+    type: photo
+    prompt:
+      en: "EMI Filter defect detected. Since we cannot replace component, replace Main PCB. Capture photo."
+    ui:
+      control: none
+    recommends_parts:
+      - "Main PCB"
+    next: s4_fa_inlet_valve_check
+
+  - id: s3_log_pcb_dead
+    type: photo
+    prompt:
+      en: "Main PCB is dead (getting power but not ON). Capture photo."
+    ui:
+      control: none
+    recommends_parts:
+      - "Main PCB"
+    next: s4_fa_inlet_valve_check
+
+  - id: s4_fa_inlet_valve_check
+    type: quiz
+    prompt:
+      en: "FA Step 4: Inlet Valve. Is machine taking water? (Wash won't start without water)."
+    ui:
+      control: radio
+      options:
+        - "Yes, taking water / Water level OK"
+        - "No water: Valve getting 220V but not opening"
+        - "No water: Valve NOT getting voltage (PCB Issue)"
+    require_pass: true
+    branches:
+      - when: selection == 'No water: Valve getting 220V but not opening'
+        next: s4_log_valve_fault
+      - when: selection == 'No water: Valve NOT getting voltage (PCB Issue)'
+        next: s4_log_pcb_valve_relay
+    next: s5_fa_pressure_sensor_check
+
+  - id: s4_log_valve_fault
+    type: photo
+    prompt:
+      en: "Capture photo of faulty Inlet Valve."
+    ui:
+      control: none
+    recommends_parts:
+      - "Inlet Valve"
+    next: s5_fa_pressure_sensor_check
+
+  - id: s4_log_pcb_valve_relay
+    type: photo
+    prompt:
+      en: "PCB Relay Fault (No supply to valve). Capture photo of PCB."
+    ui:
+      control: none
+    recommends_parts:
+      - "Main PCB"
+    next: s5_fa_pressure_sensor_check
+
+  - id: s5_fa_pressure_sensor_check
+    type: quiz
+    prompt:
+      en: "FA Step 5: Pressure Sensor. Check Hose & Wiring (Rat bite?). Check Voltage (3-5V DC)."
+    ui:
+      control: radio
+      options:
+        - "Sensor/Hose OK (Water stops at correct level)"
+        - "Hose Clogged / Damaged"
+        - "Wire Harness Cut (Rat Bite)"
+        - "Sensor Faulty (Voltage OK but Error)"
+    require_pass: true
+    branches:
+      - when: selection == 'Hose Clogged / Damaged'
+        next: s5_fix_hose
+      - when: selection == 'Wire Harness Cut (Rat Bite)'
+        next: s5_log_rat_bite_harness
+      - when: selection == 'Sensor Faulty (Voltage OK but Error)'
+        next: s5_log_sensor_fault
+    next: s5b_fa_door_lock_check
+
+  - id: s5_fix_hose
+    type: action
+    prompt:
+      en: "Clean or Refit Pressure Hose. Did this fix the issue?"
+    ui:
+      control: radio
+      options:
+        - "Yes, Fixed"
+        - "No, Hose Broken (Replace)"
+    require_pass: true
+    branches:
+      - when: selection == 'Yes, Fixed'
+        next: null # STOP ON FIX
+      - when: selection == 'No, Hose Broken (Replace)'
+        next: s5_log_hose_replace
+    next: s5b_fa_door_lock_check
+
+  - id: s5_log_hose_replace
+    type: photo
+    prompt:
+      en: "Capture photo of broken Pressure Hose."
+    ui:
+      control: none
+    recommends_parts:
+      - "Pressure Hose"
+    next: s5b_fa_door_lock_check
+
+  - id: s5_log_rat_bite_harness
+    type: photo
+    prompt:
+      en: "Rat bite detected. Capture photo of damaged Harness."
+    ui:
+      control: none
+    recommends_parts:
+      - "Sensor Harness"
+    next: s5b_fa_door_lock_check
+
+  - id: s5_log_sensor_fault
+    type: photo
+    prompt:
+      en: "Capture photo of faulty Pressure Sensor."
+    ui:
+      control: none
+    recommends_parts:
+      - "Pressure Sensor"
+    next: s5b_fa_door_lock_check
+
+  - id: s5b_fa_door_lock_check
+    type: quiz
+    prompt:
+      en: "FA Step 6: Door/Lid Lock. Is it locking? Check 220V AC at switch."
+    ui:
+      control: radio
+      options:
+        - "Locking OK"
+        - "Not Locking (Mechanical Damage/Jam)"
+        - "Switch Faulty (Getting 220V but error)"
+    require_pass: true
+    branches:
+      - when: selection == 'Not Locking (Mechanical Damage/Jam)'
+        next: s5b_log_door_switch
+      - when: selection == 'Switch Faulty (Getting 220V but error)'
+        next: s5b_log_door_switch
+    next: s6_motor_capacitor_check
+
+  - id: s5b_log_door_switch
+    type: photo
+    prompt:
+      en: "Capture photo of faulty Door Lock/Lid Switch."
+    ui:
+      control: none
+    recommends_parts:
+      - "Door Lock/Lid Switch"
+    next: s6_motor_capacitor_check
+
+  # ==========================================
+  # SHARED: MOTOR & MECHANICAL (ALL TYPES)
+  # ==========================================
+  - id: s6_motor_capacitor_check
+    type: quiz
+    prompt:
+      en: "Step 7: Motor & Capacitor. Check Rotation, Belt, and Capacitor condition."
+    ui:
+      control: radio
+      options:
+        - "Motor Running OK"
+        - "Load Unbalanced -> Balanced it"
+        - "Belt Broken / Loose"
+        - "Capacitor Weak / Bulged / Loose Connection"
+        - "Motor Windings Open / Dead (Check Resistance)"
+    require_pass: true
+    branches:
+      - when: selection == 'Load Unbalanced -> Balanced it'
+        next: s6_verify_fix_load
+      - when: selection == 'Belt Broken / Loose'
+        next: s6_fix_belt
+      - when: selection == 'Capacitor Weak / Bulged / Loose Connection'
+        next: s6_fix_capacitor
+      - when: selection == 'Motor Windings Open / Dead (Check Resistance)'
+        next: s6_log_motor_fault
+    next: s7_pulsator_gearbox_check
+
+  - id: s6_verify_fix_load
+    type: action
+    prompt:
+      en: "You balanced the load. Does it wash now?"
+    ui:
+      control: radio
+      options:
+        - "Yes, Fixed"
+        - "No"
+    require_pass: true
+    branches:
+      - when: selection == 'Yes, Fixed'
+        next: null # STOP ON FIX
+    next: s7_pulsator_gearbox_check
+
+  - id: s6_fix_belt
+    type: action
+    prompt:
+      en: "Refit or Replace Belt. Does it wash now?"
+    ui:
+      control: radio
+      options:
+        - "Refitted Belt - Fixed"
+        - "Belt Damaged - Needs Replacement"
+    require_pass: true
+    branches:
+      - when: selection == 'Refitted Belt - Fixed'
+        next: null # STOP ON FIX
+      - when: selection == 'Belt Damaged - Needs Replacement'
+        next: s6_log_belt
+    next: s6_log_belt
+
+  - id: s6_log_belt
+    type: photo
+    prompt:
+      en: "Capture photo of broken Belt."
+    ui:
+      control: none
+    recommends_parts:
+      - "Drive Belt"
+    next: s7_pulsator_gearbox_check
+
+  - id: s6_fix_capacitor
+    type: action
+    prompt:
+      en: "Tighten connections. If Capacitor bulged, mark for replacement."
+    ui:
+      control: radio
+      options:
+        - "Wires Tightened - Fixed"
+        - "Capacitor Defective - Needs Replacement"
+    require_pass: true
+    branches:
+      - when: selection == 'Wires Tightened - Fixed'
+        next: null # STOP ON FIX
+      - when: selection == 'Capacitor Defective - Needs Replacement'
+        next: s6_log_capacitor
+    next: s7_pulsator_gearbox_check
+
+  - id: s6_log_capacitor
+    type: photo
+    prompt:
+      en: "Capture photo of defective Capacitor (Show rating)."
+    ui:
+      control: none
+    recommends_parts:
+      - "Capacitor"
+    next: s7_pulsator_gearbox_check
+
+  - id: s6_log_motor_fault
+    type: photo
+    prompt:
+      en: "Motor winding/resistance failure. Capture photo of Motor."
+    ui:
+      control: none
+    recommends_parts:
+      - "Wash Motor"
+    next: s7_pulsator_gearbox_check
+
+  - id: s7_pulsator_gearbox_check
+    type: quiz
+    prompt:
+      en: "Step 8: Pulsator & Gearbox/Clutch. Check for stripped splines or gearbox noise."
+    ui:
+      control: radio
+      options:
+        - "Mechanically OK"
+        - "Pulsator Free Rotate (Stripped Splines)"
+        - "Gearbox/Clutch Jammed or Noisy"
+    require_pass: true
+    branches:
+      - when: selection == 'Pulsator Free Rotate (Stripped Splines)'
+        next: s7_log_pulsator
+      - when: selection == 'Gearbox/Clutch Jammed or Noisy'
+        next: s7_log_gearbox
+    next: end_flow
+
+  - id: s7_log_pulsator
+    type: photo
+    prompt:
+      en: "Capture photo of damaged Pulsator."
+    ui:
+      control: none
+    recommends_parts:
+      - "Pulsator"
+    next: end_flow
+
+  - id: s7_log_gearbox
+    type: photo
+    prompt:
+      en: "Capture photo of faulty Gearbox/Clutch Assembly."
+    ui:
+      control: none
+    recommends_parts:
+      - "Gearbox/Clutch Assembly"
+    next: end_flow
+
+  - id: end_flow
+    type: note
+    prompt:
+      en: "Diagnostic Complete. If parts were selected, a token will be generated."
+    ui:
+      control: none
+    next: null

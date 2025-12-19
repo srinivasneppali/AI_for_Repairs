@@ -1,0 +1,1231 @@
+meta:
+  id: WM_ALL_WASH_NOT_WORKING_V7_JEEVES_SCOPE
+  title: 'P2O: WM - Wash Not Working (SA/TL/FL) (Jeeves ST Scope: Part Replacement Only)'
+  version: 7
+  language: en
+  gating:
+    require_all_steps: true
+    generate_token: true
+    token_pattern: '{FAULT}-{SKU}-{RAND5}'
+start: s1_machine_type
+steps:
+- id: s1_machine_type
+  type: quiz
+  prompt:
+    en: Step 1 - Select Washing Machine type (this only decides the next steps).
+  ui:
+    control: radio
+    options:
+    - Semi Automatic WM
+    - Top Load Automatic WM
+    - Front Load WM
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Semi Automatic WM'
+    next: sa_1_timer_check
+  - when: selection == 'Top Load Automatic WM'
+    next: tl_1_power_on
+  - when: selection == 'Front Load WM'
+    next: fl_1_power_on
+- id: end_flow
+  type: note
+  prompt:
+    en: 'End: If you found a faulty PART, take clear photo evidence and Generate Gate Token. If resolved, explain correct
+      usage to customer.'
+  ui:
+    control: none
+  resolution_prompt: false
+- id: log_external_power
+  type: photo
+  prompt:
+    en: '[POWER - CUSTOMER SIDE]
+
+      Wall voltage is low/high.
+
+      Action: Inform customer to fix wiring/voltage with electrician.
+
+      Do NOT replace any parts until voltage is correct.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+- id: log_power_cord
+  type: photo
+  prompt:
+    en: '[POWER CORD / PLUG]
+
+      Power cord/plug is damaged/loose/burnt.
+
+      Action: Replace Power Cord / Plug Assembly.
+
+      Take photo of damage.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Power Cord / Plug Assembly
+  recommends_part: Power Cord / Plug Assembly
+- id: log_power_pcb_or_main_pcb
+  type: photo
+  prompt:
+    en: '[POWER BOARD / MAIN PCB]
+
+      Wall voltage is OK but machine is not turning ON.
+
+      230V is NOT reaching PCB input OR PCB is dead.
+
+      Action (Jeeves scope): Replace PCB/Power Board Assembly (do not replace EMI filter alone).
+
+      Take photo of measurement point + board.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Main PCB / Power PCB Assembly
+  recommends_part: Main PCB / Power PCB Assembly
+- id: log_main_pcb_dead
+  type: photo
+  prompt:
+    en: '[MAIN PCB]
+
+      230V reaches PCB input, but display/LED is dead.
+
+      Action: Replace Main PCB Assembly.
+
+      Take photo of display OFF + PCB connectors.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Main PCB / Power PCB Assembly
+  recommends_part: Main PCB / Power PCB Assembly
+- id: log_wiring_harness
+  type: photo
+  prompt:
+    en: '[WIRING HARNESS]
+
+      Rat bite / cut wire / burnt connector found.
+
+      Action: Replace Main Wiring Harness (or repair as per SOP if allowed).
+
+      Take photo of damage.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Main Wiring Harness
+  recommends_part: Main Wiring Harness
+- id: log_inlet_valve
+  type: photo
+  prompt:
+    en: '[INLET VALVE]
+
+      220-240V AC present at inlet valve during FILL, but water not entering.
+
+      Action: Clean filter; if still no water, replace Inlet Valve.
+
+      Take photo/video of test.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Inlet Valve
+  recommends_part: Inlet Valve
+- id: log_pcb_no_valve_output
+  type: photo
+  prompt:
+    en: '[MAIN PCB]
+
+      No voltage at inlet valve during FILL command.
+
+      If harness is OK, replace Main PCB Assembly.
+
+      Take photo of valve connector + PCB connector.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Main PCB / Power PCB Assembly
+  recommends_part: Main PCB / Power PCB Assembly
+- id: log_pressure_hose
+  type: photo
+  prompt:
+    en: '[PRESSURE HOSE / SENSOR PIPE]
+
+      Pressure hose is loose/clogged/leaking/damaged.
+
+      Action: Fix connection / clean port / replace hose.
+
+      Take photo.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Pressure Hose / Sensor Pipe
+  recommends_part: Pressure Hose / Sensor Pipe
+- id: log_pressure_sensor
+  type: photo
+  prompt:
+    en: '[PRESSURE SENSOR]
+
+      3-5V DC supply is present, but water level is not detected (overflow/keeps filling).
+
+      Action: Replace Pressure Sensor.
+
+      Take photo of sensor connector.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Pressure Sensor
+  recommends_part: Pressure Sensor
+- id: log_pcb_no_sensor_supply
+  type: photo
+  prompt:
+    en: '[MAIN PCB]
+
+      3-5V DC supply to pressure sensor is missing (0V).
+
+      Action: Replace Main PCB Assembly.
+
+      Take photo of measurement.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Main PCB / Power PCB Assembly
+  recommends_part: Main PCB / Power PCB Assembly
+- id: log_lid_switch
+  type: photo
+  prompt:
+    en: '[LID SWITCH / LOCK]
+
+      Lid switch not detecting lid closed.
+
+      Action: Replace Lid Switch / Lock Assembly.
+
+      Take photo.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Lid Switch / Lock Assembly
+  recommends_part: Lid Switch / Lock Assembly
+- id: log_door_lock
+  type: photo
+  prompt:
+    en: '[DOOR LOCK]
+
+      Door lock not engaging.
+
+      Action: Replace Door Lock Assembly.
+
+      Take photo/video of lock light or error.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Door Lock Assembly
+  recommends_part: Door Lock Assembly
+- id: log_capacitor
+  type: photo
+  prompt:
+    en: '[CAPACITOR]
+
+      Motor hums (gunn-gunn) but does not start OR capacitor bulged/leaked/burnt.
+
+      Action: Replace Capacitor with same rating (µF).
+
+      Take photo of capacitor label.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Motor Capacitor
+  recommends_part: Motor Capacitor
+- id: log_motor
+  type: photo
+  prompt:
+    en: '[MOTOR / DRIVE]
+
+      Motor/drive suspected faulty (jam/burn/ground/rust water damage) as per checks.
+
+      Action: Replace Motor / Drive (as per model).
+
+      Take photo/video evidence.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Motor / Drive Assembly
+  recommends_part: Motor / Drive Assembly
+- id: log_belt
+  type: photo
+  prompt:
+    en: '[DRIVE BELT]
+
+      Belt loose/cut/off.
+
+      Action: Refit or Replace belt.
+
+      Take photo.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Drive Belt
+  recommends_part: Drive Belt
+- id: log_pulsator
+  type: photo
+  prompt:
+    en: '[PULSATOR / AGITATOR]
+
+      Pulsator free-spins by hand (coupling/splines worn).
+
+      Action: Replace Pulsator/Agitator Assembly.
+
+      Take short video.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Pulsator / Agitator Assembly
+  recommends_part: Pulsator / Agitator Assembly
+- id: log_bearing
+  type: photo
+  prompt:
+    en: '[BEARING KIT]
+
+      Grinding noise / very hard drum rotation by hand.
+
+      Action: Replace Bearing Kit (as per SOP).
+
+      Take video of grinding sound.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Bearing Kit
+  recommends_part: Bearing Kit
+- id: log_gearbox_clutch
+  type: photo
+  prompt:
+    en: '[GEARBOX / CLUTCH]
+
+      Gearbox/Clutch slip or jam suspected after all checks.
+
+      Action: Replace Gearbox/Clutch Assembly.
+
+      Take video evidence.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Gearbox / Clutch Assembly
+  recommends_part: Gearbox / Clutch Assembly
+- id: log_unresolved
+  type: photo
+  prompt:
+    en: '[UNRESOLVED]
+
+      Wash still not working after all checks.
+
+      Action: Record 20-sec video + escalate to THD/senior. Do not guess parts.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+- id: sa_1_timer_check
+  type: quiz
+  prompt:
+    en: 'SA Step 1 - Start wash:
+
+      Set WASH timer to 10 minutes.
+
+      Is the WASH timer knob rotating (moving) with ticking sound?'
+  ui:
+    control: radio
+    options:
+    - No, timer stuck / not moving
+    - Yes, timer moving
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, timer stuck / not moving'
+    next: sa_log_timer
+  next: sa_2_water_load
+- id: sa_log_timer
+  type: photo
+  prompt:
+    en: '[WASH TIMER]
+
+      Timer stuck/not moving.
+
+      Action: Replace Wash Timer.
+
+      Take photo.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: end_flow
+  recommends_parts:
+  - Wash Timer
+  recommends_part: Wash Timer
+- id: sa_2_water_load
+  type: quiz
+  prompt:
+    en: 'SA Step 2 - Water & load:
+
+      Is water level sufficient AND load is normal (not overloaded)?'
+  ui:
+    control: radio
+    options:
+    - Yes, water & load OK
+    - No, water low / tap closed
+    - No, overloaded / heavy load
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, water low / tap closed'
+    next: sa_fix_water
+  - when: selection == 'No, overloaded / heavy load'
+    next: sa_fix_load
+  next: sa_3_retest
+- id: sa_fix_water
+  type: note
+  prompt:
+    en: 'Action: Open tap and fill water to normal level.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: sa_3_retest
+- id: sa_fix_load
+  type: note
+  prompt:
+    en: 'Action: Remove some clothes and balance the load.'
+  ui:
+    control: none
+  resolution_prompt: false
+  next: sa_3_retest
+- id: sa_3_retest
+  type: quiz
+  prompt:
+    en: 'SA Step 3 - Retest:
+
+      Restart wash timer.
+
+      Is wash working now (pulsator moving)?'
+  ui:
+    control: radio
+    options:
+    - Yes, wash working
+    - No, still not working
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, wash working'
+    next: end_flow
+  next: sa_4_motor_behavior
+- id: sa_4_motor_behavior
+  type: quiz
+  prompt:
+    en: 'SA Step 4 - Motor behavior (during wash): What happens?'
+  ui:
+    control: radio
+    options:
+    - Motor hums but pulsator not moving
+    - Motor runs but pulsator not moving
+    - Motor silent (no sound)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Motor hums but pulsator not moving'
+    next: sa_5_capacitor_check
+  - when: selection == 'Motor silent (no sound)'
+    next: sa_5_wiring_check
+  next: sa_6_belt_pulsator
+- id: sa_5_wiring_check
+  type: quiz
+  prompt:
+    en: 'SA Step 5 - Wiring check:
+
+      Open back panel.
+
+      Any rat bite/cut wire/burnt connector at motor/capacitor?'
+  ui:
+    control: radio
+    options:
+    - Yes, wiring damage found
+    - No wiring damage
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, wiring damage found'
+    next: log_wiring_harness
+  next: sa_5_capacitor_check
+- id: sa_5_capacitor_check
+  type: quiz
+  prompt:
+    en: 'SA Step 6 - Capacitor check:
+
+      If motor hums but does not start → capacitor weak.
+
+      Is capacitor bulged/leaked/burnt OR hum without start?'
+  ui:
+    control: radio
+    options:
+    - Yes, capacitor faulty
+    - No, capacitor OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, capacitor faulty'
+    next: log_capacitor
+  next: sa_6_belt_pulsator
+- id: sa_6_belt_pulsator
+  type: quiz
+  prompt:
+    en: 'SA Step 7 - Belt & pulsator check:
+
+      Does motor pulley rotate but pulsator not moving?'
+  ui:
+    control: radio
+    options:
+    - Belt loose/cut/off
+    - Pulsator free-spin (coupling worn)
+    - Belt & pulsator OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Belt loose/cut/off'
+    next: log_belt
+  - when: selection == 'Pulsator free-spin (coupling worn)'
+    next: log_pulsator
+  next: sa_8_motor_check
+- id: sa_8_motor_check
+  type: quiz
+  prompt:
+    en: 'SA Step 8 - Motor check (power OFF): Rotate motor shaft by hand.
+
+      Is motor tight/jammed/burnt smell/rust water damage?'
+  ui:
+    control: radio
+    options:
+    - Yes, motor faulty
+    - No, motor rotates freely
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, motor faulty'
+    next: log_motor
+  next: sa_9_gearbox
+- id: sa_9_gearbox
+  type: quiz
+  prompt:
+    en: 'SA Step 9 - Gearbox/Clutch check:
+
+      If all above OK but wash not working.'
+  ui:
+    control: radio
+    options:
+    - Gearbox/Clutch suspected
+    - Still not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Gearbox/Clutch suspected'
+    next: log_gearbox_clutch
+  - when: selection == 'Still not resolved'
+    next: log_unresolved
+  next: end_flow
+- id: tl_1_power_on
+  type: quiz
+  prompt:
+    en: 'TL Step 1 - Power ON:
+
+      Is machine turning ON (display/LED glows)?'
+  ui:
+    control: radio
+    options:
+    - Yes, ON
+    - No, no display/LED
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, ON'
+    next: tl_2_start_wash
+  next: tl_1a_socket
+- id: tl_1a_socket
+  type: quiz
+  prompt:
+    en: 'TL Step 1A - Socket check:
+
+      Try another wall socket.
+
+      Did machine turn ON now?'
+  ui:
+    control: radio
+    options:
+    - Yes, ON now
+    - No, still OFF
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, ON now'
+    next: tl_2_start_wash
+  next: tl_1b_wall_voltage
+- id: tl_1b_wall_voltage
+  type: quiz
+  prompt:
+    en: 'TL Step 1B - Wall voltage check (multimeter):
+
+      Measure Phase to Neutral.
+
+      Is voltage 220-240V AC?'
+  ui:
+    control: radio
+    options:
+    - Yes, voltage OK
+    - No, low/high voltage
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, low/high voltage'
+    next: log_external_power
+  next: tl_1c_power_cord
+- id: tl_1c_power_cord
+  type: quiz
+  prompt:
+    en: 'TL Step 1C - Power cord check:
+
+      Is power cord/plug loose/burnt/damaged?'
+  ui:
+    control: radio
+    options:
+    - Yes, cord/plug damaged
+    - No, cord/plug OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, cord/plug damaged'
+    next: log_power_cord
+  next: tl_1d_pcb_input
+- id: tl_1d_pcb_input
+  type: quiz
+  prompt:
+    en: 'TL Step 1D - PCB input voltage:
+
+      Open panel and measure 230V AC at PCB input connector.
+
+      What is the result?'
+  ui:
+    control: radio
+    options:
+    - 230V NOT reaching PCB input
+    - 230V reaches PCB input but PCB dead
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == '230V NOT reaching PCB input'
+    next: log_power_pcb_or_main_pcb
+  - when: selection == '230V reaches PCB input but PCB dead'
+    next: log_main_pcb_dead
+  next: end_flow
+- id: tl_2_start_wash
+  type: quiz
+  prompt:
+    en: 'TL Step 2 - Start quick wash.
+
+      What happens?'
+  ui:
+    control: radio
+    options:
+    - No water entering
+    - Water enters but keeps filling (no stop)
+    - Water enters and stops but wash does not start
+    - Wash working (pulsator moving)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Wash working (pulsator moving)'
+    next: end_flow
+  - when: selection == 'No water entering'
+    next: tl_3_inlet_basic
+  - when: selection == 'Water enters but keeps filling (no stop)'
+    next: tl_4_pressure_hose
+  - when: selection == 'Water enters and stops but wash does not start'
+    next: tl_5_lid_switch
+- id: tl_3_inlet_basic
+  type: quiz
+  prompt:
+    en: 'TL Step 3 - Inlet basic check:
+
+      Tap ON? Hose not bent? Inlet filter clean?'
+  ui:
+    control: radio
+    options:
+    - Yes, all OK
+    - No, issue found and fixed
+  require_pass: true
+  resolution_prompt: false
+  next: tl_3a_retest_inlet
+- id: tl_3a_retest_inlet
+  type: quiz
+  prompt:
+    en: 'TL Step 3A - Retest:
+
+      Start wash again.
+
+      Is water entering now?'
+  ui:
+    control: radio
+    options:
+    - Yes, water entering
+    - No, still no water
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, water entering'
+    next: tl_5_lid_switch
+  next: tl_3b_valve_voltage
+- id: tl_3b_valve_voltage
+  type: quiz
+  prompt:
+    en: 'TL Step 3B - Inlet valve voltage:
+
+      During FILL, measure at inlet valve.
+
+      Is 220-240V AC present?'
+  ui:
+    control: radio
+    options:
+    - Yes, voltage present but no water
+    - No voltage at valve
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, voltage present but no water'
+    next: log_inlet_valve
+  - when: selection == 'No voltage at valve'
+    next: tl_3c_valve_wiring
+  next: end_flow
+- id: tl_3c_valve_wiring
+  type: quiz
+  prompt:
+    en: 'TL Step 3C - Valve wiring:
+
+      Is inlet valve wiring/harness cut/loose/burnt?'
+  ui:
+    control: radio
+    options:
+    - Yes, wiring damaged
+    - No, wiring OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, wiring damaged'
+    next: log_wiring_harness
+  - when: selection == 'No, wiring OK'
+    next: log_pcb_no_valve_output
+  next: end_flow
+- id: tl_4_pressure_hose
+  type: quiz
+  prompt:
+    en: 'TL Step 4 - Water level sensing:
+
+      Check pressure hose (tub to sensor).
+
+      Is hose loose/clogged/leaking/damaged?'
+  ui:
+    control: radio
+    options:
+    - Yes, hose problem found
+    - No hose problem
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, hose problem found'
+    next: log_pressure_hose
+  next: tl_4a_sensor_supply
+- id: tl_4a_sensor_supply
+  type: quiz
+  prompt:
+    en: 'TL Step 4A - Pressure sensor supply:
+
+      Measure DC at sensor connector.
+
+      Is 3-5V DC present?'
+  ui:
+    control: radio
+    options:
+    - Yes, 3-5V present
+    - No, 0V
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, 0V'
+    next: log_pcb_no_sensor_supply
+  next: tl_4b_sensor_replace
+- id: tl_4b_sensor_replace
+  type: quiz
+  prompt:
+    en: 'TL Step 4B - Sensor decision:
+
+      Supply is OK but water keeps filling.
+
+      What should be replaced?'
+  ui:
+    control: radio
+    options:
+    - Pressure Sensor
+    - Still not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Pressure Sensor'
+    next: log_pressure_sensor
+  - when: selection == 'Still not resolved'
+    next: log_unresolved
+  next: end_flow
+- id: tl_5_lid_switch
+  type: quiz
+  prompt:
+    en: 'TL Step 5 - Lid switch:
+
+      Is lid switch detecting lid closed and wiring OK?'
+  ui:
+    control: radio
+    options:
+    - Yes, lid switch OK
+    - No, lid switch faulty
+    - Wiring damaged
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, lid switch faulty'
+    next: log_lid_switch
+  - when: selection == 'Wiring damaged'
+    next: log_wiring_harness
+  next: tl_6_motor_capacitor
+- id: tl_6_motor_capacitor
+  type: quiz
+  prompt:
+    en: 'TL Step 6 - Motor during wash:
+
+      What happens?'
+  ui:
+    control: radio
+    options:
+    - Motor hums but pulsator not moving
+    - Motor silent
+    - Motor runs but weak/slow
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Motor hums but pulsator not moving'
+    next: tl_6a_capacitor_check
+  - when: selection == 'Motor silent'
+    next: tl_6b_wiring_check
+  next: tl_7_belt_pulsator
+- id: tl_6a_capacitor_check
+  type: quiz
+  prompt:
+    en: 'TL Step 6A - Capacitor check:
+
+      Is capacitor bulged/leaked/burnt OR hum without start?'
+  ui:
+    control: radio
+    options:
+    - Yes, capacitor faulty
+    - No, capacitor OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, capacitor faulty'
+    next: log_capacitor
+  next: tl_7_belt_pulsator
+- id: tl_6b_wiring_check
+  type: quiz
+  prompt:
+    en: 'TL Step 6B - Wiring check:
+
+      Any rat bite/cut wire/burnt connector at motor/capacitor/PCB?'
+  ui:
+    control: radio
+    options:
+    - Yes, wiring damaged
+    - No wiring damage
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, wiring damaged'
+    next: log_wiring_harness
+  next: tl_7_belt_pulsator
+- id: tl_7_belt_pulsator
+  type: quiz
+  prompt:
+    en: 'TL Step 7 - Belt & pulsator:
+
+      Check belt and pulsator coupling.'
+  ui:
+    control: radio
+    options:
+    - Belt loose/cut/off
+    - Pulsator free-spin (coupling worn)
+    - Belt & pulsator OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Belt loose/cut/off'
+    next: log_belt
+  - when: selection == 'Pulsator free-spin (coupling worn)'
+    next: log_pulsator
+  next: tl_8_bearing
+- id: tl_8_bearing
+  type: quiz
+  prompt:
+    en: 'TL Step 8 - Bearing check (power OFF):
+
+      Rotate drum by hand.
+
+      Grinding noise / hard rotation?'
+  ui:
+    control: radio
+    options:
+    - Yes, grinding/hard
+    - No, smooth
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, grinding/hard'
+    next: log_bearing
+  next: tl_9_gearbox
+- id: tl_9_gearbox
+  type: quiz
+  prompt:
+    en: 'TL Step 9 - Gearbox/Clutch:
+
+      If all above OK but wash not working.'
+  ui:
+    control: radio
+    options:
+    - Gearbox/Clutch suspected
+    - Still not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Gearbox/Clutch suspected'
+    next: log_gearbox_clutch
+  - when: selection == 'Still not resolved'
+    next: log_unresolved
+  next: end_flow
+- id: fl_1_power_on
+  type: quiz
+  prompt:
+    en: 'FL Step 1 - Power ON:
+
+      Is machine turning ON (display ON)?'
+  ui:
+    control: radio
+    options:
+    - Yes, ON
+    - No, not ON
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, ON'
+    next: fl_2_door_lock
+  next: fl_1a_wall_voltage
+- id: fl_1a_wall_voltage
+  type: quiz
+  prompt:
+    en: 'FL Step 1A - Wall voltage check (multimeter):
+
+      Measure Phase to Neutral.
+
+      Is voltage 220-240V AC?'
+  ui:
+    control: radio
+    options:
+    - Yes, voltage OK
+    - No, low/high voltage
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, low/high voltage'
+    next: log_external_power
+  next: fl_1b_power_cord
+- id: fl_1b_power_cord
+  type: quiz
+  prompt:
+    en: 'FL Step 1B - Power cord check:
+
+      Is power cord/plug loose/burnt/damaged?'
+  ui:
+    control: radio
+    options:
+    - Yes, cord/plug damaged
+    - No, cord/plug OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, cord/plug damaged'
+    next: log_power_cord
+  next: fl_1c_pcb_input
+- id: fl_1c_pcb_input
+  type: quiz
+  prompt:
+    en: 'FL Step 1C - PCB input voltage:
+
+      Open panel and measure 230V AC at PCB input connector.
+
+      What is the result?'
+  ui:
+    control: radio
+    options:
+    - 230V NOT reaching PCB input
+    - 230V reaches PCB input but PCB dead
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == '230V NOT reaching PCB input'
+    next: log_power_pcb_or_main_pcb
+  - when: selection == '230V reaches PCB input but PCB dead'
+    next: log_main_pcb_dead
+  next: end_flow
+- id: fl_2_door_lock
+  type: quiz
+  prompt:
+    en: 'FL Step 2 - Door lock:
+
+      When start program, does door lock (click / lock light)?'
+  ui:
+    control: radio
+    options:
+    - Yes, door locks
+    - No, door not locking
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, door not locking'
+    next: log_door_lock
+  next: fl_3_start_wash
+- id: fl_3_start_wash
+  type: quiz
+  prompt:
+    en: 'FL Step 3 - Start quick wash.
+
+      What happens?'
+  ui:
+    control: radio
+    options:
+    - No water entering
+    - Water enters but keeps filling (no stop)
+    - Water enters and stops but drum not tumbling
+    - Wash working (drum tumbling)
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Wash working (drum tumbling)'
+    next: end_flow
+  - when: selection == 'No water entering'
+    next: fl_4_inlet_basic
+  - when: selection == 'Water enters but keeps filling (no stop)'
+    next: fl_5_pressure_hose
+  - when: selection == 'Water enters and stops but drum not tumbling'
+    next: fl_6_drive
+- id: fl_4_inlet_basic
+  type: quiz
+  prompt:
+    en: 'FL Step 4 - Inlet basic check:
+
+      Tap ON? Hose not bent? Inlet filter clean?'
+  ui:
+    control: radio
+    options:
+    - Yes, all OK
+    - No, issue found and fixed
+  require_pass: true
+  resolution_prompt: false
+  next: fl_4a_retest_inlet
+- id: fl_4a_retest_inlet
+  type: quiz
+  prompt:
+    en: 'FL Step 4A - Retest:
+
+      Start program again.
+
+      Is water entering now?'
+  ui:
+    control: radio
+    options:
+    - Yes, water entering
+    - No, still no water
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, water entering'
+    next: fl_6_drive
+  next: fl_4b_valve_voltage
+- id: fl_4b_valve_voltage
+  type: quiz
+  prompt:
+    en: 'FL Step 4B - Inlet valve voltage:
+
+      During FILL, measure at inlet valve.
+
+      Is 220-240V AC present?'
+  ui:
+    control: radio
+    options:
+    - Yes, voltage present but no water
+    - No voltage at valve
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, voltage present but no water'
+    next: log_inlet_valve
+  - when: selection == 'No voltage at valve'
+    next: fl_4c_valve_wiring
+  next: end_flow
+- id: fl_4c_valve_wiring
+  type: quiz
+  prompt:
+    en: 'FL Step 4C - Valve wiring:
+
+      Is inlet valve wiring/harness cut/loose/burnt?'
+  ui:
+    control: radio
+    options:
+    - Yes, wiring damaged
+    - No, wiring OK
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, wiring damaged'
+    next: log_wiring_harness
+  - when: selection == 'No, wiring OK'
+    next: log_pcb_no_valve_output
+  next: end_flow
+- id: fl_5_pressure_hose
+  type: quiz
+  prompt:
+    en: 'FL Step 5 - Water level sensing:
+
+      Check pressure hose to sensor.
+
+      Is hose loose/clogged/leaking/damaged?'
+  ui:
+    control: radio
+    options:
+    - Yes, hose problem found
+    - No hose problem
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, hose problem found'
+    next: log_pressure_hose
+  next: fl_5a_sensor_supply
+- id: fl_5a_sensor_supply
+  type: quiz
+  prompt:
+    en: 'FL Step 5A - Pressure sensor supply:
+
+      Measure DC at sensor connector.
+
+      Is 3-5V DC present?'
+  ui:
+    control: radio
+    options:
+    - Yes, 3-5V present
+    - No, 0V
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'No, 0V'
+    next: log_pcb_no_sensor_supply
+  next: fl_5b_sensor_replace
+- id: fl_5b_sensor_replace
+  type: quiz
+  prompt:
+    en: 'FL Step 5B - Sensor decision:
+
+      Supply is OK but water keeps filling.
+
+      What should be replaced?'
+  ui:
+    control: radio
+    options:
+    - Pressure Sensor
+    - Still not resolved
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Pressure Sensor'
+    next: log_pressure_sensor
+  - when: selection == 'Still not resolved'
+    next: log_unresolved
+  next: end_flow
+- id: fl_6_drive
+  type: quiz
+  prompt:
+    en: 'FL Step 6 - Drum tumble check:
+
+      After water stops, drum should tumble.
+
+      What do you find?'
+  ui:
+    control: radio
+    options:
+    - Belt loose/cut/off (belt models)
+    - Wiring harness damaged
+    - Motor/drive fault suspected
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Belt loose/cut/off (belt models)'
+    next: log_belt
+  - when: selection == 'Wiring harness damaged'
+    next: log_wiring_harness
+  - when: selection == 'Motor/drive fault suspected'
+    next: log_motor
+  next: fl_7_bearing
+- id: fl_7_bearing
+  type: quiz
+  prompt:
+    en: 'FL Step 7 - Bearing check (power OFF):
+
+      Rotate drum by hand.
+
+      Grinding noise / wobble / hard rotation?'
+  ui:
+    control: radio
+    options:
+    - Yes, grinding/hard/wobble
+    - No, smooth but still not working
+  require_pass: true
+  resolution_prompt: false
+  branches:
+  - when: selection == 'Yes, grinding/hard/wobble'
+    next: log_bearing
+  - when: selection == 'No, smooth but still not working'
+    next: log_unresolved
+  next: end_flow
