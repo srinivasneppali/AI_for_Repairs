@@ -1,7 +1,7 @@
 meta:
-  id: WM_ALL_WASH_NOT_WORKING_V1
-  title: 'DIAGNOSTIC: WM - Wash Not Working (Stop on Fix)'
-  version: '1.0'
+  id: WM_ALL_WASH_NOT_WORKING_V2
+  title: 'DIAGNOSTIC: WM - Wash Not Working (Syntax Fixed)'
+  version: '2.0'
   language:
     - en
   gating:
@@ -27,9 +27,9 @@ steps:
         - "Earthing Issue (Neutral-Earth > 5V)"
     require_pass: true
     branches:
-      - when: selection == 'Voltage Low/Unstable (< 200V)'
+      - when: "selection == 'Voltage Low/Unstable (< 200V)'"
         next: s1_advise_electrician
-      - when: selection == 'Earthing Issue (Neutral-Earth > 5V)'
+      - when: "selection == 'Earthing Issue (Neutral-Earth > 5V)'"
         next: s1_advise_electrician
     next: s2_machine_type_branch
 
@@ -52,9 +52,9 @@ steps:
         - "Fully Automatic (Top/Front Load)"
     require_pass: true
     branches:
-      - when: selection == 'Semi Automatic (SA)'
+      - when: "selection == 'Semi Automatic (SA)'"
         next: s3_sa_timer_check
-      - when: selection == 'Fully Automatic (Top/Front Load)'
+      - when: "selection == 'Fully Automatic (Top/Front Load)'"
         next: s3_fa_pcb_power_check
 
   # ==========================================
@@ -71,7 +71,7 @@ steps:
         - "Timer Stuck / No Sound / Broken Knob"
     require_pass: true
     branches:
-      - when: selection == 'Timer Stuck / No Sound / Broken Knob'
+      - when: "selection == 'Timer Stuck / No Sound / Broken Knob'"
         next: s3_log_sa_timer
     next: s6_motor_capacitor_check
 
@@ -100,9 +100,9 @@ steps:
         - "No Power: Voltage reaching PCB but not turning on"
     require_pass: true
     branches:
-      - when: selection == 'No Power: Input OK at EMI, but No Output (EMI Fail)'
+      - when: "selection == 'No Power: Input OK at EMI, but No Output (EMI Fail)'"
         next: s3_log_pcb_emi_fault
-      - when: selection == 'No Power: Voltage reaching PCB but not turning on'
+      - when: "selection == 'No Power: Voltage reaching PCB but not turning on'"
         next: s3_log_pcb_dead
     next: s4_fa_inlet_valve_check
 
@@ -138,9 +138,9 @@ steps:
         - "No water: Valve NOT getting voltage (PCB Issue)"
     require_pass: true
     branches:
-      - when: selection == 'No water: Valve getting 220V but not opening'
+      - when: "selection == 'No water: Valve getting 220V but not opening'"
         next: s4_log_valve_fault
-      - when: selection == 'No water: Valve NOT getting voltage (PCB Issue)'
+      - when: "selection == 'No water: Valve NOT getting voltage (PCB Issue)'"
         next: s4_log_pcb_valve_relay
     next: s5_fa_pressure_sensor_check
 
@@ -177,11 +177,11 @@ steps:
         - "Sensor Faulty (Voltage OK but Error)"
     require_pass: true
     branches:
-      - when: selection == 'Hose Clogged / Damaged'
+      - when: "selection == 'Hose Clogged / Damaged'"
         next: s5_fix_hose
-      - when: selection == 'Wire Harness Cut (Rat Bite)'
+      - when: "selection == 'Wire Harness Cut (Rat Bite)'"
         next: s5_log_rat_bite_harness
-      - when: selection == 'Sensor Faulty (Voltage OK but Error)'
+      - when: "selection == 'Sensor Faulty (Voltage OK but Error)'"
         next: s5_log_sensor_fault
     next: s5b_fa_door_lock_check
 
@@ -196,9 +196,9 @@ steps:
         - "No, Hose Broken (Replace)"
     require_pass: true
     branches:
-      - when: selection == 'Yes, Fixed'
+      - when: "selection == 'Yes, Fixed'"
         next: null # STOP ON FIX
-      - when: selection == 'No, Hose Broken (Replace)'
+      - when: "selection == 'No, Hose Broken (Replace)'"
         next: s5_log_hose_replace
     next: s5b_fa_door_lock_check
 
@@ -244,9 +244,9 @@ steps:
         - "Switch Faulty (Getting 220V but error)"
     require_pass: true
     branches:
-      - when: selection == 'Not Locking (Mechanical Damage/Jam)'
+      - when: "selection == 'Not Locking (Mechanical Damage/Jam)'"
         next: s5b_log_door_switch
-      - when: selection == 'Switch Faulty (Getting 220V but error)'
+      - when: "selection == 'Switch Faulty (Getting 220V but error)'"
         next: s5b_log_door_switch
     next: s6_motor_capacitor_check
 
@@ -277,13 +277,13 @@ steps:
         - "Motor Windings Open / Dead (Check Resistance)"
     require_pass: true
     branches:
-      - when: selection == 'Load Unbalanced -> Balanced it'
+      - when: "selection == 'Load Unbalanced -> Balanced it'"
         next: s6_verify_fix_load
-      - when: selection == 'Belt Broken / Loose'
+      - when: "selection == 'Belt Broken / Loose'"
         next: s6_fix_belt
-      - when: selection == 'Capacitor Weak / Bulged / Loose Connection'
+      - when: "selection == 'Capacitor Weak / Bulged / Loose Connection'"
         next: s6_fix_capacitor
-      - when: selection == 'Motor Windings Open / Dead (Check Resistance)'
+      - when: "selection == 'Motor Windings Open / Dead (Check Resistance)'"
         next: s6_log_motor_fault
     next: s7_pulsator_gearbox_check
 
@@ -298,7 +298,7 @@ steps:
         - "No"
     require_pass: true
     branches:
-      - when: selection == 'Yes, Fixed'
+      - when: "selection == 'Yes, Fixed'"
         next: null # STOP ON FIX
     next: s7_pulsator_gearbox_check
 
@@ -313,9 +313,9 @@ steps:
         - "Belt Damaged - Needs Replacement"
     require_pass: true
     branches:
-      - when: selection == 'Refitted Belt - Fixed'
+      - when: "selection == 'Refitted Belt - Fixed'"
         next: null # STOP ON FIX
-      - when: selection == 'Belt Damaged - Needs Replacement'
+      - when: "selection == 'Belt Damaged - Needs Replacement'"
         next: s6_log_belt
     next: s6_log_belt
 
@@ -340,9 +340,9 @@ steps:
         - "Capacitor Defective - Needs Replacement"
     require_pass: true
     branches:
-      - when: selection == 'Wires Tightened - Fixed'
+      - when: "selection == 'Wires Tightened - Fixed'"
         next: null # STOP ON FIX
-      - when: selection == 'Capacitor Defective - Needs Replacement'
+      - when: "selection == 'Capacitor Defective - Needs Replacement'"
         next: s6_log_capacitor
     next: s7_pulsator_gearbox_check
 
@@ -378,9 +378,9 @@ steps:
         - "Gearbox/Clutch Jammed or Noisy"
     require_pass: true
     branches:
-      - when: selection == 'Pulsator Free Rotate (Stripped Splines)'
+      - when: "selection == 'Pulsator Free Rotate (Stripped Splines)'"
         next: s7_log_pulsator
-      - when: selection == 'Gearbox/Clutch Jammed or Noisy'
+      - when: "selection == 'Gearbox/Clutch Jammed or Noisy'"
         next: s7_log_gearbox
     next: end_flow
 
